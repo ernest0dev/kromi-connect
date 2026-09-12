@@ -2,7 +2,9 @@ import { google } from 'googleapis';
 
 // Verificación de variables de entorno requeridas en el servidor
 const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+const privateKey = process.env.GOOGLE_PRIVATE_KEY
+  ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+  : undefined;
 const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
 
 if (!clientEmail || !privateKey) {
@@ -12,9 +14,11 @@ if (!clientEmail || !privateKey) {
 /**
  * Autenticación mediante Service Account usando el alcance (Scope) para Google Drive API.
  */
-const auth = new google.auth.JWT({
-  email: clientEmail,
-  key: privateKey,
+const auth = new google.auth.GoogleAuth({
+  credentials: {
+    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    private_key: privateKey,
+  },
   scopes: ['https://www.googleapis.com/auth/drive'],
 });
 
