@@ -1,10 +1,15 @@
 import { google } from 'googleapis';
 
-// Verificación de variables de entorno requeridas en el servidor
 const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+
+// Sanitización robusta para la Private Key en Vercel / Node.js
+// Remueve comillas al inicio/final y convierte \n literal a salto de línea real
 const privateKey = process.env.GOOGLE_PRIVATE_KEY
-  ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+  ? process.env.GOOGLE_PRIVATE_KEY
+      .replace(/^"(.*)"$/, '$1')
+      .replace(/\\n/g, '\n')
   : undefined;
+
 const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
 
 if (!clientEmail || !privateKey) {
@@ -12,11 +17,11 @@ if (!clientEmail || !privateKey) {
 }
 
 /**
- * Autenticación mediante Service Account usando el alcance (Scope) para Google Drive API.
+ * Autenticación mediante Service Account usando GoogleAuth.
  */
 const auth = new google.auth.GoogleAuth({
   credentials: {
-    client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+    client_email: clientEmail,
     private_key: privateKey,
   },
   scopes: ['https://www.googleapis.com/auth/drive'],
@@ -30,7 +35,7 @@ export const driveClient = google.drive({ version: 'v3', auth });
 /**
  * Crea una subcarpeta en Google Drive para un ticket específico dentro de la carpeta raíz.
  * 
- * @param folderName Nombre de la subcarpeta (ejemplo: "TCK-001_Campaña_Escolar")
+ * @param folderName Nombre de la subcarpeta (ejemplo: "TCK-001_Campana_Escolar")
  * @returns Un objeto con el ID y la URL pública de la carpeta creada
  */
 export async function createTicketFolder(folderName: string) {
