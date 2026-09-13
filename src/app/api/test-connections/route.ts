@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase, getSupabaseAdmin } from '@/lib/supabaseClient';
+import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { driveClient } from '@/lib/googleDrive';
 
 export async function GET() {
@@ -8,56 +8,59 @@ export async function GET() {
     googleDrive: { status: 'PENDING', message: '', parentFolderFound: false },
   };
 
-  // ----------------------------------------------------
-  // 1. PRUEBA DE CONEXIÓN CON SUPABASE
-  // ----------------------------------------------------
+  // 1. Validar conexión con Supabase usando el cliente Admin (Service Role)
   try {
-    // Intentamos realizar una lectura simple a la tabla 'publicaciones'
-    const { data, error } = await supabase
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin
       .from('publicaciones')
-      .select('count')
+      .select('id')
       .limit(1);
 
     if (error) {
-      results.supabase.status = 'ERROR';
-      results.supabase.message = error.message;
+      results.supabase = {
+        status: 'ERROR',
+        message: error.message,
+      };
     } else {
-      results.supabase.status = 'OK';
-      results.supabase.message = 'Conexión exitosa a la base de datos PostgreSQL en Supabase.';
+      results.supabase = {
+        status: 'OK',
+        message: 'Conexión exitosa a la base de datos PostgreSQL en Supabase.',
+      };
     }
   } catch (err: any) {
-    results.supabase.status = 'ERROR';
-    results.supabase.message = err.message || 'Error desconocido al conectar con Supabase.';
+    results.supabase = {
+      status: 'ERROR',
+      message: err.message || 'Error desconocido al conectar con Supabase.',
+    };
   }
 
-  // ----------------------------------------------------
-  // 2. PRUEBA DE CONEXIÓN CON GOOGLE DRIVE API
-  // ----------------------------------------------------
+  // 2. Validar conexión con Google Drive API
   try {
     const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
-
     if (!parentFolderId) {
-      results.googleDrive.status = 'ERROR';
-      results.googleDrive.message = 'GOOGLE_DRIVE_PARENT_FOLDER_ID no está definida.';
-    } else {
-      // Consultamos los metadatos de la carpeta raíz configurada
-      const driveRes = await driveClient.files.get({
-        fileId: parentFolderId,
-        fields: 'id, name, mimeType',
-      });
-
-      if (driveRes.data.id) {
-        results.googleDrive.status = 'OK';
-        results.googleDrive.message = `Conexión exitosa. Carpeta raíz detectada: "${driveRes.data.name}"`;
-        results.googleDrive.parentFolderFound = true;
-      }
+      throw new Error('GOOGLE_DRIVE_PARENT_FOLDER_ID no está configurado.');
     }
+
+    const response = await driveClient.files.get({
+      fileId: parentFolderId,
+      fields: 'id, name',
+    });
+
+    results.googleDrive = {
+      status: 'OK',
+      message: `Conexión exitosa. Carpeta raíz detectada: "${response.data.name}"`,
+      parentFolderFound: true,
+    };
   } catch (err: any) {
-    results.googleDrive.status = 'ERROR';
-    results.googleDrive.message = err.message || 'Error al autenticar o leer la carpeta en Google Drive.';
+    results.googleDrive = {
+      status: 'ERROR',
+      message: err.message || 'Error desconocido al conectar con Google Drive API.',
+      parentFolderFound: false,
+    };
   }
 
-  return NextResponse.json(results, {
-    status: results.supabase.status === 'OK' && results.googleDrive.status === 'OK' ? 200 : 500,
-  });
+  const hasError =
+    results.supabase.status === 'ERROR' || results.googleDrive.status === 'ERROR';
+
+  return NextResponse.json(results, { status: hasError ? 500 : 200 });
 }
