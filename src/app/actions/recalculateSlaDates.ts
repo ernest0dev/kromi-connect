@@ -1,8 +1,7 @@
-'use me' // Server Action
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getSupabaseAdmin } from '@/lib/supabaseClient'; // Cliente de Supabase optimizado para Server Actions
+import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { calcularMatrizSLA } from '@/utils/sla';
 import { Publicacion } from '@/types';
 
@@ -18,11 +17,11 @@ export interface RecalcularFechasSLAResponse {
 }
 
 /**
- * Server Action: recalcularFechasSLAAction
+ * Server Action: recalculateSlaDates
  * Soporta "Quick Reschedule" (Drag & Drop desde la Grilla/Calendario).
  * Actualiza la fecha_publicacion en Supabase y recorta hacia atrás las fechas de SLA (Regla 3+2).
  */
-export async function recalcularFechasSLAAction(
+export async function recalculateSlaDates(
   input: RecalcularFechasSLAInput
 ): Promise<RecalcularFechasSLAResponse> {
   try {
@@ -32,7 +31,7 @@ export async function recalcularFechasSLAAction(
       return { success: false, error: 'Se requieren publicacionId y nuevaFechaPublicacion' };
     }
 
-    const supabase = await getSupabaseAdmin();
+    const supabase = getSupabaseAdmin();
 
     // 1. Obtener el registro actual para validar existencia y fecha de solicitud a diseño
     const { data: publicacionExistente, error: fetchError } = await supabase
@@ -73,8 +72,9 @@ export async function recalcularFechasSLAAction(
       };
     }
 
-    // 4. Revalidar la caché de la vista de Parrilla / Calendario para reflejar el cambio en UI
-    revalidatePath('/parrilla');
+    // 4. Revalidar la caché de las rutas de visualización
+    revalidatePath('/grid');
+    revalidatePath('/kanban');
 
     return {
       success: true,
@@ -83,7 +83,10 @@ export async function recalcularFechasSLAAction(
   } catch (err: any) {
     return {
       success: false,
-      error: `Error interno en recalcularFechasSLAAction: ${err?.message || 'Error desconocido'}`,
+      error: `Error interno en recalculateSlaDates: ${err?.message || 'Error desconocido'}`,
     };
   }
 }
+
+// Alias de exportación para mantener compatibilidad con componentes que importen el nombre en español
+export const recalcularFechasSLAAction = recalculateSlaDates;

@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { Publicacion, EstatusEnum, FormatoEnum } from '@/types';
-import { recalcularFechasSLAAction } from '@/app/actions/recalculateSlaDates';
+import { recalculateSlaDates } from '@/app/actions/recalculateSlaDates';
 
 interface Props {
   publicacionesIniciales: Publicacion[];
@@ -27,15 +27,35 @@ const FORMATO_BADGES: Record<FormatoEnum, { bg: string; text: string }> = {
 };
 
 export default function KanbanClientView({ publicacionesIniciales }: Props) {
+  const [publicaciones, setPublicaciones] = useState<Publicacion[]>(publicacionesIniciales);
   const [isPending, startTransition] = useTransition();
   const [ticketSeleccionado, setTicketSeleccionado] = useState<Publicacion | null>(null);
 
+  // Manejador de reprogamación SLA desde el modal de detalles
+  const handleReprogramar = (publicacionId: string, nuevaFecha: string) => {
+    startTransition(async () => {
+      const res = await recalculateSlaDates({
+        publicacionId,
+        nuevaFechaPublicacion: nuevaFecha,
+      });
+
+      if (res.success && res.data) {
+        setPublicaciones((prev) =>
+          prev.map((item) => (item.id === publicacionId ? res.data! : item))
+        );
+        setTicketSeleccionado(res.data);
+      } else {
+        alert(res.error || 'No se pudo recalcular la fecha SLA');
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* KANBAN BOARD BOARD CONTAINER */}
+      {/* KANBAN BOARD CONTAINER */}
       <div className="flex gap-4 overflow-x-auto pb-6 scrollbar-thin min-h-[70vh]">
         {KANBAN_COLUMNAS.map((col) => {
-          const ticketsEnColumna = publicacionesIniciales.filter((p) => p.estatus === col.id);
+          const ticketsEnColumna = publicaciones.filter((p) => p.estatus === col.id);
 
           return (
             <div
@@ -120,12 +140,18 @@ export default function KanbanClientView({ publicacionesIniciales }: Props) {
               {/* Matriz de Fechas y Cronograma SLA */}
               <div className="grid grid-cols-2 gap-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800 font-mono text-xs">
                 <div>
-                  <span className="text-slate-500 block">Fecha Publicación:</span>
-                  <span className="text-white font-bold">{ticketSeleccionado.fecha_publicacion}</span>
+                  <label className="text-slate-500 block text-[10px] uppercase font-bold">Fecha Publicación:</label>
+                  <input
+                    type="date"
+                    disabled={isPending}
+                    value={ticketSeleccionado.fecha_publicacion}
+                    onChange={(e) => handleReprogramar(ticketSeleccionado.id, e.target.value)}
+                    className="bg-slate-900 border border-slate-700 text-emerald-400 font-bold px-2 py-1 rounded w-full mt-1 focus:outline-none focus:border-emerald-500"
+                  />
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Límite Brief (SLA):</span>
-                  <span className="text-amber-400 font-bold">{ticketSeleccionado.fecha_limite_brief || 'S/D'}</span>
+                  <span className="text-slate-500 block text-[10px] uppercase font-bold">Límite Brief (SLA):</span>
+                  <span className="text-amber-400 font-bold block mt-2">{ticketSeleccionado.fecha_limite_brief || 'S/D'}</span>
                 </div>
               </div>
 
