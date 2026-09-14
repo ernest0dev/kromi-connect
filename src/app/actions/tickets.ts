@@ -1,11 +1,11 @@
 'use me' // Server Action
 import { createTicketFolder } from '@/lib/googleDrive';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
-import { FormatoPublicacion } from '@/types/database';
+import { FormatoEnum, Publicacion, PublicacionInsert } from '@/types';
 
 interface CreateTicketInput {
   titulo: string;
-  formato: FormatoPublicacion;
+  formato: FormatoEnum;
   fecha_publicacion: string;
   campana_id?: string;
   linea_contenido?: string;
