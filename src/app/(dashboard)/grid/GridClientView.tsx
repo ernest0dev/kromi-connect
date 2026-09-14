@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition, useMemo } from 'react';
 import { Publicacion, FormatoEnum, EstatusEnum } from '@/types';
-import { recalcularFechasSLAAction } from '@/app/actions/recalcularFechasSLAAction';
+import { recalcularFechasSLAAction } from '@/app/actions/recalculateSlaDates';
 
 interface Props {
   publicacionesIniciales: Publicacion[];

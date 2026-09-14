@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { FormatoEnum } from '@/types';
-import { crearPublicacionConDriveAction } from '@/app/actions/crearPublicacionConDriveAction';
+import { crearPublicacionConDriveAction } from '@/app/actions/createPostWithDrive';
 
 interface Props {
   isOpen: boolean;

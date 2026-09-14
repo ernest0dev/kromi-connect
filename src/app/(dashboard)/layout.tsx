@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import NuevoTicketModal from './components/NuevoTicketModal';
+import NuevoTicketModal from './components/NewTicketModal';
 
 export default function DashboardLayout({
   children,

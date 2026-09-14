@@ -1,6 +1,6 @@
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { Publicacion } from '@/types';
-import ParrillaClientView from './ParrillaClientView';
+import ParrillaClientView from './GridClientView';
 
 export const revalidate = 0;
 

@@ -1,5 +1,5 @@
 import { Database } from '../database.types';
-import { Publicacion } from './publicaciones';
+import { Publicacion } from './posts';
 
 // Tipos base
 export type SolicitudTercero = Database['public']['Tables']['solicitudes_terceros']['Row'];

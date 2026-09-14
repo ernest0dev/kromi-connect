@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { crearPublicacion } from '@/app/actions/publicaciones';
+import { crearPublicacion } from '@/app/actions/posts';
 
 export default function TestActionPage() {
   const [loading, setLoading] = useState(false);
