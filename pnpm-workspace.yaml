@@ -1,0 +1,6 @@
+allowBuilds:
+  '@parcel/watcher': true
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - brace-expansion@1.1.21 || 5.0.12
+  - electron-to-chromium@1.5.428
