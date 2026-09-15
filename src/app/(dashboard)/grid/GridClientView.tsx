@@ -1,18 +1,14 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd";
+import { Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Publicacion } from "@/types";
 import { recalculateSlaDates } from "@/app/actions/recalculateSlaDates";
+import DndWrapper from "@/app/(dashboard)/components/DndWrapper";
 
 interface Props {
   publicacionesIniciales: Publicacion[];
-  mesActual: string; // Formato YYYY-MM
+  mesActual: string;
 }
 
 export default function GridClientView({
@@ -24,7 +20,6 @@ export default function GridClientView({
   );
   const [isPending, startTransition] = useTransition();
 
-  // Generar los días del mes actual (Ejemplo simplificado de matriz de días)
   const obtenerDiasDelMes = () => {
     const [year, month] = mesActual.split("-").map(Number);
     const date = new Date(year, month - 1, 1);
@@ -43,14 +38,12 @@ export default function GridClientView({
   const handleDragEnd = (result: DropResult) => {
     const { destination, draggableId } = result;
 
-    // Si se suelta fuera de un destino válido o en el mismo día, no hacemos nada
     if (!destination || destination.droppableId === result.source.droppableId) {
       return;
     }
 
-    const nuevaFechaPublicacion = destination.droppableId; // El droppableId es la fecha (YYYY-MM-DD)
+    const nuevaFechaPublicacion = destination.droppableId;
 
-    // Actualización optimista en la UI
     setPublicaciones((prev) =>
       prev.map((pub) =>
         pub.id === draggableId
@@ -59,7 +52,6 @@ export default function GridClientView({
       ),
     );
 
-    // Invocación a la Server Action para recalcular SLAs en base de datos
     startTransition(async () => {
       const res = await recalculateSlaDates({
         publicacionId: draggableId,
@@ -68,7 +60,6 @@ export default function GridClientView({
 
       if (!res.success) {
         alert(res.error || "Error al recalcular fechas de SLA");
-        // Revertir estado si falla la Server Action
         setPublicaciones(publicacionesIniciales);
       }
     });
@@ -76,15 +67,14 @@ export default function GridClientView({
 
   return (
     <div className="space-y-6">
-      {/* Header Grilla */}
       <div className="flex items-center justify-between bg-slate-900 p-5 rounded-xl border border-slate-800">
         <div>
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <span>📅</span> Parrilla Macro Mensual
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Arrastra las publicaciones entre los días para recalcular las fechas
-            límite de SLA automáticamente.
+            Arrastra las publicaciones entre los días para recalcular SLA
+            automáticamente.
           </p>
         </div>
         {isPending && (
@@ -94,8 +84,7 @@ export default function GridClientView({
         )}
       </div>
 
-      {/* Contenedor Drag and Drop */}
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DndWrapper onDragEnd={handleDragEnd}>
         <div className="grid grid-cols-7 gap-2 bg-slate-950 p-2 rounded-xl border border-slate-800">
           {dias.map((dia) => {
             const postsDelDia = publicaciones.filter(
@@ -108,7 +97,7 @@ export default function GridClientView({
                   <div
                     ref={provided.innerRef}
                     {...provided.droppableProps}
-                    className={`min-h-[120px] bg-slate-900/60 p-2 rounded-lg border transition ${
+                    className={`min-h-30 bg-slate-900/60 p-2 rounded-lg border transition ${
                       snapshot.isDraggingOver
                         ? "border-emerald-500 bg-slate-800/80"
                         : "border-slate-800/80"
@@ -157,7 +146,7 @@ export default function GridClientView({
             );
           })}
         </div>
-      </DragDropContext>
+      </DndWrapper>
     </div>
   );
 }
