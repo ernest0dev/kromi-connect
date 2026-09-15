@@ -32,6 +32,14 @@ export default function DashboardLayout({
           {/* Menú de Navegación con Rutas Sincronizadas */}
           <nav className="p-4 space-y-1 text-sm font-medium">
             <Link
+              href="/campaigns"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
+            >
+              <span>🎯</span>
+              <span>Campañas</span>
+            </Link>
+
+            <Link
               href="/grid"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
