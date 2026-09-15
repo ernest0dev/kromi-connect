@@ -70,6 +70,14 @@ export default function DashboardLayout({
               <span>📥</span>
               <span>Inbox Solicitudes</span>
             </Link>
+
+            <Link
+              href="/support"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
+            >
+              <span>🎧</span>
+              <span>Atención / Soporte</span>
+            </Link>
           </nav>
         </div>
 
