@@ -1,7 +1,7 @@
 'use server';
 
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
-import { createTicketFolder } from '@/lib/googleDrive';
+import { createPublicacionDriveFolder } from '@/lib/googleDrive';
 import { revalidatePath } from 'next/cache';
 
 export interface PublicacionPayload {
@@ -24,7 +24,7 @@ export async function crearPublicacion(payload: PublicacionPayload) {
     // 1. Crear la subcarpeta en Google Drive
     // Formato sugerido para el nombre de la carpeta: "TITULO_FORMATO"
     const folderName = `${payload.titulo.replace(/[^a-zA-Z0-9_-]/g, '_')}_${payload.formato}`;
-    const driveFolder = await createTicketFolder(folderName);
+    const driveFolderUrlUrl = await createPublicacionDriveFolder(folderName);
 
     // 2. Insertar el registro en la base de datos de Supabase
     const { data, error } = await supabaseAdmin
@@ -39,8 +39,8 @@ export async function crearPublicacion(payload: PublicacionPayload) {
           fecha_limite_brief: payload.fecha_limite_brief,
           copy_pieza: payload.copy_pieza || '',
           estatus: 'PENDIENTE_BRIEF',
-          drive_folder_id: driveFolder.folderId,
-          drive_folder_url: driveFolder.folderUrl,
+          drive_folder_id: driveFolderUrlUrl,
+          drive_folder_url: driveFolderUrlUrl || null,
         },
       ])
       .select()

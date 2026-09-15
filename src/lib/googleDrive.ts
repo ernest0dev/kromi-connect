@@ -1,46 +1,49 @@
 import { google } from 'googleapis';
 
-const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
-// Sanitización robusta para la Private Key en Vercel / Node.js
-// Remueve comillas al inicio/final y convierte \n literal a salto de línea real
-const privateKey = process.env.GOOGLE_PRIVATE_KEY
-  ? process.env.GOOGLE_PRIVATE_KEY
-      .replace(/^"(.*)"$/, '$1')
-      .replace(/\\n/g, '\n')
-  : undefined;
+export function getDriveClient() {
+  // Mantiene compatibilidad con la variable configurada en Vercel/.env.local
+  const clientEmail =
+    process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || process.env.GOOGLE_CLIENT_EMAIL;
 
-const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
+  // Sanitización de Private Key para comillas envolventes y saltos de línea
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY
+    ? process.env.GOOGLE_PRIVATE_KEY.replace(/^"(.*)"$/, '$1').replace(/\\n/g, '\n')
+    : undefined;
 
-if (!clientEmail || !privateKey) {
-  throw new Error('Las credenciales de Google Service Account no están definidas en las variables de entorno.');
+  if (!clientEmail || !privateKey) {
+    throw new Error(
+      'Credenciales de Google Service Account no están definidas en las variables de entorno.'
+    );
+  }
+
+  const auth = new google.auth.GoogleAuth({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+    scopes: SCOPES,
+  });
+
+  return google.drive({ version: 'v3', auth });
 }
 
 /**
- * Autenticación mediante Service Account usando GoogleAuth.
+ * Instancia del cliente exportada para pruebas de conexión
  */
-const auth = new google.auth.GoogleAuth({
-  credentials: {
-    client_email: clientEmail,
-    private_key: privateKey,
-  },
-  scopes: ['https://www.googleapis.com/auth/drive'],
-});
+export const driveClient = getDriveClient();
 
 /**
- * Instancia inicializada del cliente de Google Drive API (v3).
+ * Crea una carpeta para la publicación dentro de la carpeta raíz de Kromi Connect
+ * y le asigna permisos de lectura para visualización de assets.
  */
-export const driveClient = google.drive({ version: 'v3', auth });
-
-/**
- * Crea una subcarpeta en Google Drive para un ticket específico dentro de la carpeta raíz.
- * 
- * @param folderName Nombre de la subcarpeta (ejemplo: "TCK-001_Campana_Escolar")
- * @returns Un objeto con el ID y la URL pública de la carpeta creada
- */
-export async function createTicketFolder(folderName: string) {
+export async function createPublicacionDriveFolder(folderName: string): Promise<string | null> {
   try {
-    const response = await driveClient.files.create({
+    const drive = getDriveClient();
+    const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
+
+    const response = await drive.files.create({
       requestBody: {
         name: folderName,
         mimeType: 'application/vnd.google-apps.folder',
@@ -56,8 +59,8 @@ export async function createTicketFolder(folderName: string) {
       throw new Error('No se pudo obtener el ID de la carpeta creada.');
     }
 
-    // Otorgar permisos de lectura pública/enlace para permitir vistas previas embebidas en la web
-    await driveClient.permissions.create({
+    // Otorgar permisos de lectura pública para previsualización de assets en la UI
+    await drive.permissions.create({
       fileId: folderId,
       requestBody: {
         role: 'reader',
@@ -65,12 +68,14 @@ export async function createTicketFolder(folderName: string) {
       },
     });
 
-    return {
-      folderId,
-      folderUrl,
-    };
+    return folderUrl || null;
   } catch (error) {
-    console.error('Error al crear la carpeta en Google Drive API:', error);
-    throw error;
+    console.error('Error al crear carpeta en Google Drive:', error);
+    return null;
   }
 }
+
+/**
+ * Alias de compatibilidad para acciones previas
+ */
+export const createTicketFolder = createPublicacionDriveFolder;

@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { FormatoEnum } from '@/types';
-import { crearPublicacionConDriveAction } from '@/app/actions/createPostWithDrive';
+import { createPostWithDriveAction } from '@/app/actions/createPostWithDrive';
 
 interface Props {
   isOpen: boolean;
@@ -42,7 +42,7 @@ export default function NuevoTicketModal({ isOpen, onClose }: Props) {
       : [];
 
     startTransition(async () => {
-      const res = await crearPublicacionConDriveAction({
+      const res = await createPostWithDriveAction({
         titulo,
         formato,
         linea_contenido: lineaContenido,

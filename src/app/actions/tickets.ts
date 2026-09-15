@@ -1,3 +1,4 @@
+import { createPublicacionDriveFolder } from '@/lib/googleDrive';
 'use me' // Server Action
 import { createTicketFolder } from '@/lib/googleDrive';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
@@ -36,14 +37,14 @@ export async function createTicketAction(data: CreateTicketInput) {
 
     // 2. Crear subcarpeta correspondiente en Google Drive
     const folderName = `${newTicket.codigo_ticket}_${data.titulo.replace(/[^a-zA-Z0-9]/g, '_')}`;
-    const driveFolder = await createTicketFolder(folderName);
+    const driveFolderUrlUrl = await createPublicacionDriveFolder(folderName);
 
     // 3. Actualizar el ticket en Supabase con los datos de Google Drive
     const { data: updatedTicket, error: updateError } = await supabaseAdmin
       .from('publicaciones')
       .update({
-        drive_folder_id: driveFolder.folderId,
-        drive_folder_url: driveFolder.folderUrl,
+        drive_folder_id: driveFolderUrlUrl,
+        drive_folder_url: driveFolderUrlUrl || null,
       })
       .eq('id', newTicket.id)
       .select()
