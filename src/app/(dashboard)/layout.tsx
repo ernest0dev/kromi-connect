@@ -72,6 +72,14 @@ export default function DashboardLayout({
             </Link>
 
             <Link
+              href="/third-parties"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
+            >
+              <span>🏢</span>
+              <span>Clientes / Aliados</span>
+            </Link>
+
+            <Link
               href="/support"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
