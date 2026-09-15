@@ -29,7 +29,7 @@ export default function DashboardLayout({
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
           </div>
 
-          {/* Menú de Navegación */}
+          {/* Menú de Navegación con Rutas Sincronizadas */}
           <nav className="p-4 space-y-1 text-sm font-medium">
             <Link
               href="/grid"
@@ -57,7 +57,7 @@ export default function DashboardLayout({
 
             <Link
               href="/requests"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
               <span>📥</span>
               <span>Inbox Solicitudes</span>
