@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
-import NuevoTicketModal from './components/NewTicketModal';
+import React, { useState } from "react";
+import Link from "next/link";
+import NewTicketModal from "./components/NewTicketModal";
 
 export default function DashboardLayout({
   children,
@@ -32,7 +32,7 @@ export default function DashboardLayout({
           {/* Menú de Navegación */}
           <nav className="p-4 space-y-1 text-sm font-medium">
             <Link
-              href="/parrilla"
+              href="/grid"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
               <span>📅</span>
@@ -48,15 +48,15 @@ export default function DashboardLayout({
             </Link>
 
             <Link
-              href="/rodaje"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition"
+              href="/shooting"
+              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
             >
               <span>🎥</span>
               <span>Modo Rodaje</span>
             </Link>
 
             <Link
-              href="/solicitudes"
+              href="/requests"
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition"
             >
               <span>📥</span>
@@ -89,8 +89,12 @@ export default function DashboardLayout({
         <header className="h-14 bg-slate-900/80 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-sm sticky top-0 z-10">
           <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
             <span>Sedes:</span>
-            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">Prebo</span>
-            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">Mañongo</span>
+            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
+              Prebo
+            </span>
+            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
+              Mañongo
+            </span>
           </div>
 
           <div className="flex items-center gap-3">
@@ -113,7 +117,7 @@ export default function DashboardLayout({
         <main className="flex-1 p-6 overflow-x-auto">{children}</main>
 
         {/* Modal Global de Creación de Tickets */}
-        <NuevoTicketModal
+        <NewTicketModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
         />
