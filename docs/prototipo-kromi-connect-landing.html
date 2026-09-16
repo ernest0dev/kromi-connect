@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kromi Connect — Caso de estudio | ernestodev</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --azul: #0066D2;
+    --azul-osc: #002F80;
+    --naranja: #F28D19;
+    --amarillo: #F1C33E;
+    --celeste: #0FBDFF;
+    --morado: #8000A8;
+    --verde: #00AF65;
+    --lima: #C2D354;
+    --tinta: #10233F;
+    --hueso: #FAF8F4;
+    --papel: #FFFFFF;
+    --gris: #6B7482;
+    --borde: #E7E4DC;
+    --display: 'Baloo 2', system-ui, sans-serif;
+    --texto: 'Inter', system-ui, sans-serif;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    font-family: var(--texto);
+    color: var(--tinta);
+    background: var(--hueso);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img,svg{display:block; max-width:100%;}
+
+  .wrap{
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  h1,h2,h3{
+    font-family: var(--display);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+  }
+
+  a{color:inherit;}
+
+  /* ---------- NAV ---------- */
+  .nav{
+    position: sticky; top:0; z-index: 40;
+    background: rgba(250,248,244,0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--borde);
+  }
+  .nav .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    height: 72px;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-name{font-family:var(--display); font-weight:700; font-size:19px; color:var(--azul-osc);}
+  .brand-name span{color:var(--naranja);}
+  .nav-links{display:flex; gap:32px; font-size:15px; font-weight:500; color:var(--gris);}
+  .nav-links a{text-decoration:none; transition: color .15s;}
+  .nav-links a:hover{color:var(--azul);}
+  .nav-cta{
+    background: var(--tinta); color:#fff; text-decoration:none;
+    padding: 10px 20px; border-radius: 999px; font-size:14px; font-weight:600;
+    white-space:nowrap;
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background: var(--azul);
+    color: #fff;
+    padding: 96px 0 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .hero .wrap{
+    display:grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 56px;
+    align-items:center;
+    padding-bottom: 72px;
+  }
+  .eyebrow-row{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom: 22px;
+  }
+  .pill{
+    display:inline-flex; align-items:center; gap:8px;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.28);
+    color:#fff;
+    font-size: 13px; font-weight: 600;
+    padding: 7px 14px; border-radius: 999px;
+  }
+  .pill-dot{width:7px; height:7px; border-radius:50%; background: var(--lima);}
+
+  .hero h1{
+    font-size: 46px;
+    color: #fff;
+    margin-bottom: 20px;
+  }
+  .hero h1 em{
+    font-style:normal;
+    color: var(--amarillo);
+  }
+  .hero p.lead{
+    font-size: 17px;
+    color: rgba(255,255,255,0.86);
+    max-width: 46ch;
+    margin-bottom: 32px;
+  }
+  .hero-actions{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    padding: 13px 24px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 15px;
+    text-decoration:none;
+    border: 1px solid transparent;
+    cursor:pointer;
+  }
+  .btn-primary{background: var(--naranja); color: #2E1600;}
+  .btn-ghost{background: transparent; color:#fff; border-color: rgba(255,255,255,0.4);}
+
+  .hero-stats{
+    display:flex; gap: 28px; margin-top: 44px;
+    padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.2);
+  }
+  .hero-stat b{display:block; font-family:var(--display); font-size:24px; color:var(--amarillo);}
+  .hero-stat span{font-size:13px; color: rgba(255,255,255,0.75);}
+
+  /* Hero visual: app card mock */
+  .hero-visual{position:relative;}
+  .device{
+    background: var(--azul-osc);
+    border-radius: 22px;
+    padding: 18px;
+    box-shadow: 0 30px 60px -20px rgba(0,20,60,0.55);
+  }
+  .device-bar{display:flex; gap:6px; margin-bottom:14px; padding: 0 4px;}
+  .device-bar span{width:8px; height:8px; border-radius:50%; background: rgba(255,255,255,0.25);}
+  .card-stack{display:flex; flex-direction:column; gap:10px;}
+  .mini-card{
+    border-radius: 14px; padding: 14px 16px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .mini-card .l{display:flex; flex-direction:column; gap:3px;}
+  .mini-card .t{font-family:var(--display); font-weight:600; font-size:14px;}
+  .mini-card .s{font-size:12px; opacity:0.8;}
+  .badge-status{
+    font-size:11px; font-weight:700; padding:4px 9px; border-radius:999px;
+    white-space:nowrap;
+  }
+  .mc-naranja{background:var(--naranja); color:#2E1600;}
+  .mc-morado{background:var(--morado); color:#F3D9FF;}
+  .mc-blanco{background:#fff; color:var(--azul-osc);}
+  .mc-celeste{background:var(--celeste); color:#00303F;}
+  .bs-light{background:rgba(255,255,255,0.35); color:#2E1600;}
+  .bs-dark{background:rgba(0,0,0,0.18);}
+
+  /* ---------- SECTION shared ---------- */
+  section{padding: 88px 0;}
+  .kicker{
+    font-size: 13px; font-weight: 700; color: var(--naranja);
+    margin-bottom: 12px;
+  }
+  .sec-head{max-width: 640px; margin-bottom: 48px;}
+  .sec-head h2{font-size: 32px; color: var(--azul-osc); margin-bottom: 14px;}
+  .sec-head p{font-size: 16px; color: var(--gris);}
+
+  /* ---------- PROBLEM / BEFORE-AFTER ---------- */
+  .problema{background: var(--papel); border-bottom: 1px solid var(--borde);}
+  .ba-grid{
+    display:grid; grid-template-columns: 1fr 1fr; gap: 24px;
+  }
+  .ba-card{
+    border-radius: 18px;
+    padding: 32px;
+  }
+  .ba-antes{background: #F2EFE8; border: 1px dashed #C9C4B6;}
+  .ba-despues{background: var(--azul); color:#fff;}
+  .ba-label{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family: var(--display); font-weight:700; font-size:15px;
+    margin-bottom: 20px;
+  }
+  .ba-antes .ba-label{color: #8A6A2C;}
+  .ba-despues .ba-label{color: var(--amarillo);}
+  .ba-list{display:flex; flex-direction:column; gap:14px;}
+  .ba-item{display:flex; gap:12px; align-items:flex-start; font-size:15px;}
+  .ba-antes .ba-item{color:#5B564A;}
+  .ba-despues .ba-item{color:rgba(255,255,255,0.92);}
+  .ba-ico{
+    flex:none; width:22px; height:22px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; margin-top:1px;
+  }
+  .ba-antes .ba-ico{background:#E3DDC9; color:#8A6A2C;}
+  .ba-despues .ba-ico{background:rgba(241,195,62,0.22); color:var(--amarillo);}
+
+  /* ---------- ARQUITECTURA / FEATURES ---------- */
+  .arquitectura{background: var(--hueso);}
+  .feat-grid{
+    display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  }
+  .feat-card{
+    background: var(--papel);
+    border: 1px solid var(--borde);
+    border-radius: 18px;
+    padding: 28px 26px;
+  }
+  .feat-ico{
+    width: 44px; height:44px; border-radius: 12px;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--display); font-weight:800; font-size:18px;
+    margin-bottom: 18px; color:#fff;
+  }
+  .fi-azul{background:var(--azul);}
+  .fi-naranja{background:var(--naranja); color:#2E1600;}
+  .fi-morado{background:var(--morado);}
+  .fi-verde{background:var(--verde);}
+  .fi-celeste{background:var(--celeste); color:#00303F;}
+  .fi-oscuro{background:var(--azul-osc);}
+  .feat-card h3{font-size:17px; color: var(--azul-osc); margin-bottom:8px;}
+  .feat-card p{font-size:14.5px; color: var(--gris);}
+
+  /* ---------- FLUJO SLA ---------- */
+  .flujo{background: var(--azul-osc); color:#fff;}
+  .flujo .sec-head h2{color:#fff;}
+  .flujo .sec-head p{color: rgba(255,255,255,0.72);}
+  .flujo .kicker{color: var(--lima);}
+  .sla-track{
+    display:grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+    margin-bottom: 32px;
+  }
+  .sla-step{
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.14);
+    border-radius: 14px;
+    padding: 20px 16px;
+    position:relative;
+  }
+  .sla-step .n{
+    font-family:var(--display); font-weight:800; font-size:13px;
+    color: var(--amarillo); margin-bottom:10px; display:block;
+  }
+  .sla-step .t{font-family:var(--display); font-weight:600; font-size:15px; margin-bottom:6px;}
+  .sla-step .d{font-size:12.5px; color:rgba(255,255,255,0.68);}
+  .sla-note{
+    display:flex; gap:14px; align-items:flex-start;
+    background: rgba(242,141,25,0.14);
+    border: 1px solid rgba(242,141,25,0.35);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .sla-note .tag{
+    flex:none; background:var(--naranja); color:#2E1600;
+    font-family:var(--display); font-weight:800; font-size:13px;
+    padding: 6px 12px; border-radius: 999px;
+  }
+  .sla-note p{font-size:14.5px; color:rgba(255,255,255,0.85);}
+  .sla-note strong{color:#fff;}
+
+  /* ---------- STACK ---------- */
+  .stack{background: var(--papel); border-top:1px solid var(--borde); border-bottom:1px solid var(--borde);}
+  .stack-row{
+    display:flex; flex-wrap:wrap; gap:12px;
+  }
+  .chip{
+    display:inline-flex; align-items:center; gap:8px;
+    background: var(--hueso);
+    border: 1px solid var(--borde);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 14px; font-weight: 600;
+    color: var(--azul-osc);
+  }
+  .chip .dot{width:8px; height:8px; border-radius:50%;}
+
+  /* ---------- CTA FINAL ---------- */
+  .cta-final{background: var(--naranja);}
+  .cta-final .wrap{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 32px; flex-wrap:wrap;
+  }
+  .cta-final h2{font-size:30px; color:#2E1600; max-width: 520px;}
+  .cta-final p{color:#5A3300; margin-top:10px; font-size:15px;}
+  .cta-final .btn-primary{background:#2E1600; color:#fff;}
+
+  /* ---------- FOOTER ---------- */
+  footer{padding: 40px 0; background: var(--tinta);}
+  footer .wrap{
+    display:flex; justify-content:space-between; align-items:center;
+    color: rgba(255,255,255,0.6); font-size:13px; flex-wrap:wrap; gap:12px;
+  }
+  footer a{color:rgba(255,255,255,0.85); text-decoration:none;}
+
+  /* ---------- RESPONSIVE ---------- */
+  @media (max-width: 860px){
+    .nav-links{display:none;}
+    .hero .wrap{grid-template-columns: 1fr; padding-bottom:48px;}
+    .hero{padding-top:64px;}
+    .hero h1{font-size:34px;}
+    .hero-stats{flex-wrap:wrap;}
+    .ba-grid{grid-template-columns: 1fr;}
+    .feat-grid{grid-template-columns: 1fr 1fr;}
+    .sla-track{grid-template-columns: 1fr 1fr;}
+    section{padding:64px 0;}
+    .cta-final .wrap{flex-direction:column; align-items:flex-start;}
+  }
+  @media (max-width: 520px){
+    .feat-grid{grid-template-columns: 1fr;}
+    .sla-track{grid-template-columns: 1fr;}
+    .wrap{padding:0 20px;}
+    .hero h1{font-size:28px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="wrap">
+    <div class="brand">
+      <svg width="30" height="30" viewBox="0 0 100 100" fill="none">
+        <rect width="100" height="100" rx="22" fill="#0066D2"/>
+        <circle cx="38" cy="28" r="11" fill="#fff"/>
+        <circle cx="50" cy="24" r="8" fill="#fff"/>
+        <rect x="32" y="38" width="12" height="34" fill="#F28D19"/>
+        <path d="M44 38 L62 38 L48 55 L64 55 L44 72 L48 58 L34 58 Z" fill="#F28D19"/>
+      </svg>
+      <span class="brand-name">kromi<span>connect</span></span>
+    </div>
+    <div class="nav-links">
+      <a href="#problema">El problema</a>
+      <a href="#solucion">La solución</a>
+      <a href="#sla">Automatización</a>
+      <a href="#stack">Stack</a>
+    </div>
+    <a class="nav-cta" href="#contacto">Hablemos</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow-row">
+        <span class="pill"><span class="pill-dot" aria-hidden="true"></span>Caso de estudio · ernestodev</span>
+      </div>
+      <h1>El CRM interno que ordenó la producción de contenido de <em>Kromi Market</em></h1>
+      <p class="lead">Kromi Market es una cadena de supermercados venezolana. Su equipo de redes sociales operaba a punta de hojas de cálculo dispersas, sin trazabilidad de plazos ni un lugar único para coordinar brief, rodaje y diseño. Diseñé y construí Kromi Connect para resolver justamente eso.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="#solucion">Ver cómo funciona</a>
+        <a class="btn btn-ghost" href="#stack">Ver arquitectura técnica</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><b>8</b><span>tablas relacionales</span></div>
+        <div class="hero-stat"><b>3+2</b><span>días de regla SLA automatizada</span></div>
+        <div class="hero-stat"><b>5</b><span>fases de roadmap</span></div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="device">
+        <div class="device-bar"><span></span><span></span><span></span></div>
+        <div class="card-stack">
+          <div class="mini-card mc-naranja">
+            <div class="l"><span class="t">Festival de Carnes Premium</span><span class="s">Vence brief en 2 días</span></div>
+            <span class="badge-status bs-light">En diseño</span>
+          </div>
+          <div class="mini-card mc-blanco">
+            <div class="l"><span class="t">Aniversario Mañongo — Reel</span><span class="s">Rodaje: sede Prebo</span></div>
+            <span class="badge-status bs-dark">Programado</span>
+          </div>
+          <div class="mini-card mc-morado">
+            <div class="l"><span class="t">Solicitud de Compras #114</span><span class="s">Convertir a ticket</span></div>
+            <span class="badge-status bs-light">Inbox</span>
+          </div>
+          <div class="mini-card mc-celeste">
+            <div class="l"><span class="t">Carrusel oferta fin de semana</span><span class="s">Publicado en 3 canales</span></div>
+            <span class="badge-status bs-dark">Publicado</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="problema" id="problema">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">El punto de partida</p>
+      <h2>De hojas de cálculo dispersas a un flujo con reglas propias</h2>
+      <p>El equipo de Redes Sociales cumplía una función que cruza estrategia, producción y coordinación con otras áreas de la empresa. Ese cruce era exactamente lo que no tenía un sistema propio.</p>
+    </div>
+    <div class="ba-grid">
+      <div class="ba-card ba-antes">
+        <span class="ba-label">Antes</span>
+        <div class="ba-list">
+          <div class="ba-item"><span class="ba-ico">–</span>Planificación de grilla y brief en hojas de cálculo separadas, sin vínculo entre sí.</div>
+          <div class="ba-item"><span class="ba-ico">–</span>Sin fecha límite calculada: cada retraso en diseño se descubría manualmente.</div>
+          <div class="ba-item"><span class="ba-ico">–</span>Solicitudes de Compras, HR y Proveedores llegaban por canales sueltos, sin ticket ni seguimiento.</div>
+          <div class="ba-item"><span class="ba-ico">–</span>Reprogramar una publicación significaba recalcular todo a mano.</div>
+        </div>
+      </div>
+      <div class="ba-card ba-despues">
+        <span class="ba-label">Con Kromi Connect</span>
+        <div class="ba-list">
+          <div class="ba-item"><span class="ba-ico">✓</span>Una sola entidad central (<em>publicaciones</em>) conecta brief, rodaje, diseño y aprobación.</div>
+          <div class="ba-item"><span class="ba-ico">✓</span>Fechas límite de brief y diseño calculadas automáticamente con la Regla SLA 3+2.</div>
+          <div class="ba-item"><span class="ba-ico">✓</span>Inbox de solicitudes de terceros con conversión a ticket en un clic.</div>
+          <div class="ba-item"><span class="ba-ico">✓</span>Quick Reschedule: mover la fecha de publicación recalcula todo hacia atrás, en cascada.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="arquitectura" id="solucion">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">La solución</p>
+      <h2>Un sistema pensado para cómo trabaja el equipo, no al revés</h2>
+      <p>Cada vista responde a un momento real del flujo de trabajo: planificar, producir, coordinar con otras áreas y medir resultados.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="feat-ico fi-azul">P</div>
+        <h3>Parrilla con tres vistas</h3>
+        <p>Calendario macro, Kanban por estatus y tabla tipo spreadsheet, todas sobre el mismo dataset — sin duplicar información.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-naranja">B</div>
+        <h3>Brief a diseño estructurado</h3>
+        <p>Hook, cuerpo, CTA y hashtags versionados, con historial de revisiones y assets vinculados desde Google Drive.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-verde">R</div>
+        <h3>Rodaje en piso de tienda</h3>
+        <p>Vista PWA optimizada para móvil, con checklist de tomas por sede (Prebo, Mañongo) y área física específica.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-morado">S</div>
+        <h3>Inbox de solicitudes</h3>
+        <p>Compras, HR y Proveedores entran por un único canal. Cada solicitud se convierte en ticket de contenido sin retipear nada.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-celeste">I</div>
+        <h3>Inventario de premios</h3>
+        <p>Control de stock físico por sede para sorteos y concursos, con trazabilidad opcional hacia el proveedor de origen.</p>
+      </div>
+      <div class="feat-card">
+        <div class="feat-ico fi-oscuro">A</div>
+        <h3>Reportes y escucha social</h3>
+        <p>Log semanal de quejas y sugerencias, más informes post-mortem por campaña con alcance, interacciones y presupuesto.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="flujo" id="sla">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Automatización</p>
+      <h2>La Regla SLA 3+2, calculada sola</h2>
+      <p>El punto de partida siempre es la fecha de publicación. A partir de ahí, el sistema calcula hacia atrás cuándo debe estar listo cada entregable — y lo recalcula si algo cambia.</p>
+    </div>
+    <div class="sla-track">
+      <div class="sla-step">
+        <span class="n">Día 0</span>
+        <div class="t">Publicación</div>
+        <div class="d">Fecha fijada por la estrategia de contenido.</div>
+      </div>
+      <div class="sla-step">
+        <span class="n">–3 días</span>
+        <div class="t">Límite de rodaje</div>
+        <div class="d">Ventana de captura en piso de tienda.</div>
+      </div>
+      <div class="sla-step">
+        <span class="n">–5 días</span>
+        <div class="t">Límite de brief</div>
+        <div class="d">3 días de rodaje + 2 de diseño, contados hacia atrás.</div>
+      </div>
+      <div class="sla-step">
+        <span class="n">+2 días</span>
+        <div class="t">Entrega estimada de diseño</div>
+        <div class="d">Calculada desde la fecha de solicitud a diseño.</div>
+      </div>
+      <div class="sla-step">
+        <span class="n">Trazado</span>
+        <div class="t">Cumplimiento SLA</div>
+        <div class="d">Fecha real vs. estimada, para medir al equipo de diseño.</div>
+      </div>
+    </div>
+    <div class="sla-note">
+      <span class="tag">Quick Reschedule</span>
+      <p>Si la fecha de publicación cambia, una sola acción del servidor recalcula en cascada el límite de brief y la entrega estimada de diseño — <strong>nadie vuelve a hacer esa cuenta a mano.</strong></p>
+    </div>
+  </div>
+</section>
+
+<section class="stack" id="stack">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="kicker">Debajo del capó</p>
+      <h2>Arquitectura pensada para escalar sin refactor</h2>
+      <p>La Fase 1 opera con un solo perfil (Estrategia + Producción), pero el modelo de datos y las políticas de acceso ya están preparados para sumar los paneles de Diseño Gráfico y Gerencia de Mercadeo sin rehacer el esquema.</p>
+    </div>
+    <div class="stack-row">
+      <span class="chip"><span class="dot" style="background:#0066D2"></span>Next.js App Router</span>
+      <span class="chip"><span class="dot" style="background:#00AF65"></span>Supabase / PostgreSQL</span>
+      <span class="chip"><span class="dot" style="background:#F28D19"></span>Server Actions</span>
+      <span class="chip"><span class="dot" style="background:#8000A8"></span>Row Level Security</span>
+      <span class="chip"><span class="dot" style="background:#0FBDFF"></span>Google Drive API v3</span>
+      <span class="chip"><span class="dot" style="background:#F1C33E"></span>Jest + Playwright</span>
+      <span class="chip"><span class="dot" style="background:#002F80"></span>Vercel CI/CD</span>
+    </div>
+  </div>
+</section>
+
+<section class="cta-final" id="contacto">
+  <div class="wrap">
+    <div>
+      <h2>¿Quieres ver el resto del proceso o hablar de un proyecto similar?</h2>
+      <p>Puedo compartir el SRS completo, el esquema de base de datos o caminar contigo por las decisiones de arquitectura.</p>
+    </div>
+    <a class="btn btn-primary" href="#">Escríbeme</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Kromi Connect — caso de estudio de producto interno, documentado por <a href="#">ernestodev</a>.</span>
+    <span>Documento de portafolio · no es un producto público de Kromi Market</span>
+  </div>
+</footer>
+
+</body>
+</html>

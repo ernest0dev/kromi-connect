@@ -1,15 +1,47 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@layer theme {
+  :root {
+    --font-baloo: "Baloo 2", system-ui, sans-serif;
+    --font-inter: "Inter", system-ui, sans-serif;
+
+    /* Paleta Kromi */
+    --azul: #0066d2;
+    --azul-osc: #002f80;
+    --naranja: #f28d19;
+    --amarillo: #f1c33e;
+    --celeste: #0fbdff;
+    --morado: #8000a8;
+    --verde: #00af65;
+    --lima: #c2d354;
+    --tinta: #10233f;
+    --hueso: #faf8f4;
+    --papel: #ffffff;
+    --gris: #6b7482;
+    --borde: #e7e4dc;
+
+    --background: #ffffff;
+    --foreground: #171717;
+  }
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -17,10 +49,4 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
