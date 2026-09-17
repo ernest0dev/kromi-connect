@@ -1,0 +1,195 @@
+=== Pagina 1 ===
+IMAGEN DE MARCA
+KROMI MARKET
+
+=== Pagina 2 ===
+Logotipo
+con tagline
+Logotipo Símbolo
+
+=== Pagina 3 ===
+Logotipo con tagline
+Versión Positiva
+Logotipo con tagline
+Versión Negativa Isotipo
+Versión Negativa
+Isotipo
+Versión Positiva
+Mantener el gorro 
+en blanco en fondos claros 
+con ayuda del contorno.
+
+=== Pagina 4 ===
+PANTONE 123 CPANTONE Reﬂex Blue C
+#:F1C33E
+C: 0
+M: 24
+Y: 92
+K: 0
+R: 241
+G: 195
+B: 62
+PANTONE 144 C
+#:F28D19
+C: 0
+M: 54
+Y: 100
+K: 0
+R: 242
+G: 141
+B: 25
+#:002F80
+C: 100
+M: 89
+Y: 20
+K: 11
+R: 0
+G: 47
+B: 128
+PANTONE 513 C
+#:8000A8
+C: 53
+M: 95
+Y: 0
+K: 0
+R: 128
+G: 0
+B: 168
+PANTONE 7481 C
+#:00AF65
+C: 100
+M: 0
+Y: 88
+K: 0
+R: 0
+G: 175
+B: 101
+PANTONE 381 C
+#:C2D354
+C: 31
+M: 1
+Y: 91
+K: 0
+R: 194
+G: 211
+B: 84
+PANTONE 3005 C
+PALETA DE COLORES PARA RECURSOS GRÁFICOS
+#:0066D2
+PRESENCIA
+PRESENCIA PRESENCIA
+PRESENCIA
+C: 92
+M: 59
+Y: 0
+K: 0
+R: 0
+G: 102
+B: 210
+RGB Y HEX (#): COLORES DIGITALES
+CMYK Y PANTONE: COLORES FÍSICOS
+25%30%
+20%
+PANTONE 298 C
+#:0FBDFF
+C: 87
+M: 0
+Y: 0
+K: 0
+R: 15
+G: 189
+B: 255
+5% 5% 5% 5%5% PRESENCIA PRESENCIA
+
+=== Pagina 5 ===
+Recursos gráﬁcos
+de uso comercial o de
+uso interno.
+Planteando conbinacines
+de colores especíﬁcas a partir 
+de la paleta principal.
+
+=== Pagina 6 ===
+Se plantea el azul como color principal
+rodeado del resto de colores de la paleta en 
+menor porcentaje.
+Selección de familia
+tipográﬁca
+Black Semi Bold Medium
+Goldplay
+abcdefghijklmnñ
+opqrstuvwxyz
+0123456789
+abcdefghijklmnñ
+opqrstuvwxyz
+0123456789
+abcdefghijklmnñ
+opqrstuvwxyz
+0123456789
+
+=== Pagina 7 ===
+Tu compra está
+en proceso
+Hoy cerramos
+a las 7:00 pm
+Sede mañongo
+00:03:45
+
+=== Pagina 8 ===
+
+
+=== Pagina 9 ===
+Dateun gusto
+Visítanos y disfruta de
+de un excelente servicio
+Compra en casa
+nosotros te lo
+llevamos
+Nosotros
+nos encargamos
+del resto
+Compraencasa
+DELIVERY
+am
+
+
+=== Pagina 10 ===
+Propuesta iconográﬁca
+básica para medios digitales e impresos
+con motivo informativo o corporativo.
+
+
+=== Pagina 11 ===
+
+
+=== Pagina 12 ===
+
+
+=== Pagina 13 ===
+IMAGEN DE MARCA
+KROMI MARKET
+
+=== Pagina 14 ===
+
+
+=== Pagina 15 ===
+TRAMA
+CARNICERÍA
+
+=== Pagina 16 ===
+TRAMA
+PESCADERÍA
+
+=== Pagina 17 ===
+TRAMA
+FRUVER
+
+=== Pagina 18 ===
+TRAMA
+CHARCUTERÍA
+
+=== Pagina 19 ===
+TRAMA
+REFRIGERADOS
+Y CONGELADOS
+

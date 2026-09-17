@@ -12,36 +12,25 @@ const stack = [
 
 export function Stack() {
   return (
-    <section
-      className="bg-kromi-papel border-t border-kromi-borde py-24"
-      id="stack"
-    >
-      <div className="max-w-7xl mx-auto px-8">
-        <div className="max-w-2xl mb-12">
-          <p className="text-xs font-bold text-kromi-naranja mb-3">
-            Debajo del capó
-          </p>
-          <h2 className="font-display font-bold text-4xl text-kromi-azul-osc mb-3.5">
-            Arquitectura pensada para escalar sin refactor
-          </h2>
-          <p className="text-base text-kromi-gris">
+    <section className="stack" id="stack">
+      <div className="wrap">
+        <div className="sec-head">
+          <p className="kicker">Debajo del capó</p>
+          <h2>Arquitectura pensada para escalar sin refactor</h2>
+          <p>
             La Fase 1 opera con un solo perfil (Estrategia + Producción), pero
             el modelo de datos y las políticas de acceso ya están preparados
             para sumar los paneles de Diseño Gráfico y Gerencia de Mercadeo sin
             rehacer el esquema.
           </p>
         </div>
-
-        <div className="flex flex-wrap gap-3">
+        <div className="stack-row">
           {stack.map((tech) => (
-            <span
-              key={tech.name}
-              className="inline-flex items-center gap-2 bg-kromi-hueso border border-kromi-borde px-4 py-2.5 rounded-full text-sm font-semibold text-kromi-azul-osc"
-            >
+            <span key={tech.name} className="chip">
               <span
-                className="w-2 h-2 rounded-full"
+                className="dot"
                 style={{ backgroundColor: tech.color }}
-              />
+              ></span>
               {tech.name}
             </span>
           ))}

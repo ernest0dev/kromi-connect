@@ -26,8 +26,10 @@ const config: Config = {
         },
       },
       fontFamily: {
-        display: ["var(--font-baloo)", "system-ui", "sans-serif"],
-        text: ["var(--font-inter)", "system-ui", "sans-serif"],
+        // Goldplay (Manual Corporativo) cargada localmente vía next/font/local
+        display: ["var(--font-goldplay)", "system-ui", "sans-serif"],
+        // Inter cargado vía next/font/google
+        text: ["var(--font-text)", "system-ui", "sans-serif"],
       },
       fontSize: {
         "32px": "32px",
