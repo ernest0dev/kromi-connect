@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { crearPublicacion } from '@/app/actions/posts';
+import { useState } from "react";
+import { createPostWithDriveAction } from "@/app/actions/publicaciones/create";
 
 export default function TestActionPage() {
   const [loading, setLoading] = useState(false);
@@ -13,50 +13,55 @@ export default function TestActionPage() {
 
     const testPayload = {
       titulo: `Publicacion_Test_${Date.now()}`,
-      formato: 'Reel 9:16',
-      linea_contenido: 'Promocional',
-      fecha_publicacion: '2026-10-01',
-      fecha_limite_brief: '2026-09-25',
-      copy_pieza: 'Este es un texto de prueba para el ticket de contenido.',
+      formato: "REEL" as const,
+      linea_contenido: "Promocional",
+      fecha_publicacion: "2026-10-01",
+      hook_texto: "Hook de prueba",
+      body_texto: "Este es un texto de prueba para el ticket de contenido.",
+      cta_texto: "Compra ahora",
+      hashtags: ["#prueba", "#kromiconnect"],
     };
 
-    const response = await crearPublicacion(testPayload);
+    const response = await createPostWithDriveAction(testPayload);
     setResult(response);
     setLoading(false);
   };
 
   return (
-    <main style={{ padding: '2rem', fontFamily: 'sans-serif', maxWidth: '600px' }}>
+    <main
+      style={{ padding: "2rem", fontFamily: "sans-serif", maxWidth: "600px" }}
+    >
       <h1>Prueba de Server Action: Crear Publicación</h1>
       <p>
-        Este test intentará crear una fila en Supabase y generar su carpeta en Google Drive.
+        Este test intentará crear una fila en Supabase y generar su carpeta en
+        Google Drive.
       </p>
 
       <button
         onClick={handleTestSubmit}
         disabled={loading}
         style={{
-          padding: '0.75rem 1.5rem',
-          backgroundColor: loading ? '#ccc' : '#0070f3',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          fontSize: '1rem',
+          padding: "0.75rem 1.5rem",
+          backgroundColor: loading ? "#ccc" : "#0070f3",
+          color: "#fff",
+          border: "none",
+          borderRadius: "5px",
+          cursor: loading ? "not-allowed" : "pointer",
+          fontSize: "1rem",
         }}
       >
-        {loading ? 'Ejecutando prueba...' : 'Ejecutar Prueba de Inserción'}
+        {loading ? "Ejecutando prueba..." : "Ejecutar Prueba de Inserción"}
       </button>
 
       {result && (
-        <div style={{ marginTop: '2rem' }}>
+        <div style={{ marginTop: "2rem" }}>
           <h3>Resultado de la ejecución:</h3>
           <pre
             style={{
-              padding: '1rem',
-              backgroundColor: '#f4f4f4',
-              borderRadius: '5px',
-              overflowX: 'auto',
+              padding: "1rem",
+              backgroundColor: "#f4f4f4",
+              borderRadius: "5px",
+              overflowX: "auto",
             }}
           >
             {JSON.stringify(result, null, 2)}
