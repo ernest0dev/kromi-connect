@@ -26,6 +26,7 @@ export async function processRequestAction(
     titulo: string;
     formato: "POST" | "REEL" | "STORY" | "CARRUSEL";
     fecha_publicacion: string;
+    campana_id?: string;
   },
 ) {
   try {
@@ -34,11 +35,11 @@ export async function processRequestAction(
     if (!aprobar) {
       const { error } = await supabase
         .from("solicitudes_terceros")
-        .update({ estatus: "RECHAZADO" })
+        .update({ estatus_solicitud: "RECHAZADO" })
         .eq("id", solicitudId);
 
       if (error) return { success: false, error: error.message };
-      revalidatePath("/requests");
+      revalidatePath("/social-media/requests");
       return { success: true };
     }
 
@@ -54,30 +55,38 @@ export async function processRequestAction(
       calcularMatrizSLA(datosPublicacion.fecha_publicacion);
 
     // 1. Crear el ticket en la tabla de publicaciones
-    const { error: postError } = await supabase.from("publicaciones").insert([
-      {
-        titulo: datosPublicacion.titulo,
-        formato: datosPublicacion.formato,
-        fecha_publicacion: datosPublicacion.fecha_publicacion,
-        fecha_limite_brief,
-        fecha_entrega_diseno_estimada,
-        estatus: "PENDIENTE_BRIEF",
-      },
-    ]);
+    const { data: nuevaPublicacion, error: postError } = await supabase
+      .from("publicaciones")
+      .insert([
+        {
+          titulo: datosPublicacion.titulo,
+          formato: datosPublicacion.formato,
+          fecha_publicacion: datosPublicacion.fecha_publicacion,
+          fecha_limite_brief,
+          fecha_entrega_diseno_estimada,
+          campana_id: datosPublicacion.campana_id || null,
+          estatus: "PENDIENTE_BRIEF",
+        },
+      ])
+      .select()
+      .single();
 
     if (postError) return { success: false, error: postError.message };
 
-    // 2. Marcar la solicitud como aprobada
+    // 2. Marcar la solicitud como convertida y vincularla al ticket creado
     await supabase
       .from("solicitudes_terceros")
-      .update({ estatus: "APROBADO" })
+      .update({
+        estatus_solicitud: "CONVERTIDA",
+        publicacion_id: nuevaPublicacion.id,
+      })
       .eq("id", solicitudId);
 
-    revalidatePath("/requests");
-    revalidatePath("/kanban");
-    revalidatePath("/grid");
+    revalidatePath("/social-media/requests");
+    revalidatePath("/social-media/kanban");
+    revalidatePath("/social-media/grid");
 
-    return { success: true };
+    return { success: true, data: nuevaPublicacion };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
