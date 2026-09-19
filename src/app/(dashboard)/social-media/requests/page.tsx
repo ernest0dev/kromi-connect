@@ -1,6 +1,6 @@
 import React from "react";
 import RequestsClientView from "./RequestsClientView";
-import { getRequestsAction } from "@/app/actions/requests";
+import { getRequestsAction } from "@/app/actions/solicitudes/convert";
 
 export const revalidate = 0;
 

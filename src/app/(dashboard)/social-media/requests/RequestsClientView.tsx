@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { processRequestAction } from "@/app/actions/requests";
+import { processRequestAction } from "@/app/actions/solicitudes/convert";
 
 interface Solicitud {
   id: string;

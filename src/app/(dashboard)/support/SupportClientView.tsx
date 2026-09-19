@@ -5,7 +5,7 @@ import {
   TicketSoporte,
   createSupportTicketAction,
   updateSupportTicketStatusAction,
-} from "@/app/actions/customerSupport";
+} from "@/app/actions/support/customerSupport";
 
 interface Props {
   ticketsIniciales: TicketSoporte[];

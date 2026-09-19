@@ -1,6 +1,6 @@
 import React from "react";
 import ThirdPartiesClientView from "./ThirdPartiesClientView";
-import { getThirdPartiesAction } from "@/app/actions/thirdParties";
+import { getThirdPartiesAction } from "@/app/actions/third-parties/thirdParties";
 
 export const revalidate = 0;
 

@@ -1,6 +1,6 @@
 import React from "react";
 import CampaignsClientView from "./CampaignsClientView";
-import { getCampaignsAction } from "@/app/actions/campaigns";
+import { getCampaignsAction } from "@/app/actions/campanas/campaigns";
 
 export const revalidate = 0;
 

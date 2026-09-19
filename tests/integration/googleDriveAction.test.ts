@@ -1,4 +1,4 @@
-import { createPostWithDriveAction } from '@/app/actions/createPostWithDrive';
+import { createPostWithDriveAction } from '@/app/actions/publicaciones/create';
 
 describe('Integración con Google Drive API', () => {
   test('debe crear una carpeta en Drive y guardar la URL en la publicación', async () => {

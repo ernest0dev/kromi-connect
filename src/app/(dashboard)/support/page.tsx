@@ -1,6 +1,6 @@
 import React from "react";
 import SupportClientView from "./SupportClientView";
-import { getSupportTicketsAction } from "@/app/actions/customerSupport";
+import { getSupportTicketsAction } from "@/app/actions/support/customerSupport";
 
 export const revalidate = 0;
 

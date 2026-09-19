@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Campana, createCampaignAction } from "@/app/actions/campaigns";
+import { Campana, createCampaignAction } from "@/app/actions/campanas/campaigns";
 
 interface Props {
   campanasIniciales: Campana[];

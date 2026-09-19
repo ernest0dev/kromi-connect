@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useTransition } from "react";
-import { Tercero, createThirdPartyAction } from "@/app/actions/thirdParties";
+import { Tercero, createThirdPartyAction } from "@/app/actions/third-parties/thirdParties";
 
 interface Props {
   tercerosIniciales: Tercero[];

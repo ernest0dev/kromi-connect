@@ -2,7 +2,7 @@
 
 import React, { useState, useTransition } from "react";
 import { Publicacion } from "@/types";
-import { updateShootingStatusAction } from "@/app/actions/shooting";
+import { updateShootingStatusAction } from "@/app/actions/publicaciones/shooting";
 
 interface Props {
   pautasIniciales: Publicacion[];

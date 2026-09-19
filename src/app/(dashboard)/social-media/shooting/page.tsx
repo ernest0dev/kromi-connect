@@ -1,6 +1,6 @@
 import React from "react";
 import ShootingClientView from "./ShootingClientView";
-import { getShootingPostsAction } from "@/app/actions/shooting";
+import { getShootingPostsAction } from "@/app/actions/publicaciones/shooting";
 
 export const revalidate = 0;
 
