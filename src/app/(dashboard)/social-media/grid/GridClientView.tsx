@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useMemo, useEffect } from 'react';
+import React, { useState, useTransition, useMemo } from 'react';
 import { Publicacion, FormatoEnum, EstatusEnum } from '@/types';
 import { recalcularFechasSLAAction } from '@/app/actions/publicaciones/recalculateSla';
 
@@ -28,21 +28,19 @@ const ESTATUS_DOTS: Record<EstatusEnum, { color: string; label: string; badgeBg:
 };
 
 export default function GridClientView({ publicacionesIniciales }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>(publicacionesIniciales);
   const [isPending, startTransition] = useTransition();
   const [currentDate, setCurrentDate] = useState(new Date(2026, 8, 1)); // Septiembre 2026 por defecto
   const [formatoFiltro, setFormatoFiltro] = useState<FormatoEnum | 'TODOS'>('TODOS');
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
+  const [lastProp, setLastProp] = useState(publicacionesIniciales);
+  if (lastProp !== publicacionesIniciales) {
+    setLastProp(publicacionesIniciales);
     setPublicaciones(publicacionesIniciales);
-  }, [publicacionesIniciales]);
+  }
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -95,8 +93,9 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
         nuevaFechaPublicacion: targetDateStr,
       });
       if (!res.success) {
-        alert(`Error de reprogramación: ${res.error}`);
         setPublicaciones(publicacionesIniciales);
+        setErrorMsg(res.error ?? null);
+        setTimeout(() => setErrorMsg(null), 5000);
       }
     });
   };
@@ -111,16 +110,19 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
 
   const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
 
-  if (!mounted) {
-    return (
-      <div className="p-8 text-center text-slate-500 font-mono text-xs">
-        Cargando Parrilla Macro...
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-8">
+      {errorMsg && (
+        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-rose-950/80 border border-rose-700/50 text-rose-300 text-sm">
+          <span>⚠️ {errorMsg}</span>
+          <button
+            onClick={() => setErrorMsg(null)}
+            className="text-rose-400 hover:text-rose-200 font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       {/* SECCIÓN SUPERIOR: CONTROLES & GRILLA MENSUAL */}
       <div className="space-y-4">
         {/* BARRA DE FILTROS & SELECTOR DE MES */}

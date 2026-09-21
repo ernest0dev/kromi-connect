@@ -73,17 +73,17 @@ export async function recalculateSlaDates(
     }
 
     // 4. Revalidar la caché de las rutas de visualización
-    revalidatePath('/grid');
-    revalidatePath('/kanban');
+    revalidatePath('/social-media/grid');
+    revalidatePath('/social-media/kanban');
 
     return {
       success: true,
       data: publicacionActualizada as Publicacion,
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     return {
       success: false,
-      error: `Error interno en recalculateSlaDates: ${err?.message || 'Error desconocido'}`,
+      error: `Error interno en recalculateSlaDates: ${err instanceof Error ? err.message : 'Error desconocido'}`,
     };
   }
 }
