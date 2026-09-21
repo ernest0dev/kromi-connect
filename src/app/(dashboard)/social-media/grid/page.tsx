@@ -20,11 +20,11 @@ export default async function ParrillaPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E7E4DC] pb-4">
         <div>
-          <h1 className="text-xl font-bold text-white">Grilla Macro de Contenidos</h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Planificación mensual y reprogramación mediante Drag & Drop.
+          <h1 className="text-xl font-bold text-[#10233F]">Parrilla macro de contenidos</h1>
+          <p className="text-sm text-[#6B7482] mt-0.5">
+            Planificación mensual y reprogramación mediante arrastrar y soltar.
           </p>
         </div>
       </header>

@@ -1,68 +1,120 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import {
+  Target,
+  CalendarRange,
+  Kanban,
+  Video,
+  Inbox,
+  Plus,
+  AlertTriangle,
+} from "lucide-react";
 import NewTicketModal from "./components/NewTicketModal";
-import { useNavContext } from "../components/NavContext";
+import { useRegisterShellSlots } from "../components/ShellSlot";
+import type { NavGroup } from "../components/SocialMediaShell";
 
-const socialMediaNavItems = [
-  { href: "/social-media/campaigns", label: "Campañas", icon: <span>🎯</span> },
-  { href: "/social-media/grid", label: "Parrilla Macro", icon: <span>📅</span> },
-  { href: "/social-media/kanban", label: "Tablero Kanban", icon: <span>📋</span> },
-  { href: "/social-media/shooting", label: "Modo Rodaje", icon: <span>🎥</span> },
-  { href: "/social-media/requests", label: "Inbox Solicitudes", icon: <span>📥</span> },
+const navGroupsSocialMedia: NavGroup[] = [
+  {
+    label: "Social media",
+    items: [
+      { href: "/social-media/campaigns", label: "Campañas", icon: Target },
+      { href: "/social-media/grid", label: "Parrilla macro", icon: CalendarRange },
+      { href: "/social-media/kanban", label: "Tablero kanban", icon: Kanban },
+      { href: "/social-media/shooting", label: "Modo rodaje", icon: Video },
+      { href: "/social-media/requests", label: "Inbox solicitudes", icon: Inbox },
+    ],
+  },
 ];
 
-export default function SocialMediaLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { setExtraNavItems } = useNavContext();
+interface SlaSummary {
+  vencidos: number;
+  hoy: number;
+}
 
-  useEffect(() => {
-    setExtraNavItems(socialMediaNavItems);
-    return () => setExtraNavItems([]);
-  }, [setExtraNavItems]);
+interface Props {
+  children: React.ReactNode;
+  /**
+   * Resumen de SLA. Ver nota al final de la respuesta sobre cómo completar
+   * este dato desde el servidor — por ahora, si no se provee, el indicador
+   * simplemente no se muestra (no se inventa un dato falso).
+   */
+  slaSummary?: SlaSummary;
+}
+
+/**
+ * IMPORTANTE: este layout ya NO renderiza <SocialMediaShell>. El shell
+ * (sidebar + <main>) se monta una sola vez en (dashboard)/layout.tsx, que
+ * es el layout padre de esta ruta. Este componente solo se encarga de:
+ *  1. Registrar el grupo de nav "Social media" en el sidebar del padre.
+ *  2. Registrar su propio topbar (selector de sede, indicador SLA, botón
+ *     "Nuevo ticket") en el slot del padre.
+ *  3. Montar el modal de creación de tickets.
+ *
+ * Esto evita el bug de doble sidebar: antes, tanto este layout como el
+ * padre montaban su propio <aside>, y Next.js los anidaba a ambos.
+ */
+export default function SocialMediaLayout({ children, slaSummary }: Props) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const tieneAlertas = !!slaSummary && (slaSummary.vencidos > 0 || slaSummary.hoy > 0);
+
+  const topbar = useMemo(() => (
+    <header
+      className="h-16 border-b px-6 flex items-center justify-between sticky top-0 z-10"
+      style={{ background: "var(--papel)", borderColor: "var(--borde)" }}
+    >
+      <div className="flex items-center gap-2 text-xs" style={{ color: "var(--gris)" }}>
+        <span className="font-medium">Sedes:</span>
+        <span
+          className="border px-2.5 py-1 rounded-full"
+          style={{ background: "var(--hueso)", borderColor: "var(--borde)", color: "var(--tinta)" }}
+        >
+          Prebo
+        </span>
+        <span
+          className="border px-2.5 py-1 rounded-full"
+          style={{ background: "var(--hueso)", borderColor: "var(--borde)", color: "var(--tinta)" }}
+        >
+          Mañongo
+        </span>
+      </div>
+
+      <div className="flex items-center gap-3">
+        {slaSummary && (
+          <span
+            className="text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 border"
+            style={
+              tieneAlertas
+                ? { background: "color-mix(in srgb, var(--naranja) 15%, white)", color: "#8A4B0C", borderColor: "var(--naranja)" }
+                : { background: "color-mix(in srgb, var(--verde) 12%, white)", color: "#256B3A", borderColor: "var(--verde)" }
+            }
+          >
+            {tieneAlertas && <AlertTriangle size={13} aria-hidden="true" />}
+            {tieneAlertas
+              ? `${slaSummary.vencidos} vencido${slaSummary.vencidos !== 1 ? "s" : ""} · ${slaSummary.hoy} hoy`
+              : "Sin tickets en riesgo"}
+          </span>
+        )}
+
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="text-sm font-semibold px-4 py-2 rounded-full transition flex items-center gap-1.5"
+          style={{ background: "var(--naranja)", color: "#2E1600" }}
+        >
+          <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
+          <span>Nuevo ticket</span>
+        </button>
+      </div>
+    </header>
+  ), [slaSummary, tieneAlertas]);
+
+  useRegisterShellSlots(topbar, navGroupsSocialMedia);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
-      {/* TopBar Superior */}
-      <header className="h-14 bg-slate-900/80 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-sm sticky top-0 z-10">
-        <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-          <span>Sedes:</span>
-          <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
-            Prebo
-          </span>
-          <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
-            Mañongo
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-[11px] bg-amber-950/60 border border-amber-800/50 text-amber-300 px-2.5 py-1 rounded-md font-mono hidden sm:inline-block">
-            ⚡ SLA 3+2: Brief -5d | Rodaje -3d
-          </span>
-
-          {/* Gatillo de apertura del Modal de Creación */}
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-md shadow-emerald-950 flex items-center gap-1.5"
-          >
-            <span>+</span>
-            <span>Nuevo Ticket</span>
-          </button>
-        </div>
-      </header>
-
-      {/* Contenido Dinámico de la Ruta */}
-      <main className="flex-1 p-6 overflow-x-auto">{children}</main>
-
-      {/* Modal Global de Creación de Tickets */}
-      <NewTicketModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-    </div>
+    <>
+      {children}
+      <NewTicketModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </>
   );
 }

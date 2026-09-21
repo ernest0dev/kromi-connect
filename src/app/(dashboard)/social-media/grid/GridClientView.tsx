@@ -1,46 +1,101 @@
 'use client';
 
-import React, { useState, useTransition, useMemo } from 'react';
+import React, { useState, useTransition, useMemo, useEffect, useRef } from 'react';
+import { ChevronLeft, ChevronRight, FolderOpen, AlertTriangle, Pencil, Check, X } from 'lucide-react';
 import { Publicacion, FormatoEnum, EstatusEnum } from '@/types';
 import { recalcularFechasSLAAction } from '@/app/actions/publicaciones/recalculateSla';
+import {
+  actualizarEstatusTicketAction,
+  editarCamposRapidosTicketAction,
+} from '@/app/actions/publicaciones/ticket-quick-actions';
 
 interface Props {
   publicacionesIniciales: Publicacion[];
 }
 
-const FORMATO_BADGES: Record<FormatoEnum, { bg: string; text: string; border: string }> = {
-  CARRUSEL: { bg: 'bg-indigo-950/80', text: 'text-indigo-300', border: 'border-indigo-700/50' },
-  POST: { bg: 'bg-emerald-950/80', text: 'text-emerald-300', border: 'border-emerald-700/50' },
-  REEL: { bg: 'bg-pink-950/80', text: 'text-pink-300', border: 'border-pink-700/50' },
-  STORY: { bg: 'bg-amber-950/80', text: 'text-amber-300', border: 'border-amber-700/50' },
+const FORMATO_LABEL: Record<FormatoEnum, string> = {
+  CARRUSEL: 'Carrusel',
+  POST: 'Post',
+  REEL: 'Reel',
+  STORY: 'Story',
 };
 
-const ESTATUS_DOTS: Record<EstatusEnum, { color: string; label: string; badgeBg: string }> = {
-  PENDIENTE_BRIEF: { color: 'bg-slate-400', label: 'Brief Pendiente', badgeBg: 'bg-slate-800 text-slate-300' },
-  EN_RODAJE: { color: 'bg-amber-400', label: 'En Rodaje', badgeBg: 'bg-amber-950/80 text-amber-300 border-amber-700/50' },
-  EN_DISENO: { color: 'bg-sky-400', label: 'En Diseño', badgeBg: 'bg-sky-950/80 text-sky-300 border-sky-700/50' },
-  EN_REVISION_CM: { color: 'bg-purple-400', label: 'En Revisión CM', badgeBg: 'bg-purple-950/80 text-purple-300 border-purple-700/50' },
-  RECHAZADO_DISENO: { color: 'bg-rose-500', label: 'Rechazado Diseño', badgeBg: 'bg-rose-950/80 text-rose-300 border-rose-700/50' },
-  PENDIENTE_APROBACION_GERENCIA: { color: 'bg-orange-400', label: 'Pendiente Gerencia', badgeBg: 'bg-orange-950/80 text-orange-300 border-orange-700/50' },
-  APROBADO: { color: 'bg-emerald-400', label: 'Aprobado', badgeBg: 'bg-emerald-950/80 text-emerald-300 border-emerald-700/50' },
-  PROGRAMADO: { color: 'bg-teal-400', label: 'Programado', badgeBg: 'bg-teal-950/80 text-teal-300 border-teal-700/50' },
-  PUBLICADO: { color: 'bg-blue-500', label: 'Publicado', badgeBg: 'bg-blue-950/80 text-blue-300 border-blue-700/50' },
+/**
+ * Único eje cromático con significado semántico en la vista: 4 familias
+ * (gris = pendiente, azul = en proceso, naranja = requiere atención/
+ * rechazo, verde = aprobado o publicado), todas tomadas de las variables
+ * de marca en globals.css — no hex sueltos.
+ */
+const ESTATUS_ORDEN: EstatusEnum[] = [
+  'PENDIENTE_BRIEF',
+  'EN_RODAJE',
+  'EN_DISENO',
+  'EN_REVISION_CM',
+  'RECHAZADO_DISENO',
+  'PENDIENTE_APROBACION_GERENCIA',
+  'APROBADO',
+  'PROGRAMADO',
+  'PUBLICADO',
+];
+
+const ESTATUS_STYLE: Record<
+  EstatusEnum,
+  { label: string; dotVar: string; bgVar: string; textVar: string }
+> = {
+  PENDIENTE_BRIEF: { label: 'Brief pendiente', dotVar: 'var(--gris)', bgVar: 'var(--hueso)', textVar: 'var(--gris)' },
+  EN_RODAJE: { label: 'En rodaje', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
+  EN_DISENO: { label: 'En diseño', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
+  EN_REVISION_CM: { label: 'En revisión CM', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
+  RECHAZADO_DISENO: { label: 'Rechazado', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
+  PENDIENTE_APROBACION_GERENCIA: { label: 'Pendiente gerencia', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
+  APROBADO: { label: 'Aprobado', dotVar: 'var(--verde)', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', textVar: '#256B3A' },
+  PROGRAMADO: { label: 'Programado', dotVar: 'var(--verde)', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', textVar: '#256B3A' },
+  PUBLICADO: { label: 'Publicado', dotVar: 'var(--verde)', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', textVar: '#256B3A' },
+};
+
+type SlaState = 'vencido' | 'hoy' | 'proximo' | 'ok' | 'sin-fecha';
+
+function calcularSlaState(fechaLimiteBrief: string | null | undefined): SlaState {
+  if (!fechaLimiteBrief) return 'sin-fecha';
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const limite = new Date(fechaLimiteBrief + 'T00:00:00');
+  const diffDias = Math.round((limite.getTime() - hoy.getTime()) / 86400000);
+
+  if (diffDias < 0) return 'vencido';
+  if (diffDias === 0) return 'hoy';
+  if (diffDias <= 2) return 'proximo';
+  return 'ok';
+}
+
+const SLA_META: Record<SlaState, { label: string; textVar: string; bgVar: string }> = {
+  vencido: { label: 'Brief vencido', textVar: '#A32D2D', bgVar: '#FCEBEB' },
+  hoy: { label: 'Brief vence hoy', textVar: '#8A4B0C', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)' },
+  proximo: { label: 'Brief próximo a vencer', textVar: '#8A4B0C', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)' },
+  ok: { label: 'En plazo', textVar: '#256B3A', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)' },
+  'sin-fecha': { label: 'Sin fecha límite', textVar: 'var(--gris)', bgVar: 'var(--hueso)' },
 };
 
 export default function GridClientView({ publicacionesIniciales }: Props) {
+  const [mounted, setMounted] = useState(false);
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>(publicacionesIniciales);
   const [isPending, startTransition] = useTransition();
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 8, 1)); // Septiembre 2026 por defecto
+  const [currentDate, setCurrentDate] = useState(new Date(2026, 8, 1));
   const [formatoFiltro, setFormatoFiltro] = useState<FormatoEnum | 'TODOS'>('TODOS');
   const [draggedTicketId, setDraggedTicketId] = useState<string | null>(null);
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
+  const [editTitulo, setEditTitulo] = useState('');
+  const [editFecha, setEditFecha] = useState('');
+  const [editError, setEditError] = useState<string | null>(null);
 
-  const [lastProp, setLastProp] = useState(publicacionesIniciales);
-  if (lastProp !== publicacionesIniciales) {
-    setLastProp(publicacionesIniciales);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
     setPublicaciones(publicacionesIniciales);
-  }
+  }, [publicacionesIniciales]);
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -71,6 +126,11 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
     });
   }, [publicaciones, formatoFiltro]);
 
+  const hoyStr = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }, []);
+
   const handleDragStart = (e: React.DragEvent, id: string) => {
     setDraggedTicketId(id);
     e.dataTransfer.setData('text/plain', id);
@@ -82,7 +142,6 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
     const ticketId = draggedTicketId;
     setDraggedTicketId(null);
 
-    // Actualización optimista en la UI
     setPublicaciones((prev) =>
       prev.map((p) => (p.id === ticketId ? { ...p, fecha_publicacion: targetDateStr } : p))
     );
@@ -93,9 +152,8 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
         nuevaFechaPublicacion: targetDateStr,
       });
       if (!res.success) {
+        alert(`Error de reprogramación: ${res.error}`);
         setPublicaciones(publicacionesIniciales);
-        setErrorMsg(res.error ?? null);
-        setTimeout(() => setErrorMsg(null), 5000);
       }
     });
   };
@@ -108,51 +166,123 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
     }
   };
 
+  /**
+   * Cambio de estatus inline vía <select>. Optimista en UI; revierte si la
+   * Server Action falla. La acción está como placeholder — ver
+   * ticket-quick-actions.ts — así que hoy siempre revertirá con un aviso.
+   */
+  const handleEstatusChange = (pub: Publicacion, nuevoEstatus: EstatusEnum) => {
+    const estatusAnterior = pub.estatus;
+    setPublicaciones((prev) =>
+      prev.map((p) => (p.id === pub.id ? { ...p, estatus: nuevoEstatus } : p))
+    );
+
+    startTransition(async () => {
+      const res = await actualizarEstatusTicketAction({
+        publicacionId: pub.id,
+        nuevoEstatus,
+      });
+      if (!res.success) {
+        setPublicaciones((prev) =>
+          prev.map((p) => (p.id === pub.id ? { ...p, estatus: estatusAnterior } : p))
+        );
+      }
+    });
+  };
+
+  const startEditing = (pub: Publicacion) => {
+    setEditingTicketId(pub.id);
+    setEditTitulo(pub.titulo);
+    setEditFecha(pub.fecha_publicacion);
+    setEditError(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingTicketId(null);
+    setEditError(null);
+  };
+
+  const confirmEditing = (pub: Publicacion) => {
+    if (!editTitulo.trim() || !editFecha) {
+      setEditError('Título y fecha son requeridos.');
+      return;
+    }
+
+    const tituloAnterior = pub.titulo;
+    const fechaAnterior = pub.fecha_publicacion;
+
+    setPublicaciones((prev) =>
+      prev.map((p) =>
+        p.id === pub.id ? { ...p, titulo: editTitulo.trim(), fecha_publicacion: editFecha } : p
+      )
+    );
+    setEditingTicketId(null);
+
+    startTransition(async () => {
+      const res = await editarCamposRapidosTicketAction({
+        publicacionId: pub.id,
+        titulo: editTitulo.trim(),
+        fechaPublicacion: editFecha,
+      });
+      if (!res.success) {
+        setPublicaciones((prev) =>
+          prev.map((p) =>
+            p.id === pub.id ? { ...p, titulo: tituloAnterior, fecha_publicacion: fechaAnterior } : p
+          )
+        );
+        alert(`No se pudo guardar: ${res.error ?? 'la acción todavía no está implementada.'}`);
+      }
+    });
+  };
+
   const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
 
+  if (!mounted) {
+    return (
+      <div className="p-8 text-center text-sm" style={{ color: 'var(--gris)' }}>
+        Cargando parrilla macro…
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      {errorMsg && (
-        <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-rose-950/80 border border-rose-700/50 text-rose-300 text-sm">
-          <span>⚠️ {errorMsg}</span>
-          <button
-            onClick={() => setErrorMsg(null)}
-            className="text-rose-400 hover:text-rose-200 font-bold"
-          >
-            ✕
-          </button>
-        </div>
-      )}
+    <div className="space-y-6">
       {/* SECCIÓN SUPERIOR: CONTROLES & GRILLA MENSUAL */}
       <div className="space-y-4">
         {/* BARRA DE FILTROS & SELECTOR DE MES */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-sm">
+        <div
+          className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl border"
+          style={{ background: 'var(--papel)', borderColor: 'var(--borde)' }}
+        >
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400 mr-2 uppercase tracking-wider">
-              Filtrar Formato:
+            <span className="text-xs font-semibold mr-1" style={{ color: 'var(--gris)' }}>
+              Formato:
             </span>
             <button
               onClick={() => setFormatoFiltro('TODOS')}
-              className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${
+              className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition"
+              style={
                 formatoFiltro === 'TODOS'
-                  ? 'bg-slate-700 text-white border-slate-500'
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-750'
-              }`}
+                  ? { background: 'var(--azul)', color: '#fff' }
+                  : { background: 'var(--hueso)', color: 'var(--gris)' }
+              }
             >
-              TODOS
+              Todos
             </button>
             {(['CARRUSEL', 'POST', 'REEL', 'STORY'] as FormatoEnum[]).map((fmt) => {
-              const style = FORMATO_BADGES[fmt];
               const isSelected = formatoFiltro === fmt;
               return (
                 <button
                   key={fmt}
                   onClick={() => setFormatoFiltro(fmt)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${style.bg} ${style.text} ${style.border} ${
-                    isSelected ? 'ring-2 ring-indigo-500 scale-105' : 'opacity-70 hover:opacity-100'
-                  }`}
+                  className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition"
+                  style={
+                    isSelected
+                      ? { background: 'var(--azul)', color: '#fff' }
+                      : { background: 'var(--hueso)', color: 'var(--gris)' }
+                  }
                 >
-                  {fmt}
+                  {FORMATO_LABEL[fmt]}
                 </button>
               );
             })}
@@ -161,72 +291,108 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
           <div className="flex items-center gap-3">
             <button
               onClick={prevMonth}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
+              aria-label="Mes anterior"
+              className="p-2 rounded-lg border transition"
+              style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
             >
-              &#8592;
+              <ChevronLeft size={16} aria-hidden="true" />
             </button>
-            <span className="text-base font-bold capitalize text-white min-w-[140px] text-center">
+            <span
+              className="text-sm font-semibold capitalize min-w-[140px] text-center"
+              style={{ fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}
+            >
               {monthName}
             </span>
             <button
               onClick={nextMonth}
-              className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition"
+              aria-label="Mes siguiente"
+              className="p-2 rounded-lg border transition"
+              style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
             >
-              &#8594;
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
         </div>
 
         {/* GRILLA MATRIZ */}
-        <div className="bg-slate-900 rounded-xl border border-slate-800 overflow-hidden shadow-2xl">
-          <div className="grid grid-cols-7 border-b border-slate-800 bg-slate-950/50 text-center py-2.5 text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <div
+          className="rounded-2xl border overflow-hidden"
+          style={{ background: 'var(--papel)', borderColor: 'var(--borde)' }}
+        >
+          <div
+            className="grid grid-cols-7 border-b text-center py-2.5 text-xs font-semibold"
+            style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
+          >
             <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
           </div>
 
-          <div className={`grid grid-cols-7 divide-x divide-y divide-slate-800/60 bg-slate-900 ${isPending ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className={`grid grid-cols-7 ${isPending ? 'opacity-60 pointer-events-none' : ''}`}>
             {calendarDays.map((cell, idx) => {
-              if (!cell) return <div key={`empty-${idx}`} className="min-h-[110px] bg-slate-950/20" />;
+              if (!cell)
+                return (
+                  <div
+                    key={`empty-${idx}`}
+                    className="min-h-[110px] border-b border-r"
+                    style={{ background: 'var(--hueso)', borderColor: 'var(--borde)' }}
+                  />
+                );
 
               const itemsDelDia = publicacionesFiltradas.filter((p) => p.fecha_publicacion === cell.dateStr);
+              const esHoy = cell.dateStr === hoyStr;
+              const estadosSla = itemsDelDia.map((p) => calcularSlaState(p.fecha_limite_brief));
+              const peorEstado: SlaState | null = estadosSla.includes('vencido')
+                ? 'vencido'
+                : estadosSla.includes('hoy')
+                ? 'hoy'
+                : estadosSla.includes('proximo')
+                ? 'proximo'
+                : null;
 
               return (
                 <div
                   key={cell.dateStr}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={(e) => handleDrop(e, cell.dateStr)}
-                  className="min-h-[110px] p-2 transition-colors hover:bg-slate-800/30 flex flex-col justify-between group"
+                  className="min-h-[110px] p-2 border-b border-r transition-colors flex flex-col justify-between"
+                  style={{
+                    background: esHoy ? 'color-mix(in srgb, var(--azul) 8%, white)' : 'var(--papel)',
+                    borderColor: 'var(--borde)',
+                  }}
                 >
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-xs font-semibold text-slate-400 group-hover:text-white">
+                    <span
+                      className="text-xs font-semibold"
+                      style={{ color: esHoy ? 'var(--azul)' : 'var(--gris)' }}
+                    >
                       {cell.day}
                     </span>
-                    {itemsDelDia.length > 0 && (
-                      <span className="text-[10px] text-slate-500 font-mono">{itemsDelDia.length} pz</span>
+                    {peorEstado && (
+                      <span
+                        className="h-2 w-2 rounded-full shrink-0"
+                        style={{ backgroundColor: SLA_META[peorEstado].textVar }}
+                        title={SLA_META[peorEstado].label}
+                      />
                     )}
                   </div>
 
-                  <div className="space-y-1.5 flex-1 overflow-y-auto max-h-[90px] scrollbar-thin">
+                  <div className="space-y-1 flex-1 overflow-y-auto max-h-[86px]">
                     {itemsDelDia.map((pub) => {
-                      const badgeStyle = FORMATO_BADGES[pub.formato];
-                      const dotStyle = ESTATUS_DOTS[pub.estatus];
-
+                      const estatusStyle = ESTATUS_STYLE[pub.estatus];
                       return (
                         <div
                           key={pub.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, pub.id)}
                           onClick={() => scrollToTicketCard(pub.id)}
-                          className={`p-1.5 rounded-md border text-xs cursor-pointer transition-all hover:scale-[1.02] shadow-sm ${badgeStyle.bg} ${badgeStyle.border}`}
+                          className="flex items-center gap-1.5 px-1.5 py-1 rounded-md text-[11px] font-medium truncate cursor-pointer active:cursor-grabbing"
+                          style={{ background: estatusStyle.bgVar, color: estatusStyle.textVar }}
+                          title={pub.titulo}
                         >
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded ${badgeStyle.text} bg-black/30`}>
-                              {pub.formato}
-                            </span>
-                            <span className={`h-2 w-2 rounded-full ${dotStyle.color}`} title={`Estatus: ${dotStyle.label}`} />
-                          </div>
-                          <p className="text-[11px] font-medium text-slate-200 line-clamp-1 leading-tight">
-                            {pub.titulo}
-                          </p>
+                          <span
+                            className="h-1.5 w-1.5 rounded-full shrink-0"
+                            style={{ backgroundColor: estatusStyle.dotVar }}
+                          />
+                          <span className="truncate">{pub.titulo}</span>
                         </div>
                       );
                     })}
@@ -238,76 +404,168 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
         </div>
       </div>
 
-      {/* DETALLE DE ENTREGABLES / TICKETS */}
-      <section className="space-y-4 pt-4 border-t border-slate-800">
+      {/* DETALLE DE ENTREGABLES / TICKETS — lista completa siempre visible */}
+      <section className="space-y-4 pt-4 border-t" style={{ borderColor: 'var(--borde)' }}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-bold text-white">Detalle de Tickets y Fichas de Entregables</h3>
-            <p className="text-xs text-slate-400">Selección directa sincronizada con la grilla superior.</p>
+            <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}>
+              Detalle de tickets y fichas de entregables
+            </h3>
+            <p className="text-xs" style={{ color: 'var(--gris)' }}>
+              Cambia el estatus o edita el título y la fecha sin salir de esta vista.
+            </p>
           </div>
-          <span className="text-xs text-slate-400 font-mono bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg">
-            Total: {publicacionesFiltradas.length} ítems
+          <span
+            className="text-xs px-3 py-1.5 rounded-full border"
+            style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
+          >
+            {publicacionesFiltradas.length} ítems
           </span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {publicacionesFiltradas.map((pub) => {
-            const badgeStyle = FORMATO_BADGES[pub.formato];
-            const dotStyle = ESTATUS_DOTS[pub.estatus];
+            const estatusStyle = ESTATUS_STYLE[pub.estatus];
+            const slaState = calcularSlaState(pub.fecha_limite_brief);
+            const slaMeta = SLA_META[slaState];
             const isSelected = selectedTicketId === pub.id;
+            const isEditing = editingTicketId === pub.id;
 
             return (
               <article
                 key={pub.id}
                 id={`ticket-card-${pub.id}`}
-                className={`bg-slate-900 border rounded-xl p-4 flex flex-col justify-between transition-all ${
-                  isSelected ? 'border-emerald-500 ring-2 ring-emerald-500/30 bg-slate-850' : 'border-slate-800 hover:border-slate-700'
-                }`}
+                className="rounded-xl p-4 flex flex-col justify-between transition-all border"
+                style={{
+                  background: 'var(--papel)',
+                  borderColor: isSelected ? 'var(--verde)' : 'var(--borde)',
+                  boxShadow: isSelected ? '0 0 0 2px color-mix(in srgb, var(--verde) 30%, transparent)' : 'none',
+                }}
               >
                 <div>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-[11px] font-mono text-slate-400 font-semibold">
-                      Pub: {pub.fecha_publicacion}
-                    </span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${dotStyle.badgeBg}`}>
-                      {dotStyle.label}
+                  {/* Título editable + fecha editable */}
+                  {isEditing ? (
+                    <div className="space-y-2 mb-2">
+                      <input
+                        type="text"
+                        value={editTitulo}
+                        onChange={(e) => setEditTitulo(e.target.value)}
+                        className="w-full text-sm font-semibold rounded-lg px-2.5 py-1.5 border"
+                        style={{ borderColor: 'var(--azul)', color: 'var(--tinta)' }}
+                        autoFocus
+                      />
+                      <input
+                        type="date"
+                        value={editFecha}
+                        onChange={(e) => setEditFecha(e.target.value)}
+                        className="w-full text-xs rounded-lg px-2.5 py-1.5 border"
+                        style={{ borderColor: 'var(--azul)', color: 'var(--tinta)' }}
+                      />
+                      {editError && (
+                        <p className="text-[11px]" style={{ color: '#A32D2D' }}>{editError}</p>
+                      )}
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          onClick={() => confirmEditing(pub)}
+                          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg"
+                          style={{ background: 'var(--verde)', color: '#fff' }}
+                        >
+                          <Check size={13} aria-hidden="true" />
+                          Guardar
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg"
+                          style={{ background: 'var(--hueso)', color: 'var(--gris)' }}
+                        >
+                          <X size={13} aria-hidden="true" />
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="text-[11px] font-semibold" style={{ color: 'var(--gris)' }}>
+                          Pub: {pub.fecha_publicacion}
+                        </span>
+                        <button
+                          onClick={() => startEditing(pub)}
+                          aria-label="Editar título y fecha"
+                          className="p-1 rounded-md transition"
+                          style={{ color: 'var(--gris)' }}
+                        >
+                          <Pencil size={13} aria-hidden="true" />
+                        </button>
+                      </div>
+                      <h4 className="text-sm font-bold mb-2 line-clamp-2" style={{ color: 'var(--tinta)' }}>
+                        {pub.titulo}
+                      </h4>
+                    </>
+                  )}
+
+                  {/* Cambio de estatus inline */}
+                  <div className="mb-2">
+                    <select
+                      value={pub.estatus}
+                      onChange={(e) => handleEstatusChange(pub, e.target.value as EstatusEnum)}
+                      className="w-full text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-0 cursor-pointer"
+                      style={{ background: estatusStyle.bgVar, color: estatusStyle.textVar }}
+                    >
+                      {ESTATUS_ORDEN.map((est) => (
+                        <option key={est} value={est}>
+                          {ESTATUS_STYLE[est].label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Indicador de SLA — elemento visualmente dominante */}
+                  <div
+                    className="flex items-center gap-2 text-[11px] font-medium px-2.5 py-1.5 rounded-lg mb-2"
+                    style={{ background: slaMeta.bgVar, color: slaMeta.textVar }}
+                  >
+                    {(slaState === 'vencido' || slaState === 'hoy') && (
+                      <AlertTriangle size={12} aria-hidden="true" />
+                    )}
+                    <span>
+                      {slaMeta.label}
+                      {pub.fecha_limite_brief && ` · ${pub.fecha_limite_brief}`}
                     </span>
                   </div>
 
-                  <h4 className="text-sm font-bold text-white mb-2 line-clamp-2">{pub.titulo}</h4>
-
-                  <div className="space-y-1 text-xs text-slate-300 bg-slate-950/50 p-2.5 rounded-lg border border-slate-800/80 mb-3 font-mono">
+                  <div
+                    className="space-y-1 text-xs p-2.5 rounded-lg border"
+                    style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
+                  >
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Formato:</span>
-                      <span className={`font-bold ${badgeStyle.text}`}>{pub.formato}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Límite Brief:</span>
-                      <span className="text-amber-400">{pub.fecha_limite_brief || 'S/D'}</span>
+                      <span style={{ color: 'var(--gris)' }}>Formato:</span>
+                      <span className="font-semibold">{FORMATO_LABEL[pub.formato]}</span>
                     </div>
                     {pub.linea_contenido && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500">Línea:</span>
-                        <span className="text-slate-300 truncate max-w-[120px]">{pub.linea_contenido}</span>
+                      <div className="flex justify-between gap-2">
+                        <span style={{ color: 'var(--gris)' }}>Línea:</span>
+                        <span className="truncate max-w-[140px]">{pub.linea_contenido}</span>
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
-                  <span className="text-[10px] text-slate-500">Google Drive API</span>
+                <div className="pt-3 mt-3 border-t flex items-center justify-between" style={{ borderColor: 'var(--borde)' }}>
+                  <span className="text-[10px]" style={{ color: 'var(--gris)' }}>Google Drive</span>
                   {pub.drive_folder_url ? (
                     <a
                       href={pub.drive_folder_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition"
+                      className="text-xs font-semibold flex items-center gap-1.5 transition"
+                      style={{ color: 'var(--azul)' }}
                     >
-                      <span>📁 Assets Drive</span>
-                      <span>&#8599;</span>
+                      <FolderOpen size={13} aria-hidden="true" />
+                      <span>Ver assets</span>
                     </a>
                   ) : (
-                    <span className="text-xs text-slate-600 font-mono italic">Sin Carpeta Vinculada</span>
+                    <span className="text-xs italic" style={{ color: 'var(--gris)' }}>Sin carpeta vinculada</span>
                   )}
                 </div>
               </article>

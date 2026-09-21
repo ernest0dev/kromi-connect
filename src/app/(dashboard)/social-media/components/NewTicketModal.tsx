@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useId, useState, useTransition } from 'react';
+import { X, Loader2, TriangleAlert, FolderPlus } from 'lucide-react';
 import { FormatoEnum } from '@/types';
 import { createPostWithDriveAction } from '@/app/actions/publicaciones/create';
 
@@ -9,17 +10,29 @@ interface Props {
   onClose: () => void;
 }
 
+const FORMATO_OPCIONES: { value: FormatoEnum; label: string; hint: string }[] = [
+  { value: 'REEL', label: 'Reel', hint: '9:16' },
+  { value: 'CARRUSEL', label: 'Carrusel', hint: '1:1 / 4:5' },
+  { value: 'POST', label: 'Post', hint: '1:1' },
+  { value: 'STORY', label: 'Story', hint: '9:16' },
+];
+
+const inputStyle: React.CSSProperties = {
+  background: 'var(--hueso)',
+  borderColor: 'var(--borde)',
+  color: 'var(--tinta)',
+};
+
 export default function NuevoTicketModal({ isOpen, onClose }: Props) {
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const formId = useId();
 
-  // Estados del Formulario
   const [titulo, setTitulo] = useState('');
   const [formato, setFormato] = useState<FormatoEnum>('REEL');
   const [lineaContenido, setLineaContenido] = useState('');
   const [fechaPublicacion, setFechaPublicacion] = useState('');
-  
-  // Copy Táctico / Brefeado Granular
+
   const [hookTexto, setHookTexto] = useState('');
   const [bodyTexto, setBodyTexto] = useState('');
   const [ctaTexto, setCtaTexto] = useState('');
@@ -36,7 +49,6 @@ export default function NuevoTicketModal({ isOpen, onClose }: Props) {
       return;
     }
 
-    // Procesar array de hashtags desde el string delimitado por comas
     const hashtagsArray = hashtagsRaw
       ? hashtagsRaw.split(',').map((tag) => tag.trim().replace(/^#/, '')).filter(Boolean)
       : [];
@@ -69,170 +81,211 @@ export default function NuevoTicketModal({ isOpen, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in zoom-in-95 duration-150">
-        
-        {/* Header Modal */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+      <div
+        className="w-full max-w-2xl rounded-2xl shadow-xl overflow-hidden flex flex-col max-h-[90vh] border"
+        style={{ background: 'var(--papel)', borderColor: 'var(--borde)' }}
+      >
+        {/* Header */}
+        <div className="p-5 border-b flex items-center justify-between" style={{ borderColor: 'var(--borde)' }}>
           <div>
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <span>✨</span> Nuevo Ticket de Contenido
+            <h2 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}>
+              Nuevo ticket de contenido
             </h2>
-            <p className="text-xs text-slate-400">
-              Crea el ticket y genera automáticamente su carpeta en Google Drive API[cite: 4].
+            <p className="text-xs mt-0.5" style={{ color: 'var(--gris)' }}>
+              Se crea el ticket y su carpeta de assets en Google Drive automáticamente.
             </p>
           </div>
           <button
             onClick={onClose}
             disabled={isPending}
-            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition"
+            aria-label="Cerrar"
+            className="p-1.5 rounded-lg transition"
+            style={{ color: 'var(--gris)' }}
           >
-            ✕
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
         {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5 scrollbar-thin">
+        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
           {errorMessage && (
-            <div className="p-3 bg-rose-950/80 border border-rose-800/80 text-rose-300 text-xs rounded-lg font-mono">
-              ⚠️ {errorMessage}
+            <div
+              className="p-3 text-xs rounded-lg flex items-start gap-2 border"
+              style={{ background: '#FCEBEB', borderColor: '#F09595', color: '#A32D2D' }}
+            >
+              <TriangleAlert size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{errorMessage}</span>
             </div>
           )}
 
-          {/* Bloque 1: Información Principal */}
+          {/* Bloque 1: Información principal */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Título del Entregable *
+            <div className="space-y-1.5 md:col-span-2">
+              <label htmlFor={`${formId}-titulo`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Título del entregable
               </label>
               <input
+                id={`${formId}-titulo`}
                 type="text"
                 required
-                placeholder="Ej. Reel Ofertas de Carnicería Prebo"
+                placeholder="Reel ofertas de charcutería Prebo"
                 value={titulo}
                 onChange={(e) => setTitulo(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none"
+                style={inputStyle}
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Formato *
+            <div className="space-y-1.5">
+              <label htmlFor={`${formId}-formato`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Formato
               </label>
               <select
+                id={`${formId}-formato`}
                 value={formato}
                 onChange={(e) => setFormato(e.target.value as FormatoEnum)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none"
+                style={inputStyle}
               >
-                <option value="REEL">🎥 REEL (9:16)</option>
-                <option value="CARRUSEL">📚 CARRUSEL (1:1 / 4:5)</option>
-                <option value="POST">🖼️ POST (1:1)</option>
-                <option value="STORY">📱 STORY (9:16)</option>
+                {FORMATO_OPCIONES.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label} ({opt.hint})
+                  </option>
+                ))}
               </select>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Línea Comercial
+            <div className="space-y-1.5">
+              <label htmlFor={`${formId}-linea`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Línea comercial
               </label>
               <input
+                id={`${formId}-linea`}
                 type="text"
-                placeholder="Ej. Promociones, Charcutería"
+                placeholder="Promociones, charcutería…"
                 value={lineaContenido}
                 onChange={(e) => setLineaContenido(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none"
+                style={inputStyle}
               />
             </div>
 
-            <div className="space-y-1 md:col-span-2">
-              <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                Fecha de Publicación * (SLA 3+2)[cite: 4, 6]
+            <div className="space-y-1.5 md:col-span-2">
+              <label htmlFor={`${formId}-fecha`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Fecha de publicación
               </label>
               <input
+                id={`${formId}-fecha`}
                 type="date"
                 required
                 value={fechaPublicacion}
                 onChange={(e) => setFechaPublicacion(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none"
+                style={inputStyle}
               />
+              <p className="text-[11px]" style={{ color: 'var(--gris)' }}>
+                El límite de brief y rodaje se calcula automáticamente (regla SLA 3+2).
+              </p>
             </div>
           </div>
 
-          {/* Bloque 2: Estructura de Copy */}
-          <div className="space-y-3 pt-3 border-t border-slate-800">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-              Brefeado y Estructura de Copy[cite: 4]
+          {/* Bloque 2: Copy */}
+          <div className="space-y-3 pt-4 border-t" style={{ borderColor: 'var(--borde)' }}>
+            <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--gris)' }}>
+              Brief de copy
             </h3>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-indigo-400">🪝 Hook (Gancho)</label>
+            <div className="space-y-1.5">
+              <label htmlFor={`${formId}-hook`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Hook
+              </label>
               <input
+                id={`${formId}-hook`}
                 type="text"
-                placeholder="Ej. ¡3 cortes de carne que estás comprando mal!"
+                placeholder="3 cortes de carne que estás comprando mal"
                 value={hookTexto}
                 onChange={(e) => setHookTexto(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
+                style={inputStyle}
               />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-[11px] font-semibold text-emerald-400">📝 Cuerpo del Mensaje</label>
+            <div className="space-y-1.5">
+              <label htmlFor={`${formId}-body`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Cuerpo del mensaje
+              </label>
               <textarea
+                id={`${formId}-body`}
                 rows={3}
-                placeholder="Detalle de las ofertas..."
+                placeholder="Detalle de las ofertas…"
                 value={bodyTexto}
                 onChange={(e) => setBodyTexto(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none resize-none"
+                style={inputStyle}
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-amber-400">📢 CTA</label>
+              <div className="space-y-1.5">
+                <label htmlFor={`${formId}-cta`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                  CTA
+                </label>
                 <input
+                  id={`${formId}-cta`}
                   type="text"
-                  placeholder="Ej. Visítanos en Prebo o Mañongo"
+                  placeholder="Visítanos en Prebo o Mañongo"
                   value={ctaTexto}
                   onChange={(e) => setCtaTexto(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                  className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
+                  style={inputStyle}
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-semibold text-sky-400"># Hashtags (coma)</label>
+              <div className="space-y-1.5">
+                <label htmlFor={`${formId}-hashtags`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                  Hashtags (separados por coma)
+                </label>
                 <input
+                  id={`${formId}-hashtags`}
                   type="text"
                   placeholder="KromiMarket, Prebo"
                   value={hashtagsRaw}
                   onChange={(e) => setHashtagsRaw(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-sky-500 font-mono"
+                  className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
+                  style={inputStyle}
                 />
               </div>
             </div>
           </div>
 
-          {/* Footer Acciones */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
+          {/* Acciones */}
+          <div className="pt-4 border-t flex items-center justify-end gap-3" style={{ borderColor: 'var(--borde)' }}>
             <button
               type="button"
               onClick={onClose}
               disabled={isPending}
-              className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition"
+              className="px-4 py-2 rounded-full text-sm font-semibold transition"
+              style={{ background: 'var(--hueso)', color: 'var(--gris)' }}
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-2 disabled:opacity-50"
+              className="px-5 py-2 rounded-full text-sm font-semibold transition flex items-center gap-2 disabled:opacity-50"
+              style={{ background: 'var(--naranja)', color: '#2E1600' }}
             >
               {isPending ? (
                 <>
-                  <span className="h-3 w-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Creando Carpeta en Drive...</span>
+                  <Loader2 size={14} className="animate-spin" aria-hidden="true" />
+                  <span>Creando carpeta en Drive…</span>
                 </>
               ) : (
-                <span>Crear Ticket + Drive Folder</span>
+                <>
+                  <FolderPlus size={14} aria-hidden="true" />
+                  <span>Crear ticket</span>
+                </>
               )}
             </button>
           </div>
