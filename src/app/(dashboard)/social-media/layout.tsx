@@ -1,8 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
-import Link from "next/link";
+import React, { useState, useEffect, useMemo } from "react";
 import NewTicketModal from "./components/NewTicketModal";
+import { useNavContext } from "../components/NavContext";
+
+const socialMediaNavItems = [
+  { href: "/social-media/campaigns", label: "Campañas", icon: <span>🎯</span> },
+  { href: "/social-media/grid", label: "Parrilla Macro", icon: <span>📅</span> },
+  { href: "/social-media/kanban", label: "Tablero Kanban", icon: <span>📋</span> },
+  { href: "/social-media/shooting", label: "Modo Rodaje", icon: <span>🎥</span> },
+  { href: "/social-media/requests", label: "Inbox Solicitudes", icon: <span>📥</span> },
+];
 
 export default function SocialMediaLayout({
   children,
@@ -10,142 +18,51 @@ export default function SocialMediaLayout({
   children: React.ReactNode;
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { setExtraNavItems } = useNavContext();
+
+  useEffect(() => {
+    setExtraNavItems(socialMediaNavItems);
+    return () => setExtraNavItems([]);
+  }, [setExtraNavItems]);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col md:flex-row">
-      {/* Sidebar Lateral */}
-      <aside className="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between shrink-0">
-        <div>
-          {/* Header & Logo */}
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-black tracking-wider text-white">
-                KROMI <span className="text-emerald-500">CONNECT</span>
-              </h1>
-              <p className="text-[10px] text-slate-400 font-mono">
-                CRM / CMS Audiovisual
-              </p>
-            </div>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-
-          {/* Menú de Navegación con Rutas Sincronizadas */}
-          <nav className="p-4 space-y-1 text-sm font-medium">
-            <Link
-              href="/social-media/campaigns"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>🎯</span>
-              <span>Campañas</span>
-            </Link>
-
-            <Link
-              href="/social-media/grid"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>📅</span>
-              <span>Parrilla Macro</span>
-            </Link>
-
-            <Link
-              href="/social-media/kanban"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>📋</span>
-              <span>Tablero Kanban</span>
-            </Link>
-
-            <Link
-              href="/social-media/shooting"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>🎥</span>
-              <span>Modo Rodaje</span>
-            </Link>
-
-            <Link
-              href="/social-media/requests"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>📥</span>
-              <span>Inbox Solicitudes</span>
-            </Link>
-
-            <Link
-              href="/third-parties"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>🏢</span>
-              <span>Clientes / Aliados</span>
-            </Link>
-
-            <Link
-              href="/support"
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white transition"
-            >
-              <span>🎧</span>
-              <span>Atención / Soporte</span>
-            </Link>
-          </nav>
+    <div className="flex-1 flex flex-col min-w-0">
+      {/* TopBar Superior */}
+      <header className="h-14 bg-slate-900/80 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-sm sticky top-0 z-10">
+        <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
+          <span>Sedes:</span>
+          <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
+            Prebo
+          </span>
+          <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
+            Mañongo
+          </span>
         </div>
 
-        {/* Footer Sidebar / Perfil */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950/40">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-full bg-emerald-950 border border-emerald-600/50 flex items-center justify-center text-emerald-400 text-xs font-bold">
-              SM
-            </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-slate-200 truncate">
-                Social Media Manager
-              </p>
-              <span className="text-[9px] text-emerald-400 font-mono block">
-                Rol Operativo Activo
-              </span>
-            </div>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[11px] bg-amber-950/60 border border-amber-800/50 text-amber-300 px-2.5 py-1 rounded-md font-mono hidden sm:inline-block">
+            ⚡ SLA 3+2: Brief -5d | Rodaje -3d
+          </span>
+
+          {/* Gatillo de apertura del Modal de Creación */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-md shadow-emerald-950 flex items-center gap-1.5"
+          >
+            <span>+</span>
+            <span>Nuevo Ticket</span>
+          </button>
         </div>
-      </aside>
+      </header>
 
-      {/* Área Principal de Contenido */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* TopBar Superior */}
-        <header className="h-14 bg-slate-900/80 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-sm sticky top-0 z-10">
-          <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-            <span>Sedes:</span>
-            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
-              Prebo
-            </span>
-            <span className="bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
-              Mañongo
-            </span>
-          </div>
+      {/* Contenido Dinámico de la Ruta */}
+      <main className="flex-1 p-6 overflow-x-auto">{children}</main>
 
-          <div className="flex items-center gap-3">
-            <span className="text-[11px] bg-amber-950/60 border border-amber-800/50 text-amber-300 px-2.5 py-1 rounded-md font-mono hidden sm:inline-block">
-              ⚡ SLA 3+2: Brief -5d | Rodaje -3d
-            </span>
-
-            {/* Gatillo de apertura del Modal de Creación */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg transition shadow-md shadow-emerald-950 flex items-center gap-1.5"
-            >
-              <span>+</span>
-              <span>Nuevo Ticket</span>
-            </button>
-          </div>
-        </header>
-
-        {/* Contenido Dinámico de la Ruta */}
-        <main className="flex-1 p-6 overflow-x-auto">{children}</main>
-
-        {/* Modal Global de Creación de Tickets */}
-        <NewTicketModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-        />
-      </div>
+      {/* Modal Global de Creación de Tickets */}
+      <NewTicketModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 }
