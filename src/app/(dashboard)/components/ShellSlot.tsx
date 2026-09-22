@@ -54,13 +54,20 @@ export function useShellSlot() {
  */
 export function useRegisterShellSlots(topbar: React.ReactNode, navGroups: NavGroup[] = EMPTY_NAV_GROUPS) {
   const { setTopbar, setExtraNavGroups } = useShellSlot();
+  const topbarRef = React.useRef<React.ReactNode>(topbar);
+  const navGroupsRef = React.useRef<NavGroup[]>(navGroups);
+
   React.useEffect(() => {
-    setTopbar(topbar);
-    setExtraNavGroups(navGroups);
+    topbarRef.current = topbar;
+    navGroupsRef.current = navGroups;
+  }, [topbar, navGroups]);
+
+  React.useEffect(() => {
+    setTopbar(topbarRef.current);
+    setExtraNavGroups(navGroupsRef.current);
     return () => {
       setTopbar(null);
       setExtraNavGroups([]);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topbar, navGroups]);
+  }, [setTopbar, setExtraNavGroups]);
 }

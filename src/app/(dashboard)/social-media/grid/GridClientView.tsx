@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useTransition, useMemo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, FolderOpen, AlertTriangle, Pencil, Check, X } from 'lucide-react';
 import { Publicacion, FormatoEnum, EstatusEnum } from '@/types';
 import { recalcularFechasSLAAction } from '@/app/actions/publicaciones/recalculateSla';
@@ -77,7 +77,6 @@ const SLA_META: Record<SlaState, { label: string; textVar: string; bgVar: string
 };
 
 export default function GridClientView({ publicacionesIniciales }: Props) {
-  const [mounted, setMounted] = useState(false);
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>(publicacionesIniciales);
   const [isPending, startTransition] = useTransition();
   const [currentDate, setCurrentDate] = useState(new Date(2026, 8, 1));
@@ -90,11 +89,14 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
   const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    setPublicaciones(publicacionesIniciales);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPublicaciones((prev) => {
+      if (prev.length !== publicacionesIniciales.length) return publicacionesIniciales;
+      for (let i = 0; i < prev.length; i++) {
+        if (prev[i].id !== publicacionesIniciales[i].id) return publicacionesIniciales;
+      }
+      return prev;
+    });
   }, [publicacionesIniciales]);
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
@@ -236,14 +238,6 @@ export default function GridClientView({ publicacionesIniciales }: Props) {
   };
 
   const monthName = currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
-
-  if (!mounted) {
-    return (
-      <div className="p-8 text-center text-sm" style={{ color: 'var(--gris)' }}>
-        Cargando parrilla macro…
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

@@ -53,36 +53,63 @@ function ShellInner({
   const gruposCombinados = [...extraNavGroups, ...navGroups];
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row" style={{ background: 'var(--hueso)', color: 'var(--tinta)' }}>
+    <div
+      className="min-h-screen flex flex-col md:flex-row"
+      style={{ background: "var(--hueso)", color: "var(--tinta)" }}
+    >
       {/* Sidebar */}
-      <aside className="w-full md:w-64 flex flex-col justify-between shrink-0" style={{ background: 'var(--azul)' }}>
+      <aside
+        className="w-full md:w-64 flex flex-col justify-between shrink-0"
+        style={{ background: "var(--azul)" }}
+      >
         <div>
           {/* Logo */}
           <div className="p-5 border-b border-white/15 flex items-center gap-3">
-            <svg width="30" height="30" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-              <circle cx="38" cy="28" r="11" fill="#fff" />
-              <circle cx="50" cy="24" r="8" fill="#fff" />
-              <rect x="32" y="38" width="12" height="34" fill="var(--naranja)" />
-              <path d="M44 38 L62 38 L48 55 L64 55 L44 72 L48 58 L34 58 Z" fill="var(--naranja)" />
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 120 120"
+              fill="none"
+              aria-hidden="true"
+              className="shrink-0"
+            >
+              <circle cx="46" cy="34" r="13" fill="#fff" />
+              <circle cx="60" cy="29" r="9" fill="#fff" />
+              <rect
+                x="38"
+                y="46"
+                width="14"
+                height="40"
+                fill="var(--naranja)"
+              />
+              <path
+                d="M52 46 L74 46 L58 65 L76 65 L52 86 L57 70 L41 70 Z"
+                fill="var(--naranja)"
+              />
             </svg>
             <div>
-              <h1 className="text-base font-bold tracking-tight text-white leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              <h1
+                className="text-base font-bold tracking-tight text-white leading-tight"
+                style={{ fontFamily: "var(--font-display)" }}
+              >
                 Kromi Connect
               </h1>
-              <p className="text-[11px] text-white/60">CRM interno de contenido</p>
+              <p className="text-[11px] text-white/60">
+                CRM interno de contenido
+              </p>
             </div>
           </div>
 
           {/* Navegación agrupada */}
-          <nav className="p-3 space-y-4 text-sm font-medium">
+          <nav className="p-3 space-y-6 text-sm font-medium">
             {gruposCombinados.map((group, gi) => (
               <div key={group.label ?? `group-${gi}`}>
                 {group.label && (
-                  <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                  <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-white/45">
                     {group.label}
                   </p>
                 )}
-                <div className="space-y-0.5">
+                <div className="space-y-1">
                   {group.items.map((item) => {
                     const isActive = activePath.startsWith(item.href);
                     const Icon = item.icon;
@@ -92,7 +119,9 @@ function ShellInner({
                         href={item.href}
                         aria-current={isActive ? "page" : undefined}
                         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition font-medium ${
-                          isActive ? "bg-white font-semibold" : "text-white/85 hover:bg-white/10 hover:text-white"
+                          isActive
+                            ? "bg-white font-semibold"
+                            : "text-white/85 hover:bg-white/10 hover:text-white"
                         }`}
                         style={isActive ? { color: "var(--azul)" } : undefined}
                       >
@@ -117,8 +146,12 @@ function ShellInner({
               {roleInitials}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-white truncate">{roleLabel}</p>
-              <span className="text-[11px] text-white/55 block">Rol activo</span>
+              <p className="text-xs font-semibold text-white truncate">
+                {roleLabel}
+              </p>
+              <span className="text-[11px] text-white/55 block">
+                Rol activo
+              </span>
             </div>
           </div>
         </div>
@@ -127,7 +160,9 @@ function ShellInner({
       {/* Área principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {topbar}
-        <main className="flex-1 p-6 overflow-x-auto">{children}</main>
+        <main className="flex-1 overflow-x-auto">
+          <div className="max-w-[1400px] mx-auto p-8 lg:p-10">{children}</div>
+        </main>
       </div>
     </div>
   );

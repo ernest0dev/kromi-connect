@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   Target,
   CalendarRange,
@@ -19,10 +19,18 @@ const navGroupsSocialMedia: NavGroup[] = [
     label: "Social media",
     items: [
       { href: "/social-media/campaigns", label: "Campañas", icon: Target },
-      { href: "/social-media/grid", label: "Parrilla macro", icon: CalendarRange },
+      {
+        href: "/social-media/grid",
+        label: "Parrilla macro",
+        icon: CalendarRange,
+      },
       { href: "/social-media/kanban", label: "Tablero kanban", icon: Kanban },
       { href: "/social-media/shooting", label: "Modo rodaje", icon: Video },
-      { href: "/social-media/requests", label: "Inbox solicitudes", icon: Inbox },
+      {
+        href: "/social-media/requests",
+        label: "Inbox solicitudes",
+        icon: Inbox,
+      },
     ],
   },
 ];
@@ -57,24 +65,36 @@ interface Props {
 export default function SocialMediaLayout({ children, slaSummary }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const tieneAlertas = !!slaSummary && (slaSummary.vencidos > 0 || slaSummary.hoy > 0);
+  const tieneAlertas =
+    !!slaSummary && (slaSummary.vencidos > 0 || slaSummary.hoy > 0);
 
-  const topbar = useMemo(() => (
+  const topbar = (
     <header
-      className="h-16 border-b px-6 flex items-center justify-between sticky top-0 z-10"
+      className="h-16 border-b px-8 flex items-center justify-between sticky top-0 z-10"
       style={{ background: "var(--papel)", borderColor: "var(--borde)" }}
     >
-      <div className="flex items-center gap-2 text-xs" style={{ color: "var(--gris)" }}>
+      <div
+        className="flex items-center gap-2 text-xs"
+        style={{ color: "var(--gris)" }}
+      >
         <span className="font-medium">Sedes:</span>
         <span
           className="border px-2.5 py-1 rounded-full"
-          style={{ background: "var(--hueso)", borderColor: "var(--borde)", color: "var(--tinta)" }}
+          style={{
+            background: "var(--hueso)",
+            borderColor: "var(--borde)",
+            color: "var(--tinta)",
+          }}
         >
           Prebo
         </span>
         <span
           className="border px-2.5 py-1 rounded-full"
-          style={{ background: "var(--hueso)", borderColor: "var(--borde)", color: "var(--tinta)" }}
+          style={{
+            background: "var(--hueso)",
+            borderColor: "var(--borde)",
+            color: "var(--tinta)",
+          }}
         >
           Mañongo
         </span>
@@ -86,8 +106,16 @@ export default function SocialMediaLayout({ children, slaSummary }: Props) {
             className="text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5 border"
             style={
               tieneAlertas
-                ? { background: "color-mix(in srgb, var(--naranja) 15%, white)", color: "#8A4B0C", borderColor: "var(--naranja)" }
-                : { background: "color-mix(in srgb, var(--verde) 12%, white)", color: "#256B3A", borderColor: "var(--verde)" }
+                ? {
+                    background: "color-mix(in srgb, var(--naranja) 15%, white)",
+                    color: "#8A4B0C",
+                    borderColor: "var(--naranja)",
+                  }
+                : {
+                    background: "color-mix(in srgb, var(--verde) 12%, white)",
+                    color: "#256B3A",
+                    borderColor: "var(--verde)",
+                  }
             }
           >
             {tieneAlertas && <AlertTriangle size={13} aria-hidden="true" />}
@@ -107,14 +135,17 @@ export default function SocialMediaLayout({ children, slaSummary }: Props) {
         </button>
       </div>
     </header>
-  ), [slaSummary, tieneAlertas]);
+  );
 
   useRegisterShellSlots(topbar, navGroupsSocialMedia);
 
   return (
     <>
       {children}
-      <NewTicketModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      <NewTicketModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </>
   );
 }

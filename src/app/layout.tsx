@@ -1,15 +1,8 @@
 import type { Metadata } from "next";
 import { Analytics } from '@vercel/analytics/next';
-import { Inter } from "next/font/google";
 import { goldplay } from "@/fonts/goldplay";
+import { inter } from "@/fonts/inter";
 import "./globals.css";
-
-const inter = Inter({
-  variable: "--font-text",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Kromi Connect",
