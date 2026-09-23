@@ -1,7 +1,7 @@
 import React from "react";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { Publicacion } from "@/types";
-import GridClientView from "./GridClientView";
+import GridView from "./GridView";
 
 export const revalidate = 0;
 
@@ -37,9 +37,7 @@ export default async function ParrillaPage() {
         </div>
       </header>
 
-      <GridClientView
-        publicacionesIniciales={(publicaciones as Publicacion[]) || []}
-      />
+      <GridView publicacionesIniciales={(publicaciones as Publicacion[]) || []} />
     </div>
   );
 }
