@@ -2,6 +2,7 @@
 
 > Documento interno de seguimiento operativo de desarrollo. No apto para distribución externa ni comercial.
 > Stack objetivo: Next.js (App Router) + Supabase/PostgreSQL + Server Actions.
+> **Estado del documento:** las secciones 1–5 expresan el alcance y diseño objetivo; la sección 6 contrasta ese diseño con una auditoría parcial del código. En la sección 2, cada requisito incluye su estado de implementación conocido.
 
 ---
 
@@ -29,52 +30,61 @@
 
 ## 2. Requisitos Funcionales (por bloque)
 
+Estados usados: **Implementado**, **Parcial**, **Pendiente**, **No verificado**. Se refieren al código inspeccionado en la auditoría de la sección 6 y no implican verificación del entorno Supabase desplegado.
+
 ### 2.1 Generación y Gestión de Contenido
-- Planificación de grilla mensual con cálculo automatizado de fechas.
-  - **Regla SLA:** `fecha_publicacion - 3 días` = fecha límite rodaje; `fecha_publicacion - 5 días` = fecha límite brief (3 días rodaje + 2 días diseño, contados hacia atrás desde publicación).
-- Generación de cronograma de producción y guiones de rodaje para piso de tienda.
-- Creación de solicitudes de diseño (brief técnico: dimensiones, copy versionado, badges).
-- Flujo de revisión/corrección/aprobación con estados de retorno explícitos.
-- Trazabilidad de tiempos: `fecha_solicitud_diseno` vs `fecha_entrega_diseno_real` (deriva SLA cumplido/incumplido).
-- Programación, publicación y **reprogramación inversa** (Quick Reschedule: mover fecha de publicación recalcula automáticamente brief/rodaje hacia atrás).
+- Planificación de grilla mensual y cálculo automatizado de fechas. **Parcial:** `/social-media/grid` muestra calendario mensual y permite reprogramar; el SLA implementado calcula `fecha_limite_brief = fecha_publicacion - 5 días`. La fecha límite de rodaje (`fecha_publicacion - 3 días`) no está implementada.
+- Generación de cronograma de producción y guiones de rodaje para piso de tienda. **Parcial:** existe `/social-media/shooting`, pero muestra publicaciones e idea principal; no usa `checklist_rodaje` ni ofrece guion estructurado por tomas/zonas.
+- Creación de solicitudes de diseño (brief técnico: dimensiones, copy versionado, badges). **Parcial:** Kanban muestra hook, body, CTA y hashtags; Grid solo permite editar título y fecha. No se verificó un editor técnico completo de brief.
+- Flujo de revisión/corrección/aprobación con estados de retorno explícitos. **Parcial:** hay cambio de estatus, pero Grid permite cualquier transición y el Kanban no tiene interacción de arrastre de estado confirmada.
+- Trazabilidad de tiempos: `fecha_solicitud_diseno` vs `fecha_entrega_diseno_real` y SLA cumplido/incumplido. **Parcial:** existen campos de fechas y cálculo condicional de entrega estimada; no se verificó un reporte de cumplimiento real.
+- Programación, publicación y **reprogramación inversa**. **Parcial:** Quick Reschedule actualiza fecha de publicación, límite de brief y, si hay fecha de solicitud de diseño, entrega estimada. No recalcula una fecha de rodaje, que no existe en el esquema actual.
+- Tabla tipo spreadsheet para operación de publicaciones. **Pendiente:** no se encontró en las rutas auditadas.
 
 ### 2.2 Planificación Estratégica de Campañas
-- Categorización: Temporada, Evento, Efeméride, Lanzamiento, Oferta puntual.
-- Calendario de efemérides + alianzas con proveedores como capa superpuesta a la grilla.
-- Informes post-mortem por campaña (alcance, interacciones, presupuesto, cualitativo).
+- Categorización: Temporada, Evento, Efeméride, Lanzamiento, Oferta puntual. **Pendiente:** el flujo de campañas usa estatus y presupuesto, pero no esta categorización.
+- Calendario de efemérides + alianzas con proveedores como capa superpuesta a la grilla. **Pendiente.**
+- Informes post-mortem por campaña (alcance, interacciones, presupuesto, cualitativo). **Pendiente:** la tabla está tipada, pero no tiene consumidor identificado.
 
 ### 2.3 Recepción y Publicación de Solicitudes de Terceros
-- Inbox de requerimientos entrantes (Compras, HR/Selección, Gerencia).
-- Conversión 1-clic de solicitud externa → ticket de contenido (`publicaciones` row pre-poblada desde `solicitudes_terceros`).
-- Módulo de sorteos/concursos + inventario de premios físicos por sede.
+- Inbox de requerimientos entrantes (Compras, HR/Selección, Gerencia). **Implementado** en `/social-media/requests`.
+- Conversión 1-clic de solicitud externa → ticket de contenido (`publicaciones` row pre-poblada desde `solicitudes_terceros`). **Implementado:** se crea la publicación con SLA calculado y se vincula la solicitud como convertida; también se soporta rechazo.
+- Módulo de sorteos/concursos + inventario de premios físicos por sede. **Pendiente:** la tabla existe, pero no se halló funcionalidad consumidora.
 
 ### 2.4 Informes, Escucha Social y Analítica
-- Log semanal de escucha social (quejas, sugerencias, atención en RRSS).
-- Dashboard de métricas consolidadas: crecimiento, reach, interacciones, top posts.
+- Log semanal de escucha social (quejas, sugerencias, atención en RRSS). **Pendiente** para `reporte_atencion_cliente`; existe además `/support`, con una tabla `atencion_cliente` diferente, cuya relación funcional con este SRS no está confirmada.
+- Dashboard de métricas consolidadas: crecimiento, reach, interacciones, top posts. **Pendiente / no verificado:** no se encontró `/reportes` en las rutas exploradas.
 
 ---
 
-## 3. Roadmap de UI (Next.js App Router)
+## 3. Módulos, rutas y roadmap (Next.js App Router)
 
-### Fase 1 — Core Operativo (Parrilla, Kanban & Briefing)
-- `/dashboard` — resumen operativo, alertas de SLA vencido/próximo, accesos rápidos.
-- `/parrilla` — 3 vistas sobre el mismo dataset: Calendario macro, Kanban por `estatus`, Tabla spreadsheet.
-- **Modal A — Editor de Ticket:** formulario multi-tab (Brief a Diseño / Guion de Rodaje / Historial de Revisiones).
+Las rutas siguientes son las identificadas en el código auditado. Las fases conservan el roadmap objetivo y reflejan el estado observado; no son una afirmación de que la fase esté completa.
 
-### Fase 2 — Producción & Asset Management
-- `/rodaje` — vista responsive/PWA optimizada para móvil, uso en piso por área de tienda.
-- **Modal B — Visor de Assets Drive:** explorador de thumbnails + ingesta vía Google Drive API.
+### Fase 1 — Core Operativo (Grid, Kanban & Briefing) — parcial
+- `/social-media/grid` — calendario mensual con filtro por formato, drag-and-drop de fechas, edición rápida de título/fecha e indicadores SLA.
+- `/social-media/kanban` — tablero de publicaciones con detalle de copy y reprogramación. Grid y Kanban son rutas independientes sobre `publicaciones`, con capacidades de edición distintas; no existe la tercera vista spreadsheet.
+- `/dashboard` — resumen operativo y alertas SLA. **No verificado:** la ruta no se encontró en el árbol explorado.
+- Editor completo de ticket — **Pendiente/parcial:** el formulario de Grid solo edita título y fecha; Kanban expone la ficha de copy, pero no se confirmó edición completa.
 
-### Fase 3 — Gestión de Terceros & Aprobaciones
-- `/solicitudes` — inbox de peticiones externas + conversión a ticket.
-- **Modal C — QA Pre-Publicación:** visualizador de paquete para envío a Gerencia.
+### Fase 2 — Producción & Asset Management — parcial / pendiente
+- `/social-media/shooting` — lista de publicaciones en preparación/rodaje y acción de envío a Diseño. No usa `checklist_rodaje`; PWA no verificada.
+- Guiones/checklist de rodaje estructurados y visor/ingesta de Assets Drive — **Pendiente** según código auditado.
 
-### Fase 4 — Inventario & Tipificación de Campañas
-- Submódulo en `/solicitudes`: control de sorteos y stock de premios por sede.
-- Extensión en `/parrilla`: capa visual de efemérides.
+### Fase 3 — Gestión de Terceros & Aprobaciones — parcial
+- `/social-media/requests` — inbox y conversión/rechazo de solicitudes implementados.
+- QA pre-publicación y envío de paquete a Gerencia — **Pendiente** según código auditado.
 
-### Fase 5 — Analytics & Social Listening
-- `/reportes` — dashboard mensual, log de quejas/sugerencias, informes post-mortem.
+### Fase 4 — Inventario & Tipificación de Campañas — pendiente
+- Inventario de premios por sede y tipificación de campañas/efemérides — sin consumidores identificados.
+- `/social-media/campaigns` existe; su flujo usa estatus `PLANIFICADA`/`ACTIVA`/`FINALIZADA` y presupuesto, y no la categorización `tipo_campana_enum` descrita en el esquema.
+
+### Fase 5 — Analytics & Social Listening — pendiente / no verificado
+- `/reportes`, dashboard mensual, escucha social e informes post-mortem — no se encontraron en las rutas exploradas; verificar en una auditoría posterior.
+
+### Módulos adicionales detectados — clasificación pendiente
+- `/support` — gestión de tickets de atención al cliente mediante tabla `atencion_cliente`, distinta de `reporte_atencion_cliente`. No se ha confirmado si complementa o reemplaza el alcance de escucha social.
+- `/third-parties` — directorio de contactos externos; es distinto del inbox de solicitudes y no estaba contemplado en el roadmap original.
 
 ---
 
@@ -231,10 +241,80 @@ CREATE TABLE campana_evaluaciones (
 
 ---
 
-## 5. Resumen y Escalabilidad
+## 5. Resumen, estado y escalabilidad
 
 **Resultado esperado (fin de Fase 5):** 100% de la operación del perfil Social Media centralizada en Kromi Connect, eliminando dependencia de hojas de cálculo dispersas, con trazabilidad de SLA de diseño y automatización de subida de assets a Drive.
 
 **Preparación para escalar:** el modelo de datos y las vistas actuales no requieren refactor estructural para habilitar en fases futuras:
 - Panel de **Diseño Gráfico** (Kanban centrado en `disenador_id` y estados de renderizado/assets).
 - Panel de **Gerencia de Mercadeo** (dashboard ejecutivo de aprobación 1-clic + ROI de campañas, consumiendo `campana_evaluaciones` y `publicaciones.fecha_aprobacion_gerencia`).
+
+**Lectura del estado actual:** Grid, Kanban, Rodaje, Solicitudes y Campañas tienen rutas identificadas con cobertura desigual. La conversión de solicitudes está implementada; varias tablas del esquema siguen sin consumidor. Las brechas funcionales prioritarias que refleja esta especificación son el editor completo, la fecha límite de rodaje y checklist estructurado, la cobertura de estados en Kanban, QA/aprobación, inventario y analítica. La auditoría es parcial (ver §6.6).
+
+---
+
+## 6. Auditoría de Implementación contra Código Real (parcial)
+
+> Auditoría del repositorio `ernest0dev/kromi-connect`, rama `main`, según el informe adjunto. Las capacidades se consideran implementadas solo cuando el informe describe el flujo de datos/código observado. No se verificaron módulos completos, configuración desplegada de Supabase ni ramas distintas de `main`.
+
+### 6.0 Nomenclatura de Grid y Kanban
+
+El diseño inicial describía `/parrilla` como tres vistas del mismo dataset. El código separa Grid y Kanban en rutas independientes, cada una con su propio estado y capacidades:
+
+- `/social-media/grid`: calendario macro mensual.
+- `/social-media/kanban`: tablero por estatus.
+- No se encontró vista spreadsheet en las rutas auditadas.
+
+Son proyecciones de `publicaciones`, pero no interfaces equivalentes: Grid permite edición rápida de título/fecha y Kanban muestra el copy completo.
+
+### 6.1 Grid (`/social-media/grid`)
+
+**Implementado y confirmado:** calendario mensual con navegación de meses; filtro solo por formato; reprogramación por arrastrar y soltar; cambio de estatus desde selector sin restricciones de transición; edición rápida de título y fecha; señal visual de SLA derivada solo de `fecha_limite_brief`; enlace a Drive si hay URL; actualización optimista con rollback ante error.
+
+**No implementado en Grid:** tabla spreadsheet; editor completo de brief/guion/historial; capa de campañas o efemérides; fecha límite de rodaje. Los campos `hook_texto`, `body_texto`, `cta_texto` y `hashtags` no tienen inputs en Grid.
+
+### 6.2 Kanban (`/social-media/kanban`)
+
+**Implementado y confirmado:** tablero con siete columnas (`PENDIENTE_BRIEF`, `EN_RODAJE`, `EN_DISENO`, `EN_REVISION_CM`, `APROBADO`, `PROGRAMADO`, `PUBLICADO`); modal/drawer con reprogramación, ficha de copy completa y enlace a Drive.
+
+**Brechas:** no hay columna para `RECHAZADO_DISENO` ni `PENDIENTE_APROBACION_GERENCIA`; los tickets con esos valores quedan fuera de las columnas definidas. No se confirmó interacción drag-and-drop para cambiar estatus.
+
+### 6.3 SLA y Quick Reschedule
+
+Según `src/utils/sla.ts` y `src/app/actions/publicaciones/recalculateSla.ts`:
+
+- Se calcula `fecha_limite_brief = fecha_publicacion - 5 días`.
+- `fecha_entrega_diseno_estimada = fecha_solicitud_diseno + 2 días` solo se calcula si existe `fecha_solicitud_diseno`.
+- No existe campo ni cálculo de fecha límite de rodaje (`fecha_publicacion - 3 días`).
+- La acción de reprogramación actualiza `fecha_publicacion`, `fecha_limite_brief` y la entrega estimada cuando corresponde; Grid y Kanban la consumen y ambas rutas se revalidan.
+
+Esto deja incompleta la regla de 3+2 días del requisito original: solo está materializado el límite de brief y, condicionalmente, la entrega estimada desde la solicitud de diseño.
+
+### 6.4 Rodaje (`/social-media/shooting`)
+
+El módulo lista publicaciones con estatus `PENDIENTE_BRIEF` o `EN_RODAJE`, permite enviarlas a Diseño y presenta `hook_texto` como idea principal y `linea_contenido` como referencia.
+
+No consulta `checklist_rodaje`; no hay guion/checklist de tomas por zona. El filtro de sede del servidor intenta filtrar por `publicaciones.sede`, columna que no figura en los tipos de base de datos auditados. El filtro visible aplica una búsqueda textual de la sede dentro de `linea_contenido`, en lugar de un campo estructurado. La existencia de manifest/service worker PWA no se verificó.
+
+### 6.5 Solicitudes, campañas y tablas sin consumidor
+
+**Solicitudes (`/social-media/requests`):** el inbox consulta `solicitudes_terceros`; `processRequestAction` crea una publicación con SLA, marca la solicitud como `CONVERTIDA` y enlaza el ID. También permite rechazar solicitudes.
+
+**Campañas (`/social-media/campaigns`):** el flujo usa estatus `PLANIFICADA`/`ACTIVA`/`FINALIZADA` y presupuesto. No usa `tipo_campana_enum` ni el campo `activo` del diseño SQL descrito. No se encontró categorización ni capa visual de efemérides.
+
+**Tablas tipadas sin consumidor en `src/app` según la búsqueda auditada:** `checklist_rodaje`, `inventario_premios`, `reporte_atencion_cliente`, `campana_evaluaciones` y `publicacion_canales`.
+
+**Rutas adicionales detectadas:** `/support` usa la tabla `atencion_cliente`, distinta de `reporte_atencion_cliente`; `/third-parties` gestiona un directorio de contactos y es diferente del inbox de solicitudes. Su clasificación dentro del alcance del SRS está pendiente.
+
+### 6.6 Pendiente de confirmar
+
+La auditoría adjunta no confirmó lo siguiente; no se debe asumir que esté implementado o ausente:
+
+- Flujos completos de `/support` y `/third-parties` (se confirmó su existencia y forma general, no todas sus mutaciones).
+- Ubicación alternativa de `/dashboard` y `/reportes` fuera de los árboles explorados.
+- Policies RLS efectivamente configuradas en Supabase. Las server actions revisadas usan `getSupabaseAdmin()` (Service Role), por lo que RLS no parece ser el control de acceso aplicado por esos flujos.
+- Interacción de cambio de estatus por drag-and-drop en algún componente auxiliar de Kanban.
+- Configuración PWA de `/social-media/shooting`.
+- Trabajo en progreso en ramas distintas de `main`.
+
+La auditoría describe revisión de código, no validación del despliegue ni de las policies en el proyecto vivo.
