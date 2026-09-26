@@ -14,10 +14,12 @@ export function GridHeader({
   onFiltroChange,
 }: GridHeaderProps) {
   const monthName = getMonthName(currentDate);
+  const focusRing =
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--papel)]';
 
   return (
     <div
-      className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 rounded-2xl border"
+      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-3.5 py-3 rounded-xl border"
       style={{ background: 'var(--papel)', borderColor: 'var(--borde)' }}
     >
       <div className="flex flex-wrap items-center gap-2">
@@ -26,7 +28,7 @@ export function GridHeader({
         </span>
         <button
           onClick={() => onFiltroChange('TODOS')}
-          className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition"
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${focusRing}`}
           style={
             formatoFiltro === 'TODOS'
               ? { background: 'var(--azul)', color: '#fff' }
@@ -41,7 +43,7 @@ export function GridHeader({
             <button
               key={fmt}
               onClick={() => onFiltroChange(fmt)}
-              className="px-3.5 py-1.5 rounded-full text-xs font-semibold transition"
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${focusRing}`}
               style={
                 isSelected
                   ? { background: 'var(--azul)', color: '#fff' }
@@ -58,7 +60,7 @@ export function GridHeader({
         <button
           onClick={onPrevMonth}
           aria-label="Mes anterior"
-          className="p-2 rounded-lg border transition"
+          className={`p-2 rounded-lg border transition ${focusRing}`}
           style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
         >
           <ChevronLeft size={16} aria-hidden="true" />
@@ -72,7 +74,7 @@ export function GridHeader({
         <button
           onClick={onNextMonth}
           aria-label="Mes siguiente"
-          className="p-2 rounded-lg border transition"
+          className={`p-2 rounded-lg border transition ${focusRing}`}
           style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
         >
           <ChevronRight size={16} aria-hidden="true" />

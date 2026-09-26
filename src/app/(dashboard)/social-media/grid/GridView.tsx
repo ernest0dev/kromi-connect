@@ -22,6 +22,7 @@ export default function GridView({ publicacionesIniciales }: Props) {
     editingTicketId,
     setEditingTicketId,
     publicacionesFiltradas,
+    publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
     selectTicket,
@@ -46,7 +47,7 @@ export default function GridView({ publicacionesIniciales }: Props) {
   return (
     <div className="space-y-6">
       {/* SECCIÓN SUPERIOR: CONTROLES & GRILLA MENSUAL */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <GridHeader
           currentDate={currentDate}
           formatoFiltro={formatoFiltro}
@@ -66,27 +67,27 @@ export default function GridView({ publicacionesIniciales }: Props) {
         />
       </div>
 
-      {/* DETALLE DE ENTREGABLES / TICKETS — lista completa siempre visible */}
-      <section className="space-y-4 pt-4 border-t" style={{ borderColor: 'var(--borde)' }}>
+      {/* Fichas correspondientes al mes y formato seleccionados */}
+      <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}>
-              Detalle de tickets y fichas de entregables
+            <h3 className="text-[17px] font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}>
+              Publicaciones del mes
             </h3>
-            <p className="text-xs" style={{ color: 'var(--gris)' }}>
-              Cambia el estatus o edita el título y la fecha sin salir de esta vista.
+            <p className="text-[11px]" style={{ color: 'var(--gris)' }}>
+              Publicaciones de {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })} que coinciden con el formato seleccionado. Desde cada ficha puedes cambiar el estado, editar título y fecha o abrir sus assets.
             </p>
           </div>
           <span
-            className="text-xs px-3 py-1.5 rounded-full border"
+            className="text-[10px] px-3 py-1.5 rounded-full border"
             style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
           >
-            {publicacionesFiltradas.length} ítems
+            {publicacionesMesFiltradas.length} publicaciones
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {publicacionesFiltradas.map((pub) => (
+        <div className="grid grid-cols-1 min-[761px]:grid-cols-2 min-[1100px]:grid-cols-3 gap-3">
+          {publicacionesMesFiltradas.length > 0 ? publicacionesMesFiltradas.map((pub) => (
             <TicketDetailCard
               key={pub.id}
               publicacion={pub}
@@ -103,7 +104,14 @@ export default function GridView({ publicacionesIniciales }: Props) {
                 updateStatus(pub, nuevoEstatus);
               }}
             />
-          ))}
+          )) : (
+            <p
+              className="col-span-full rounded-xl border p-6 text-center text-sm"
+              style={{ background: 'var(--papel)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
+            >
+              No hay publicaciones para este mes y formato.
+            </p>
+          )}
         </div>
       </section>
     </div>
