@@ -31,6 +31,13 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
     });
   }, [publicaciones, formatoFiltro]);
 
+  const publicacionesMesFiltradas = useMemo(() => {
+    const mesActual = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    return publicacionesFiltradas.filter((pub) =>
+      pub.fecha_publicacion.startsWith(`${mesActual}-`)
+    );
+  }, [publicacionesFiltradas, currentDate]);
+
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
 
@@ -66,6 +73,7 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
     editError,
     setEditError,
     publicacionesFiltradas,
+    publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
     selectTicket,

@@ -7,6 +7,13 @@ export const FORMATO_LABEL: Record<FormatoEnum, string> = {
   STORY: 'Story',
 };
 
+export const FORMATO_LABEL_UPPER: Record<FormatoEnum, string> = {
+  CARRUSEL: 'CARRUSEL',
+  POST: 'POST',
+  REEL: 'REEL',
+  STORY: 'STORY',
+};
+
 export const ESTATUS_ORDEN: EstatusEnum[] = [
   'PENDIENTE_BRIEF',
   'EN_RODAJE',

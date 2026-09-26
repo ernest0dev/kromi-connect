@@ -59,12 +59,12 @@ function ShellInner({
     >
       {/* Sidebar */}
       <aside
-        className="w-full md:w-64 flex flex-col justify-between shrink-0"
-        style={{ background: "var(--azul)" }}
+        className="w-full shrink-0 md:w-[232px] md:min-h-screen md:flex md:flex-col md:justify-between"
+        style={{ background: "var(--azul-osc)" }}
       >
         <div>
           {/* Logo */}
-          <div className="p-5 border-b border-white/15 flex items-center gap-3">
+          <div className="px-5 py-3 md:py-[22px] border-b border-white/15 flex items-center gap-3">
             <svg
               width="32"
               height="32"
@@ -101,15 +101,18 @@ function ShellInner({
           </div>
 
           {/* Navegación agrupada */}
-          <nav className="p-3 space-y-6 text-sm font-medium">
+          <nav
+            aria-label="Navegación principal"
+            className="flex gap-4 overflow-x-auto p-2 text-sm font-medium md:block md:space-y-6 md:overflow-visible md:p-3"
+          >
             {gruposCombinados.map((group, gi) => (
-              <div key={group.label ?? `group-${gi}`}>
+              <div key={group.label ?? `group-${gi}`} className="shrink-0 md:w-auto">
                 {group.label && (
-                  <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-white/45">
+                  <p className="hidden px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-white/45 md:block">
                     {group.label}
                   </p>
                 )}
-                <div className="space-y-1">
+                <div className="flex gap-1 md:flex-col md:space-y-1">
                   {group.items.map((item) => {
                     const isActive = activePath.startsWith(item.href);
                     const Icon = item.icon;
@@ -118,7 +121,7 @@ function ShellInner({
                         key={item.href}
                         href={item.href}
                         aria-current={isActive ? "page" : undefined}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition font-medium ${
+                        className={`flex min-h-10 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 transition font-medium md:gap-3 ${
                           isActive
                             ? "bg-white font-semibold"
                             : "text-white/85 hover:bg-white/10 hover:text-white"
@@ -137,7 +140,7 @@ function ShellInner({
         </div>
 
         {/* Footer de perfil */}
-        <div className="p-4 border-t border-white/15 bg-black/10">
+        <div className="hidden p-4 border-t border-white/15 bg-black/10 md:block">
           <div className="flex items-center gap-3">
             <div
               className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
@@ -160,8 +163,10 @@ function ShellInner({
       {/* Área principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {topbar}
-        <main className="flex-1 overflow-x-auto">
-          <div className="max-w-[1400px] mx-auto p-8 lg:p-10">{children}</div>
+        <main className="min-w-0 flex-1 overflow-x-auto">
+          <div className="mx-auto max-w-[1500px] px-3 pt-[18px] pb-[54px] md:px-8 md:pt-7">
+            {children}
+          </div>
         </main>
       </div>
     </div>

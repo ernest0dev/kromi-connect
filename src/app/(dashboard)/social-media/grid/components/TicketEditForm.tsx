@@ -23,7 +23,8 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         type="text"
         value={editTitulo}
         onChange={(e) => setEditTitulo(e.target.value)}
-        className="w-full text-sm font-semibold rounded-lg px-2.5 py-1.5 border"
+        aria-label="Título de la publicación"
+        className="w-full text-sm font-semibold rounded-lg px-2.5 py-1.5 border focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
         style={{ borderColor: 'var(--azul)', color: 'var(--tinta)' }}
         autoFocus
       />
@@ -31,16 +32,18 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         type="date"
         value={editFecha}
         onChange={(e) => setEditFecha(e.target.value)}
-        className="w-full text-xs rounded-lg px-2.5 py-1.5 border"
+        aria-label="Fecha de publicación"
+        className="w-full text-xs rounded-lg px-2.5 py-1.5 border focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
         style={{ borderColor: 'var(--azul)', color: 'var(--tinta)' }}
       />
       {editError && (
-        <p className="text-[11px]" style={{ color: '#A32D2D' }}>{editError}</p>
+        <p role="alert" className="text-[11px]" style={{ color: '#A32D2D' }}>{editError}</p>
       )}
       <div className="flex items-center gap-2 pt-1">
         <button
           onClick={handleSave}
-          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg"
+          aria-label="Guardar cambios"
+          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
           style={{ background: 'var(--verde)', color: '#fff' }}
         >
           <Check size={13} aria-hidden="true" />
@@ -48,7 +51,8 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         </button>
         <button
           onClick={onCancel}
-          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg"
+          aria-label="Cancelar edición"
+          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
           style={{ background: 'var(--hueso)', color: 'var(--gris)' }}
         >
           <X size={13} aria-hidden="true" />

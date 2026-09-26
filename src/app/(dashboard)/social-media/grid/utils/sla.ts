@@ -13,10 +13,10 @@ export function calcularSlaState(fechaLimiteBrief: string | null | undefined): S
   return 'ok';
 }
 
-export const SLA_META: Record<SlaState, { label: string; textVar: string; bgVar: string }> = {
-  vencido: { label: 'Brief vencido', textVar: '#A32D2D', bgVar: '#FCEBEB' },
-  hoy: { label: 'Brief vence hoy', textVar: '#8A4B0C', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)' },
-  proximo: { label: 'Brief próximo a vencer', textVar: '#8A4B0C', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)' },
-  ok: { label: 'En plazo', textVar: '#256B3A', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)' },
-  'sin-fecha': { label: 'Sin fecha límite', textVar: 'var(--gris)', bgVar: 'var(--hueso)' },
+export const SLA_META: Record<SlaState, { label: string; textVar: string; bgVar: string; dotVar: string }> = {
+  vencido: { label: 'Brief vencido', textVar: '#A32D2D', bgVar: '#FCEBEB', dotVar: '#C52018' },
+  hoy: { label: 'Brief vence hoy', textVar: '#8A4B0C', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', dotVar: 'var(--naranja)' },
+  proximo: { label: 'Brief próximo a vencer', textVar: '#8A4B0C', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', dotVar: 'var(--naranja)' },
+  ok: { label: 'En plazo', textVar: '#256B3A', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', dotVar: 'var(--verde)' },
+  'sin-fecha': { label: 'Sin fecha límite', textVar: 'var(--gris)', bgVar: 'var(--hueso)', dotVar: 'var(--gris)' },
 };

@@ -3,7 +3,8 @@
 import React from "react";
 import { usePathname } from "next/navigation";
 import { Building2, Headset } from "lucide-react";
-import SocialMediaShell, { NavGroup } from "./components/SocialMediaShell";
+import SocialMediaShell from "./components/SocialMediaShell";
+import type { NavGroup } from "./components/SocialMediaShell";
 
 /**
  * Grupos de navegación transversales, siempre visibles sin importar el
