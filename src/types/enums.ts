@@ -10,6 +10,8 @@ export type EstatusEnum =
   | 'PROGRAMADO'
   | 'PUBLICADO';
 export type TipoCampanaEnum = 'TEMPORADA' | 'EVENTO' | 'EFEMERIDE' | 'LANZAMIENTO' | 'OFERTA_PUNTUAL';
+export type CampanaEstatusEnum = 'PLANIFICADA' | 'ACTIVA' | 'FINALIZADA' | 'ARCHIVADA';
+export type CampanaEstatusOperativoEnum = Exclude<CampanaEstatusEnum, 'ARCHIVADA'>;
 export type DepartamentoEnum = 'COMPRAS' | 'SELECCION' | 'PROVEEDOR' | 'GERENCIA' | 'EVENTOS';
 export type CanalEnum = 'INSTAGRAM' | 'TIKTOK' | 'YOUTUBE_SHORTS' | 'FACEBOOK';
 export type SedeEnum = 'PREBO' | 'MANONGO';

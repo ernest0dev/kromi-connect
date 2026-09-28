@@ -1,6 +1,6 @@
 'use client';
 
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { FormatoEnum } from '@/types';
 import { FORMATO_LABEL } from '../utils/constants';
 import { getMonthName } from '../utils/date';
@@ -11,6 +11,8 @@ export function GridHeader({
   formatoFiltro,
   onPrevMonth,
   onNextMonth,
+  onToday,
+  onCreateClick,
   onFiltroChange,
 }: GridHeaderProps) {
   const monthName = getMonthName(currentDate);
@@ -18,17 +20,12 @@ export function GridHeader({
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--papel)]';
 
   return (
-    <div
-      className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-3.5 py-3 rounded-xl border"
-      style={{ background: 'var(--papel)', borderColor: 'var(--borde)' }}
-    >
+    <div className="ui-card-plain flex flex-wrap items-center justify-between gap-x-4 gap-y-3 px-3.5 py-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-semibold mr-1" style={{ color: 'var(--gris)' }}>
-          Formato:
-        </span>
+        <span className="text-xs font-semibold mr-1 ui-text-muted">Formato:</span>
         <button
           onClick={() => onFiltroChange('TODOS')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${focusRing}`}
+          className={'px-3 py-1.5 rounded-lg text-xs font-semibold transition ' + focusRing}
           style={
             formatoFiltro === 'TODOS'
               ? { background: 'var(--azul)', color: '#fff' }
@@ -43,7 +40,7 @@ export function GridHeader({
             <button
               key={fmt}
               onClick={() => onFiltroChange(fmt)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${focusRing}`}
+              className={'px-3 py-1.5 rounded-lg text-xs font-semibold transition ' + focusRing}
               style={
                 isSelected
                   ? { background: 'var(--azul)', color: '#fff' }
@@ -56,11 +53,11 @@ export function GridHeader({
         })}
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={onPrevMonth}
           aria-label="Mes anterior"
-          className={`p-2 rounded-lg border transition ${focusRing}`}
+          className={'p-2 rounded-lg border transition ' + focusRing}
           style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
         >
           <ChevronLeft size={16} aria-hidden="true" />
@@ -74,10 +71,27 @@ export function GridHeader({
         <button
           onClick={onNextMonth}
           aria-label="Mes siguiente"
-          className={`p-2 rounded-lg border transition ${focusRing}`}
+          className={'p-2 rounded-lg border transition ' + focusRing}
           style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
         >
           <ChevronRight size={16} aria-hidden="true" />
+        </button>
+        <button
+          onClick={onToday}
+          aria-label="Ir al mes actual"
+          className={'rounded-lg border px-3 py-2 text-xs font-semibold transition ' + focusRing}
+          style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
+        >
+          Hoy
+        </button>
+        <button
+          onClick={onCreateClick}
+          type="button"
+          className={'flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition ' + focusRing}
+          style={{ background: 'var(--azul)', color: '#fff' }}
+        >
+          <Plus size={14} aria-hidden="true" />
+          Nueva publicación
         </button>
       </div>
     </div>

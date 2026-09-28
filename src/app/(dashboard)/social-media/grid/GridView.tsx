@@ -1,6 +1,8 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import { Publicacion } from '@/types';
+import NewTicketModal from '../components/NewTicketModal';
 import { useGridState } from './hooks/useGridState';
 import { useTicketMutations } from './hooks/useTicketMutations';
 import { useDragDrop } from './hooks/useDragDrop';
@@ -16,6 +18,7 @@ export default function GridView({ publicacionesIniciales }: Props) {
   const {
     setPublicaciones,
     currentDate,
+    setCurrentDate,
     formatoFiltro,
     setFormatoFiltro,
     selectedTicketId,
@@ -25,10 +28,12 @@ export default function GridView({ publicacionesIniciales }: Props) {
     publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
+    goToToday,
     selectTicket,
     startEditing,
     cancelEditing,
   } = useGridState(publicacionesIniciales);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const { rescheduleDate, updateStatus, updateFields, isPending } =
     useTicketMutations(setPublicaciones, publicacionesIniciales);
@@ -36,23 +41,36 @@ export default function GridView({ publicacionesIniciales }: Props) {
   const { handleDragStart, handleDragOver, handleDrop } =
     useDragDrop(rescheduleDate);
 
-  const scrollToTicketCard = (id: string) => {
-    selectTicket(id);
-    const el = document.getElementById(`ticket-card-${id}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+  useEffect(() => {
+    if (!selectedTicketId) return;
+    document
+      .getElementById('ticket-card-' + selectedTicketId)
+      ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [selectedTicketId, publicacionesMesFiltradas]);
+
+  const handleTicketCreated = (publicacion: Publicacion) => {
+    setPublicaciones((prev) =>
+      [...prev.filter((item) => item.id !== publicacion.id), publicacion].sort(
+        (a, b) => a.fecha_publicacion.localeCompare(b.fecha_publicacion)
+      )
+    );
+
+    const [year, month] = publicacion.fecha_publicacion.split('-').map(Number);
+    setCurrentDate(new Date(year, month - 1, 1));
+    setFormatoFiltro('TODOS');
+    selectTicket(publicacion.id);
   };
 
   return (
     <div className="space-y-6">
-      {/* SECCIÓN SUPERIOR: CONTROLES & GRILLA MENSUAL */}
       <div className="space-y-3">
         <GridHeader
           currentDate={currentDate}
           formatoFiltro={formatoFiltro}
           onPrevMonth={prevMonth}
           onNextMonth={nextMonth}
+          onToday={goToToday}
+          onCreateClick={() => setIsCreateOpen(true)}
           onFiltroChange={setFormatoFiltro}
         />
 
@@ -60,28 +78,24 @@ export default function GridView({ publicacionesIniciales }: Props) {
           currentDate={currentDate}
           publicaciones={publicacionesFiltradas}
           isPending={isPending}
-          onTicketClick={scrollToTicketCard}
+          onTicketClick={selectTicket}
           onDragStart={handleDragStart}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
         />
       </div>
 
-      {/* Fichas correspondientes al mes y formato seleccionados */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-[17px] font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}>
+            <h3 className="text-[17px] font-bold" style={{fontFamily: 'var(--font-display)', color: 'var(--tinta)' }}>
               Publicaciones del mes
             </h3>
-            <p className="text-[11px]" style={{ color: 'var(--gris)' }}>
+            <p className="text-[11px] ui-text-muted">
               Publicaciones de {currentDate.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })} que coinciden con el formato seleccionado. Desde cada ficha puedes cambiar el estado, editar título y fecha o abrir sus assets.
             </p>
           </div>
-          <span
-            className="text-[10px] px-3 py-1.5 rounded-full border"
-            style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
-          >
+          <span className="ui-badge">
             {publicacionesMesFiltradas.length} publicaciones
           </span>
         </div>
@@ -105,15 +119,18 @@ export default function GridView({ publicacionesIniciales }: Props) {
               }}
             />
           )) : (
-            <p
-              className="col-span-full rounded-xl border p-6 text-center text-sm"
-              style={{ background: 'var(--papel)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
-            >
+            <p className="ui-empty-state col-span-full text-sm">
               No hay publicaciones para este mes y formato.
             </p>
           )}
         </div>
       </section>
+
+      <NewTicketModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onCreated={handleTicketCreated}
+      />
     </div>
   );
 }

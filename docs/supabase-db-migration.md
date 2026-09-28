@@ -60,6 +60,8 @@ Entidad de agrupación para campañas de temporada, eventos o lanzamientos.
 | `activo` | `BOOLEAN DEFAULT TRUE` | |
 | `created_at` | `TIMESTAMPTZ DEFAULT now()` | |
 
+La vista de campañas amplía esta tabla con `descripcion`, `presupuesto`, `estatus` y `estatus_pre_archivado`. `estatus` admite `PLANIFICADA`, `ACTIVA`, `FINALIZADA` y `ARCHIVADA`; archivar conserva el estado previo en `estatus_pre_archivado` y pone `activo = FALSE`. La acción de restauración devuelve ese estado previo y no elimina las relaciones con publicaciones, inventario ni evaluaciones. Aplicar las migraciones de `supabase/migrations/` en orden para habilitar estos campos.
+
 ### 3.2 `publicaciones` (entidad central)
 Ticket de contenido con trazabilidad completa de matriz SLA (brief → rodaje → diseño → aprobación → publicación).
 

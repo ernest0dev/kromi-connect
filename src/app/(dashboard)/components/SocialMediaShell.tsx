@@ -47,6 +47,7 @@ function ShellInner({
   roleInitials = "SM",
 }: SocialMediaShellProps) {
   const { topbar, extraNavGroups } = useShellSlot();
+  const campaignsView = activePath === "/social-media/campaigns";
 
   // Los grupos del perfil activo (ej. "Social media") van primero;
   // los transversales (ej. "Transversal") quedan siempre al final.
@@ -54,42 +55,28 @@ function ShellInner({
 
   return (
     <div
-      className="min-h-screen flex flex-col md:flex-row"
-      style={{ background: "var(--hueso)", color: "var(--tinta)" }}
+      data-campaigns-view={campaignsView ? "true" : undefined}
+      className="min-h-screen flex flex-col min-[768px]:flex-row"
+      style={{ background: "#f4f6f9", color: "var(--tinta)" }}
     >
       {/* Sidebar */}
       <aside
-        className="w-full shrink-0 md:w-[232px] md:min-h-screen md:flex md:flex-col md:justify-between"
-        style={{ background: "var(--azul-osc)" }}
+        className="w-full shrink-0 min-[768px]:sticky min-[768px]:top-0 min-[768px]:flex min-[768px]:h-screen min-[768px]:max-h-screen min-[768px]:w-58 min-[768px]:self-start min-[768px]:flex-col min-[768px]:justify-between min-[768px]:overflow-y-auto max-[1100px]:min-[768px]:w-51.25"
+        style={{ background: "#073b78" }}
       >
         <div>
           {/* Logo */}
-          <div className="px-5 py-3 md:py-[22px] border-b border-white/15 flex items-center gap-3">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 120 120"
-              fill="none"
+          <div className="flex items-center gap-3 border-b border-white/15 px-4 py-3 min-[761px]:px-5 min-[761px]:py-5.5">
+            <div
               aria-hidden="true"
-              className="shrink-0"
+              className="grid h-8.75 w-8.75 shrink-0 place-items-center rounded-[11px] text-xl font-black"
+              style={{ background: "#ed8b19", color: "#2E1600" }}
             >
-              <circle cx="46" cy="34" r="13" fill="#fff" />
-              <circle cx="60" cy="29" r="9" fill="#fff" />
-              <rect
-                x="38"
-                y="46"
-                width="14"
-                height="40"
-                fill="var(--naranja)"
-              />
-              <path
-                d="M52 46 L74 46 L58 65 L76 65 L52 86 L57 70 L41 70 Z"
-                fill="var(--naranja)"
-              />
-            </svg>
+              K
+            </div>
             <div>
               <h1
-                className="text-base font-bold tracking-tight text-white leading-tight"
+                className="text-[15px] font-bold tracking-tight text-white leading-tight"
                 style={{ fontFamily: "var(--font-display)" }}
               >
                 Kromi Connect
@@ -103,30 +90,34 @@ function ShellInner({
           {/* Navegación agrupada */}
           <nav
             aria-label="Navegación principal"
-            className="flex gap-4 overflow-x-auto p-2 text-sm font-medium md:block md:space-y-6 md:overflow-visible md:p-3"
+            className="flex gap-2 overflow-x-auto overscroll-x-contain px-3 py-2 text-sm font-medium focus-visible:outline-none min-[768px]:block min-[768px]:space-y-6 min-[768px]:overflow-visible min-[768px]:px-3 min-[768px]:py-5.5"
           >
             {gruposCombinados.map((group, gi) => (
-              <div key={group.label ?? `group-${gi}`} className="shrink-0 md:w-auto">
+              <div
+                key={group.label ?? `group-${gi}`}
+                className="shrink-0 min-[768px]:w-auto"
+              >
                 {group.label && (
-                  <p className="hidden px-3 pb-2 text-[11px] font-semibold uppercase tracking-wide text-white/45 md:block">
+                  <p className="mb-2.25 hidden px-2.5 text-[10px] font-normal uppercase tracking-widest text-white/45 min-[768px]:block">
                     {group.label}
                   </p>
                 )}
-                <div className="flex gap-1 md:flex-col md:space-y-1">
+                <div className="flex gap-1 min-[768px]:flex-col min-[768px]:space-y-0.75">
                   {group.items.map((item) => {
-                    const isActive = activePath.startsWith(item.href);
+                    const isActive =
+                      activePath === item.href || activePath.startsWith(`${item.href}/`);
                     const Icon = item.icon;
                     return (
                       <Link
                         key={item.href}
                         href={item.href}
                         aria-current={isActive ? "page" : undefined}
-                        className={`flex min-h-10 shrink-0 items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2.5 transition font-medium md:gap-3 ${
+                        className={`flex h-10 shrink-0 items-center gap-2.75 whitespace-nowrap rounded-lg px-2.75 transition text-[13px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-[#073b78] ${
                           isActive
-                            ? "bg-white font-semibold"
+                            ? "bg-white font-bold"
                             : "text-white/85 hover:bg-white/10 hover:text-white"
                         }`}
-                        style={isActive ? { color: "var(--azul)" } : undefined}
+                        style={{ color: isActive ? "#073b78" : "rgba(255,255,255,0.85)" }}
                       >
                         <Icon size={18} strokeWidth={2} aria-hidden="true" />
                         <span>{item.label}</span>
@@ -140,16 +131,16 @@ function ShellInner({
         </div>
 
         {/* Footer de perfil */}
-        <div className="hidden p-4 border-t border-white/15 bg-black/10 md:block">
+        <div className="flex items-center gap-2 border-t border-white/15 px-4 py-2 min-[768px]:block min-[768px]:p-4">
           <div className="flex items-center gap-3">
             <div
-              className="h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: "var(--naranja)", color: "#2E1600" }}
+              className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full text-xs font-extrabold"
+              style={{ background: "#ed8b19", color: "#2E1600" }}
             >
               {roleInitials}
             </div>
-            <div className="overflow-hidden">
-              <p className="text-xs font-semibold text-white truncate">
+            <div className="overflow-hidden min-[768px]:mt-2">
+              <p className="truncate text-[11px] font-semibold text-white">
                 {roleLabel}
               </p>
               <span className="text-[11px] text-white/55 block">
@@ -163,8 +154,8 @@ function ShellInner({
       {/* Área principal */}
       <div className="flex-1 flex flex-col min-w-0">
         {topbar}
-        <main className="min-w-0 flex-1 overflow-x-auto">
-          <div className="mx-auto max-w-[1500px] px-3 pt-[18px] pb-[54px] md:px-8 md:pt-7">
+        <main className="min-w-0 flex-1 overflow-x-auto" id="contenido-principal">
+          <div className="mx-auto max-w-375 px-3 pt-4.5 pb-13.5 min-[761px]:px-8 min-[761px]:pt-7">
             {children}
           </div>
         </main>

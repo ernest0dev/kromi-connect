@@ -2,12 +2,13 @@
 
 import React, { useId, useState, useTransition } from 'react';
 import { X, Loader2, TriangleAlert, FolderPlus } from 'lucide-react';
-import { FormatoEnum } from '@/types';
+import { FormatoEnum, Publicacion } from '@/types';
 import { createPostWithDriveAction } from '@/app/actions/publicaciones/create';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
+  onCreated?: (publicacion: Publicacion) => void;
 }
 
 const FORMATO_OPCIONES: { value: FormatoEnum; label: string; hint: string }[] = [
@@ -23,7 +24,7 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--tinta)',
 };
 
-export default function NuevoTicketModal({ isOpen, onClose }: Props) {
+export default function NuevoTicketModal({ isOpen, onClose, onCreated }: Props) {
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const formId = useId();
@@ -73,6 +74,7 @@ export default function NuevoTicketModal({ isOpen, onClose }: Props) {
         setBodyTexto('');
         setCtaTexto('');
         setHashtagsRaw('');
+        if (res.data) onCreated?.(res.data as Publicacion);
         onClose();
       } else {
         setErrorMessage(res.error || 'Ocurrió un error al crear la publicación.');

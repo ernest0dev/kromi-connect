@@ -31,18 +31,18 @@ export default async function ParrillaPage() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-5">
         <div>
           <span
-            className="block text-[11px] font-bold uppercase tracking-[0.09em] mb-1.75"
-            style={{ color: "var(--azul)" }}
+            className="ui-eyebrow block mb-1.75"
+            style={{color: "var(--azul)" }}
           >
             Planificación · Social media
           </span>
           <h1
             className="mb-1.5 text-[21px] font-bold leading-[1.15] md:text-[25px]"
-            style={{ fontFamily: "var(--font-display)", color: "var(--tinta)" }}
+            style={{fontFamily: "var(--font-display)", color: "var(--tinta)" }}
           >
             Parrilla macro de contenidos
           </h1>
-          <p className="text-[13px]" style={{ color: "var(--gris)" }}>
+          <p className="text-[13px] ui-text-muted">
             Planifica publicaciones y reprograma entregables desde el
             calendario.
           </p>
@@ -51,13 +51,12 @@ export default async function ParrillaPage() {
         {/* El contador resume el total y aparece en pantallas amplias. */}
         <div className="hidden min-[1100px]:flex items-end gap-2">
           <div
-            className="flex min-w-23.5 flex-col items-start gap-0.5 rounded-[10px] border px-3 py-2.25 shadow-[0_3px_14px_rgba(18,38,63,0.055)]"
-            style={{ background: "var(--papel)", borderColor: "var(--borde)" }}
+            className="ui-card flex min-w-23.5 flex-col items-start gap-0.5 rounded-[10px] px-3 py-2.25"
           >
-            <b className="text-sm font-bold" style={{ color: "var(--tinta)" }}>
+            <b className="text-sm font-bold" style={{color: "var(--tinta)" }}>
               {lista.length}
             </b>
-            <span className="text-[10px]" style={{ color: "var(--gris)" }}>
+            <span className="text-[10px]" style={{color: "var(--gris)" }}>
               Publicaciones
             </span>
           </div>

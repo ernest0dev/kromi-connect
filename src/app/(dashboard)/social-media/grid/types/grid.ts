@@ -55,5 +55,7 @@ export interface GridHeaderProps {
   formatoFiltro: 'TODOS' | FormatoEnum;
   onPrevMonth: () => void;
   onNextMonth: () => void;
+  onToday: () => void;
+  onCreateClick: () => void;
   onFiltroChange: (filtro: 'TODOS' | FormatoEnum) => void;
 }

@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { Publicacion } from '@/types';
 import { generateCalendarDays, getTodayIso, CalendarDay } from '../utils/date';
-import { SLA_META } from '../utils/sla';
 import { GridCalendarProps } from '../types/grid';
 import { GridCell } from './GridCell';
 
@@ -26,25 +25,25 @@ export function GridCalendar({
   return (
     <section
       aria-label="Calendario mensual"
-      className="rounded-2xl border overflow-hidden"
-      style={{ background: 'var(--papel)', borderColor: 'var(--borde)' }}
+      className="ui-card overflow-hidden"
+
     >
       <div className="overflow-x-auto">
         <div
-          className="grid grid-cols-7 min-w-[700px] border-b text-left py-2 px-[11px] text-[10px] font-bold uppercase tracking-wider"
-          style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
+          className="grid grid-cols-7 min-w-[740px] border-b text-left text-[10px] font-bold uppercase tracking-[.05em]"
+          style={{ background: 'var(--superficie-suave)', borderColor: 'var(--borde-ui)', color: 'var(--gris)' }}
         >
-          <div className="px-2">Lun</div>
-          <div className="px-2">Mar</div>
-          <div className="px-2">Mié</div>
-          <div className="px-2">Jue</div>
-          <div className="px-2">Vie</div>
-          <div className="px-2">Sáb</div>
-          <div className="px-2">Dom</div>
+          <div className="border-r border-[var(--borde-ui)] px-[11px] py-[9px]">Lun</div>
+          <div className="border-r border-[var(--borde-ui)] px-[11px] py-[9px]">Mar</div>
+          <div className="border-r border-[var(--borde-ui)] px-[11px] py-[9px]">Mié</div>
+          <div className="border-r border-[var(--borde-ui)] px-[11px] py-[9px]">Jue</div>
+          <div className="border-r border-[var(--borde-ui)] px-[11px] py-[9px]">Vie</div>
+          <div className="border-r border-[var(--borde-ui)] px-[11px] py-[9px]">Sáb</div>
+          <div className="px-[11px] py-[9px]">Dom</div>
         </div>
 
         <div
-          className={`grid grid-cols-7 min-w-[700px] ${isPending ? 'opacity-60 pointer-events-none' : ''}`}
+          className={`grid grid-cols-7 min-w-[740px] ${isPending ? 'opacity-60 pointer-events-none' : ''}`}
         >
           {calendarDays.map((cell: CalendarDay, idx) => {
             if (!cell)
@@ -52,7 +51,7 @@ export function GridCalendar({
                 <div
                   key={`empty-${idx}`}
                   className="min-h-[104px] border-b border-r"
-                  style={{ background: 'var(--hueso)', borderColor: 'var(--borde)' }}
+                  style={{ background: 'var(--hueso)', borderColor: 'var(--borde-ui)' }}
                 />
               );
 
@@ -78,42 +77,20 @@ export function GridCalendar({
         </div>
       </div>
 
-      <div className="border-t" style={{ borderColor: 'var(--borde)' }}>
-        {/* Grupo 1: colores de las tarjetas (estatus) */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-3 py-1.5 text-[11px]" style={{ color: 'var(--gris)' }}>
-          <span className="font-semibold" style={{ color: 'var(--gris)' }}>Publicación:</span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ background: 'var(--gris)' }} aria-hidden="true" />
-            Pendiente
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ background: 'var(--azul)' }} aria-hidden="true" />
-            En proceso
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ background: 'var(--naranja)' }} aria-hidden="true" />
-            Requiere atención
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full" style={{ background: 'var(--verde)' }} aria-hidden="true" />
-            Aprobado / publicado
-          </span>
-        </div>
-        {/* Grupo 2: dots SLA del día */}
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 px-3 py-1 text-[10px] italic" style={{ color: 'var(--gris)' }}>
-          <span className="font-semibold" style={{ color: 'var(--gris)' }}>Día:</span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full" style={{ background: SLA_META['vencido'].dotVar }} aria-hidden="true" />
-            SLA vencido
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded-full" style={{ background: SLA_META['hoy'].dotVar }} aria-hidden="true" />
-            Brief próximo / hoy
-          </span>
-          <span className="lg:ml-auto">
-            Arrastra una publicación para cambiar su fecha
-          </span>
-        </div>
+      <div className="flex flex-wrap items-center gap-x-[14px] gap-y-1 border-t px-[13px] py-[10px] text-[10px]" style={{ borderColor: 'var(--borde-ui)', color: 'var(--gris)' }}>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-[#3574d4]" aria-hidden="true" />
+          En proceso
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-[#db8b1b]" aria-hidden="true" />
+          Requiere atención
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-[#17845b]" aria-hidden="true" />
+          Aprobado / publicado
+        </span>
+        <span className="ml-auto">Arrastra una publicación para cambiar su fecha</span>
       </div>
     </section>
   );

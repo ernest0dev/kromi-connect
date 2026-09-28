@@ -12,7 +12,7 @@ export function StatusSelect({ currentStatus, onChange, disabled }: StatusSelect
       onChange={(e) => onChange(e.target.value as EstatusEnum)}
       disabled={disabled}
       aria-label="Cambiar estatus"
-      className="w-full text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--papel)]"
+      className="w-full text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-0 cursor-pointer ui-focus-ring"
       style={{ background: estatusStyle.bgVar, color: estatusStyle.textVar }}
     >
       {ESTATUS_ORDEN.map((est) => (

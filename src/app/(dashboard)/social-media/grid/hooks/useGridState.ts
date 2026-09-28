@@ -5,7 +5,10 @@ import { Publicacion, FormatoEnum } from '@/types';
 
 export function useGridState(publicacionesIniciales: Publicacion[]) {
   const [publicaciones, setPublicaciones] = useState<Publicacion[]>(publicacionesIniciales);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 8, 1));
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
   const [formatoFiltro, setFormatoFiltro] = useState<FormatoEnum | 'TODOS'>('TODOS');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
@@ -40,6 +43,10 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  const goToToday = () => {
+    const now = new Date();
+    setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  };
 
   const selectTicket = (id: string) => setSelectedTicketId(id);
 
@@ -76,6 +83,7 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
     publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
+    goToToday,
     selectTicket,
     startEditing,
     cancelEditing,

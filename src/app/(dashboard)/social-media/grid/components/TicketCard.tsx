@@ -21,7 +21,7 @@ export function TicketCard({ publicacion, onClick, onDragStart }: TicketCardProp
       tabIndex={0}
       role="button"
       aria-label={`${publicacion.titulo} · ${formato}`}
-      className="flex items-center gap-1.5 px-1.5 py-1 rounded-md text-[11px] font-medium cursor-grab active:cursor-grabbing focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+      className="flex w-full items-center gap-1.5 rounded-[5px] px-1.5 py-[5px] text-[10px] font-semibold leading-[1.25] cursor-grab active:cursor-grabbing ui-focus-ring"
       style={{
         background: estatusStyle.bgVar,
         color: estatusStyle.textVar,

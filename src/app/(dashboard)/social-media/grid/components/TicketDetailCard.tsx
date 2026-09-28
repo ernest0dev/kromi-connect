@@ -30,21 +30,22 @@ export function TicketDetailCard({
   return (
     <article
       id={`ticket-card-${publicacion.id}`}
-      className="rounded-xl p-3.5 flex flex-col gap-2 transition-all border"
+      className="ui-card flex min-w-0 flex-col p-3.5 transition-all"
       style={{
-        background: 'var(--papel)',
         borderColor: isSelected ? 'var(--verde)' : 'var(--borde)',
-        boxShadow: isSelected ? '0 0 0 2px color-mix(in srgb, var(--verde) 30%, transparent)' : 'none',
+        boxShadow: isSelected
+          ? '0 0 0 2px color-mix(in srgb, var(--verde) 12%, transparent), 0 3px 14px rgba(18, 38, 63, .055)'
+          : '0 3px 14px rgba(18, 38, 63, .055)',
       }}
     >
       {/* card-top: fecha de publicación + badge de formato */}
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[11px]" style={{ color: 'var(--gris)' }} aria-label={`Publicación: ${formatDate(publicacion.fecha_publicacion)}`}>
+      <div className="mb-1 flex items-center justify-between gap-2 text-[10px]">
+        <span className="text-[11px]" style={{color: 'var(--gris)' }} aria-label={`Publicación: ${formatDate(publicacion.fecha_publicacion)}`}>
           Publicación · {formatDate(publicacion.fecha_publicacion)}
         </span>
         <span
-          className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md border shrink-0"
-          style={{ background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
+          className="ui-badge shrink-0 rounded-[5px] px-[7px] py-[3px] font-bold uppercase"
+          style={{background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
         >
           {FORMATO_LABEL_UPPER[publicacion.formato]}
         </span>
@@ -59,11 +60,11 @@ export function TicketDetailCard({
         />
       ) : (
         <>
-          <h3 className="text-[13px] font-bold leading-snug line-clamp-2" style={{ color: 'var(--tinta)' }}>
+          <h3 className="mb-[9px] line-clamp-2 text-[13px] font-bold leading-[1.35]" style={{color: 'var(--tinta)' }}>
             {publicacion.titulo}
           </h3>
           {publicacion.linea_contenido && (
-            <p className="text-[11px] -mt-1.5 truncate" style={{ color: 'var(--gris)' }}>
+            <p className="-mt-1.5 mb-2 truncate text-[10px]" style={{color: 'var(--gris)' }}>
               {publicacion.linea_contenido}
             </p>
           )}
@@ -71,23 +72,25 @@ export function TicketDetailCard({
       )}
 
       {/* cambio de estatus inline */}
-      <div className="flex items-center gap-2">
-        <span className="text-[10px] font-semibold" style={{ color: 'var(--gris)' }}>Estado:</span>
-        <StatusSelect
-          currentStatus={publicacion.estatus}
-          onChange={onStatusChange}
-        />
+      <div className="mb-[9px] flex items-center">
+        <div className="w-fit max-w-full">
+          <StatusSelect
+            currentStatus={publicacion.estatus}
+            onChange={onStatusChange}
+          />
+        </div>
       </div>
 
       {/* SLA: etiqueta secundaria + valor destacado */}
       <div
-        className="flex items-center justify-between gap-2 text-[11px] pt-2 border-t"
-        style={{ borderColor: 'var(--borde)' }}
+        className="flex items-center justify-between gap-2 border-t pt-[9px] text-[10px]"
+        style={{
+        borderColor: 'var(--borde)' }}
       >
-        <span style={{ color: 'var(--gris)' }} aria-label={`Fecha límite del brief: ${formatDate(publicacion.fecha_limite_brief)}`}>Fecha límite del brief</span>
+        <span style={{color: 'var(--gris)' }} aria-label={`Fecha límite del brief: ${formatDate(publicacion.fecha_limite_brief)}`}>Fecha límite del brief</span>
         <span
-          className="flex items-center gap-1 font-semibold px-1.5 py-0.5 rounded-md text-right"
-          style={{ background: slaMeta.bgVar, color: slaMeta.textVar }}
+          className="flex items-center gap-1 rounded-[5px] px-1.5 py-1 text-right font-semibold"
+          style={{background: slaMeta.bgVar, color: slaMeta.textVar }}
         >
           {(slaState === 'vencido' || slaState === 'hoy') && (
             <AlertTriangle size={11} aria-hidden="true" />
@@ -99,15 +102,17 @@ export function TicketDetailCard({
 
       {/* card-bottom: editar + assets de Google Drive */}
       <div
-        className="flex items-center justify-between gap-2 pt-2 border-t"
-        style={{ borderColor: 'var(--borde)' }}
+        className="mt-[10px] flex items-center justify-between gap-2 border-t pt-[9px] text-[10px]"
+        style={{
+        borderColor: 'var(--borde)' }}
       >
         {!isEditing && (
           <button
             onClick={onStartEdit}
             aria-label="Editar título y fecha"
-            className="flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg border transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
-            style={{ background: 'var(--papel)', borderColor: 'var(--borde)', color: 'var(--tinta)' }}
+            className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+            style={{
+        borderColor: 'var(--borde)', color: 'var(--azul)' }}
           >
             <Pencil size={12} aria-hidden="true" />
             Editar
@@ -120,14 +125,14 @@ export function TicketDetailCard({
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Ver assets en Google Drive"
-            className="text-[11px] font-semibold flex items-center gap-1.5 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1 rounded-md"
-            style={{ color: 'var(--azul)' }}
+            className="flex items-center gap-1.5 rounded-md text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+            style={{color: 'var(--azul)' }}
           >
             <FolderOpen size={12} aria-hidden="true" />
             <span>Ver assets</span>
           </a>
         ) : (
-          <span className="text-[11px] italic" style={{ color: 'var(--gris)' }}>
+          <span className="text-[10px] italic" style={{color: 'var(--gris)' }}>
             Sin carpeta vinculada
           </span>
         )}

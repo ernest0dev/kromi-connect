@@ -86,6 +86,15 @@ Se implementó la función `calcularMatrizSLA` como unidad de lógica pura, sin 
 
 ---
 
+### 4.4. `campanas/campaigns.ts`
+
+- **Exports:** `getCampaignsAction`, `createCampaignAction`, `updateCampaignAction`, `updateCampaignStatusAction`, `archiveCampaignAction`, `restoreCampaignAction` y `saveCampaignEvaluationAction`.
+- **Edición:** `updateCampaignAction` valida y actualiza los campos de la campaña desde el mismo formulario usado para crearla.
+- **Archivo reversible:** `archiveCampaignAction` cambia `estatus` a `ARCHIVADA`, conserva el estado anterior en `estatus_pre_archivado` y desactiva la campaña. No elimina filas ni toca las publicaciones, evaluaciones o premios asociados. `restoreCampaignAction` restaura el estado previo.
+- **Presentación:** `getCampaignsAction` devuelve campañas activas y archivadas, además de las publicaciones relacionadas y la evaluación post-mortem más reciente. La UI separa las archivadas en una lista plegable y permite restaurarlas.
+- **Esquema requerido:** aplicar `202609270001_campaign_management.sql` y `202609270002_campaign_archive.sql` en orden para añadir los campos de gestión y el estado de archivo reversible.
+- **Caché:** las mutaciones revalidan `/social-media/campaigns` mediante `revalidatePath`.
+
 ## 5. Integración y Seguridad
 
 - **Cliente administrativo (`getSupabaseAdmin`):** las Server Actions que ejecutan operaciones de escritura utilizan un cliente de Supabase inicializado con Service Role Key, instanciado exclusivamente en contexto de servidor, con bypass de RLS.

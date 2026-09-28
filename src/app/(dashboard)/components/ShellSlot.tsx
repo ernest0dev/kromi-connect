@@ -57,12 +57,14 @@ export function useRegisterShellSlots(topbar: React.ReactNode, navGroups: NavGro
   const topbarRef = React.useRef<React.ReactNode>(topbar);
   const navGroupsRef = React.useRef<NavGroup[]>(navGroups);
 
-  React.useEffect(() => {
+  // Synchronize before paint so the persistent dashboard shell does not show
+  // an empty/stale topbar or navigation for a frame during route transitions.
+  React.useLayoutEffect(() => {
     topbarRef.current = topbar;
     navGroupsRef.current = navGroups;
   }, [topbar, navGroups]);
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     setTopbar(topbarRef.current);
     setExtraNavGroups(navGroupsRef.current);
     return () => {

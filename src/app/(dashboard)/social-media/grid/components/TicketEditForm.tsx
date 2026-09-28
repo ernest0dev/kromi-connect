@@ -24,7 +24,7 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         value={editTitulo}
         onChange={(e) => setEditTitulo(e.target.value)}
         aria-label="Título de la publicación"
-        className="w-full text-sm font-semibold rounded-lg px-2.5 py-1.5 border focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+        className="ui-control w-full text-sm font-semibold px-2.5 py-1.5 focus:outline-none ui-focus-ring"
         style={{ borderColor: 'var(--azul)', color: 'var(--tinta)' }}
         autoFocus
       />
@@ -33,7 +33,7 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         value={editFecha}
         onChange={(e) => setEditFecha(e.target.value)}
         aria-label="Fecha de publicación"
-        className="w-full text-xs rounded-lg px-2.5 py-1.5 border focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+        className="ui-control w-full text-xs px-2.5 py-1.5 focus:outline-none ui-focus-ring"
         style={{ borderColor: 'var(--azul)', color: 'var(--tinta)' }}
       />
       {editError && (
@@ -43,7 +43,7 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         <button
           onClick={handleSave}
           aria-label="Guardar cambios"
-          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg focus:outline-none ui-focus-ring"
           style={{ background: 'var(--verde)', color: '#fff' }}
         >
           <Check size={13} aria-hidden="true" />
@@ -52,7 +52,7 @@ export function TicketEditForm({ publicacion, onSave, onCancel }: TicketEditForm
         <button
           onClick={onCancel}
           aria-label="Cancelar edición"
-          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+          className="flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg focus:outline-none ui-focus-ring"
           style={{ background: 'var(--hueso)', color: 'var(--gris)' }}
         >
           <X size={13} aria-hidden="true" />

@@ -1,7 +1,6 @@
 'use client';
 
 import { GridCellProps } from '../types/grid';
-import { useSLA } from '../hooks/useSLA';
 import { TicketCard } from './TicketCard';
 
 export function GridCell({
@@ -14,61 +13,34 @@ export function GridCell({
   onDragOver,
   onDrop,
 }: GridCellProps) {
-  const { calcularPeorSlaDelDia, SLA_META } = useSLA();
-  const peorEstado = calcularPeorSlaDelDia(publicaciones);
-
   return (
     <div
       key={dateStr}
       onDragOver={onDragOver}
       onDrop={(e) => onDrop(e, dateStr)}
-      className="min-h-[104px] p-[7px] border-b border-r transition-colors flex flex-col justify-between"
+      className="min-h-[104px] min-w-0 border-b border-r p-[7px] transition-colors"
       style={{
-        background: isToday ? 'color-mix(in srgb, var(--azul) 6%, white)' : 'var(--papel)',
-        borderColor: isToday ? 'color-mix(in srgb, var(--azul) 28%, white)' : 'var(--borde)',
+        background: isToday ? 'var(--superficie-dia-actual)' : 'var(--papel)',
+        borderColor: 'var(--borde-ui)',
       }}
     >
       <div
-        className="flex items-center justify-between gap-1 mb-1.5"
+        className="mb-1 flex h-[21px] items-center justify-between"
         aria-current={isToday ? 'date' : undefined}
       >
-        <span className="flex items-center gap-1.5">
-          <span
-            className={`text-xs font-semibold ${isToday ? 'h-[22px] w-[22px] rounded-full grid place-items-center text-[11px]' : ''}`}
-            style={{
-              color: isToday ? '#fff' : 'var(--gris)',
-              background: isToday ? 'var(--azul)' : 'transparent',
-            }}
-          >
-            {day}
-          </span>
-          {isToday && (
-            <span
-              className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
-              style={{ background: 'var(--azul)', color: '#fff' }}
-            >
-              HOY
-            </span>
-          )}
-        </span>
-        {peorEstado && (
-          <span
-            className="h-2 w-2 rounded-full shrink-0"
-            style={{ backgroundColor: SLA_META[peorEstado].dotVar }}
-            title={`SLA del día: ${SLA_META[peorEstado].label}`}
-            aria-label={`Publicaciones de este día: ${SLA_META[peorEstado].label}`}
-            role="img"
-          />
-        )}
-      </div>
-      {peorEstado && (
         <span
-          className="sr-only"
-          aria-live="polite"
-        >{`Indicador SLA: ${SLA_META[peorEstado].label}`}</span>
-      )}
+          className={`text-[11px] font-semibold ${isToday ? 'grid h-[22px] w-[22px] place-items-center rounded-full' : ''}`}
+          style={{
+            color: isToday ? '#fff' : 'var(--texto-calendario)',
+            background: isToday ? 'var(--azul)' : 'transparent',
+          }}
+        >
+          {day}
+        </span>
+        {isToday && <span className="text-[9px] font-bold" style={{ color: 'var(--azul)' }}>HOY</span>}
+      </div>
 
-      <div className="space-y-1 flex-1 overflow-y-auto max-h-[86px]">
+      <div className="space-y-1">
         {publicaciones.map((pub) => (
           <TicketCard
             key={pub.id}

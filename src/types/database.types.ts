@@ -2,6 +2,8 @@ import {
   FormatoEnum,
   EstatusEnum,
   TipoCampanaEnum,
+  CampanaEstatusEnum,
+  CampanaEstatusOperativoEnum,
   DepartamentoEnum,
   CanalEnum,
   SedeEnum,
@@ -22,27 +24,39 @@ export interface Database {
         Row: {
           id: string;
           nombre: string;
+          descripcion: string | null;
           tipo_campana: TipoCampanaEnum;
           fecha_inicio: string;
           fecha_fin: string;
+          presupuesto: number | null;
+          estatus: CampanaEstatusEnum;
+          estatus_pre_archivado: CampanaEstatusOperativoEnum | null;
           activo: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
           nombre: string;
+          descripcion?: string | null;
           tipo_campana: TipoCampanaEnum;
           fecha_inicio: string;
           fecha_fin: string;
+          presupuesto?: number | null;
+          estatus?: CampanaEstatusEnum;
+          estatus_pre_archivado?: CampanaEstatusOperativoEnum | null;
           activo?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
           nombre?: string;
+          descripcion?: string | null;
           tipo_campana?: TipoCampanaEnum;
           fecha_inicio?: string;
           fecha_fin?: string;
+          presupuesto?: number | null;
+          estatus?: CampanaEstatusEnum;
+          estatus_pre_archivado?: CampanaEstatusOperativoEnum | null;
           activo?: boolean;
           created_at?: string;
         };
