@@ -166,7 +166,32 @@ Evaluación post-mortem de campaña.
 | `observaciones` | `TEXT` | |
 | `created_at` | `TIMESTAMPTZ DEFAULT now()` | |
 
-### 3.9 Mapa de relaciones (FK)
+### 3.9 `efemerides`
+Catálogo anual independiente de campañas. Se almacena una fila por efeméride y año; los periodos móviles (por ejemplo, Semana Santa) conservan sus fechas concretas para ese año.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `id` | `UUID PK` | Generado con `gen_random_uuid()` |
+| `nombre` | `TEXT NOT NULL` | No admite texto vacío |
+| `anio` | `INTEGER NOT NULL` | Año de planificación, entre 1 y 9999 |
+| `fecha_inicio` / `fecha_fin` | `DATE NOT NULL` | Ambas fechas deben pertenecer al año; fin no puede preceder al inicio. Para fecha puntual son iguales |
+| `descripcion` | `TEXT` | Opcional |
+| `created_at` | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
+
+Índice `idx_efemerides_anio_fecha (anio, fecha_inicio, fecha_fin)` para listar el calendario anual en orden. No tiene FK a `campanas`: una efeméride existe aunque no se planifique una campaña.
+
+### 3.10 `campana_efemerides`
+Tabla de unión muchos a muchos. Solo acepta campañas de tipo `EFEMERIDE`; el año de cada efeméride debe estar comprendido entre los años de inicio y fin de la campaña. Las FK impiden borrar una efeméride vinculada y eliminan los vínculos si se elimina una campaña.
+
+| Columna | Tipo | Notas |
+|---|---|---|
+| `campana_id` | `UUID FK → campanas(id)` | Parte de la PK compuesta; `ON DELETE CASCADE` |
+| `efemeride_id` | `UUID FK → efemerides(id)` | Parte de la PK compuesta; `ON DELETE RESTRICT` |
+| `created_at` | `TIMESTAMPTZ NOT NULL DEFAULT now()` | |
+
+`save_campaign_with_efemerides(...)` guarda los datos de la campaña y reemplaza sus vínculos dentro de una única transacción. Los triggers protegen las reglas también ante cambios directos en las tablas.
+
+### 3.11 Mapa de relaciones (FK)
 
 ```
 campanas ──┬──< publicaciones
@@ -181,6 +206,8 @@ solicitudes_terceros ──< inventario_premios (FK opcional, trazabilidad)
 
 auth.users ──< publicaciones.creador_id
 auth.users ──< publicaciones.disenador_id
+
+efemerides ──< campana_efemerides >── campanas (solo campañas tipo EFEMERIDE)
 ```
 
 ---
@@ -236,6 +263,10 @@ WITH CHECK (true);
 
 - **Diseño de cara a segregación futura:** la política actual otorga acceso total sin distinción de sub-rol, dado que la Fase 1 opera bajo un único perfil unificado (Estrategia + Producción de Contenido). La infraestructura de RLS queda preparada estructuralmente para incorporar, en fases posteriores, políticas diferenciadas por `role = 'diseno'` y `role = 'gerencia'` sin requerir cambios al esquema de tablas subyacente.
 
+La tabla `efemerides` usa la misma política permisiva para `authenticated`, habilitada en su migración. Las Server Actions usan el cliente administrativo del servidor; RLS por sí sola no sustituye autorización de aplicación para operaciones con ese cliente.
+
+`campana_efemerides` aplica la misma política RLS y grants para `authenticated` y `service_role`.
+
 ---
 
 ## 6. Verificación e Integridad de Datos (Seed Data Executed)
@@ -256,3 +287,96 @@ Se ejecutó un bloque anónimo PL/pgSQL (`DO $$ ... $$`) para poblar el esquema 
 - Verificación de disparo correcto del trigger `trg_publicaciones_updated_at` ante actualizaciones de `estatus` sobre las filas semilla.
 
 **Resultado:** carga ejecutada sin errores de integridad referencial ni de dominio; esquema verificado como consistente con la especificación del SRS de Fase 1.
+
+---
+
+## 7. Efemérides anuales: migración para Supabase SQL Editor
+
+La migración versionada es `supabase/migrations/202609280001_annual_efemerides.sql`. Para aplicarla, abre Supabase **SQL Editor**, pega y ejecuta el bloque completo siguiente. Es idempotente y no modifica filas de `campanas` ni `publicaciones`.
+
+```sql
+CREATE TABLE IF NOT EXISTS public.efemerides (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre text NOT NULL,
+  anio integer NOT NULL,
+  fecha_inicio date NOT NULL,
+  fecha_fin date NOT NULL,
+  descripcion text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT efemerides_nombre_not_blank CHECK (length(btrim(nombre)) > 0),
+  CONSTRAINT efemerides_anio_valid CHECK (anio BETWEEN 1 AND 9999),
+  CONSTRAINT efemerides_dates_ordered CHECK (fecha_fin >= fecha_inicio),
+  CONSTRAINT efemerides_dates_match_year CHECK (
+    extract(year FROM fecha_inicio)::integer = anio
+    AND extract(year FROM fecha_fin)::integer = anio
+  )
+);
+
+CREATE INDEX IF NOT EXISTS idx_efemerides_anio_fecha
+  ON public.efemerides (anio, fecha_inicio, fecha_fin);
+ALTER TABLE public.efemerides ENABLE ROW LEVEL SECURITY;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.efemerides TO authenticated, service_role;
+DROP POLICY IF EXISTS "Permitir todo a usuarios autenticados" ON public.efemerides;
+CREATE POLICY "Permitir todo a usuarios autenticados"
+  ON public.efemerides FOR ALL TO authenticated USING (true) WITH CHECK (true);
+```
+
+Verifica desde SQL Editor:
+
+```sql
+SELECT column_name, data_type, is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'public' AND table_name = 'efemerides'
+ORDER BY ordinal_position;
+
+SELECT schemaname, tablename, indexname
+FROM pg_indexes
+WHERE schemaname = 'public' AND tablename = 'efemerides';
+
+SELECT policyname, roles, cmd
+FROM pg_policies
+WHERE schemaname = 'public' AND tablename = 'efemerides';
+```
+
+La UI `/social-media/efemerides` permite consultar por año, crear, editar y eliminar ocurrencias. No se insertan registros de ejemplo automáticamente. La visualización en Grid queda fuera de este bloque.
+
+---
+
+## 8. Vínculos entre campañas y efemérides
+
+La migración `supabase/migrations/202609280002_campaign_efemerides.sql` agrega la tabla de unión, RLS, triggers de integridad y la función transaccional `save_campaign_with_efemerides`. Para aplicarla en Supabase, abre **SQL Editor**, pega el contenido completo de ese archivo y ejecútalo después de la migración anual de efemérides (§7). No ejecutes solo la creación de la tabla: la función y los triggers forman parte de las validaciones. El archivo solicita recargar el caché de esquema de PostgREST al terminar.
+
+Verifica la instalación desde SQL Editor:
+
+```sql
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN ('efemerides', 'campana_efemerides')
+ORDER BY table_name;
+
+SELECT trigger_name, event_object_table
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+  AND trigger_name IN (
+    'trg_validate_campaign_efemeride_link',
+    'trg_validate_campaign_efemeride_change',
+    'trg_validate_efemeride_year_change'
+  )
+ORDER BY trigger_name;
+
+SELECT routine_name
+FROM information_schema.routines
+WHERE routine_schema = 'public'
+  AND routine_name = 'save_campaign_with_efemerides';
+```
+
+La acción de guardar campaña llama esa función para guardar datos y vínculos atómicamente. En la UI, el selector aparece solo para campañas `EFEMERIDE` y muestra ocurrencias de los años entre el inicio y fin de la campaña, ambos inclusive. Cambiar la categoría de una campaña con vínculos requiere confirmación; eliminar una efeméride vinculada se bloquea y se informa qué campañas deben desvincularse primero.
+
+---
+
+## 9. Consumo de efemérides en Grid
+
+Grid consume `public.efemerides` por año; esta capa no necesita otra tabla ni una migración adicional. Las efemérides puntuales aparecen en su fecha. Los periodos aparecen como un solo indicador en su primer día de cada mes que abarcan (o como “En curso” al inicio del mes si comenzaron antes); al abrirlo se muestran las fechas completas y la descripción. El filtro de formato solo afecta publicaciones.
+
+Grid también consulta campañas `EFEMERIDE` con al menos un vínculo y cuyo periodo se solape con el mes visible. Cada campaña se muestra una sola vez por mes en la fecha de inicio o al inicio del mes si ya estaba en curso. La ficha detalla por separado el periodo propio de la campaña y las fechas de sus efemérides vinculadas. Las campañas `FINALIZADA` permanecen visibles con estilo atenuado; `ARCHIVADA` queda excluida. No hay cambios DDL adicionales para esta capa; sí se requiere aplicar la migración de asociaciones descrita en §8.

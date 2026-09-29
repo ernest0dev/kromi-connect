@@ -62,6 +62,55 @@ export interface Database {
         };
         Relationships: [];
       };
+      efemerides: {
+        Row: {
+          id: string;
+          nombre: string;
+          anio: number;
+          fecha_inicio: string;
+          fecha_fin: string;
+          descripcion: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nombre: string;
+          anio: number;
+          fecha_inicio: string;
+          fecha_fin: string;
+          descripcion?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nombre?: string;
+          anio?: number;
+          fecha_inicio?: string;
+          fecha_fin?: string;
+          descripcion?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      campana_efemerides: {
+        Row: { campana_id: string; efemeride_id: string; created_at: string };
+        Insert: { campana_id: string; efemeride_id: string; created_at?: string };
+        Update: { campana_id?: string; efemeride_id?: string; created_at?: string };
+        Relationships: [
+          {
+            foreignKeyName: 'campana_efemerides_campana_id_fkey';
+            columns: ['campana_id'];
+            referencedRelation: 'campanas';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'campana_efemerides_efemeride_id_fkey';
+            columns: ['efemeride_id'];
+            referencedRelation: 'efemerides';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
       publicaciones: {
         Row: {
           id: string;
@@ -388,7 +437,20 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      save_campaign_with_efemerides: {
+        Args: {
+          p_campana_id: string | null;
+          p_nombre: string;
+          p_descripcion: string | null;
+          p_tipo_campana: TipoCampanaEnum;
+          p_fecha_inicio: string;
+          p_fecha_fin: string;
+          p_presupuesto: number | null;
+          p_efemeride_ids: string[];
+          p_confirmar_desvinculacion: boolean;
+        };
+        Returns: string;
+      };
     };
     Enums: {
       formato_enum: FormatoEnum;

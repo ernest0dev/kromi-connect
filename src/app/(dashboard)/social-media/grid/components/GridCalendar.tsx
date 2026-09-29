@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { Publicacion } from '@/types';
+import type { Efemeride } from '@/app/actions/efemerides/efemerides';
+import type { CampanaGrid } from '@/app/actions/campanas/campaigns';
 import { generateCalendarDays, getTodayIso, CalendarDay } from '../utils/date';
 import { GridCalendarProps } from '../types/grid';
 import { GridCell } from './GridCell';
@@ -9,8 +11,12 @@ import { GridCell } from './GridCell';
 export function GridCalendar({
   currentDate,
   publicaciones,
+  efemerides,
+  campanas,
   isPending,
   onTicketClick,
+  onEfemerideClick,
+  onCampaignClick,
   onDragStart,
   onDragOver,
   onDrop,
@@ -21,6 +27,8 @@ export function GridCalendar({
   );
 
   const hoyStr = useMemo(() => getTodayIso(new Date()), []);
+  const mesInicio = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-01`;
+  const mesFin = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()).padStart(2, '0')}`;
 
   return (
     <section
@@ -58,6 +66,20 @@ export function GridCalendar({
             const itemsDelDia = publicaciones.filter(
               (p: Publicacion) => p.fecha_publicacion === cell.dateStr
             );
+            const itemsEfemerideDelDia = efemerides.filter((efemeride: Efemeride) => {
+              if (efemeride.fecha_fin < mesInicio || efemeride.fecha_inicio > mesFin) return false;
+              const fechaIndicador = efemeride.fecha_inicio < mesInicio ? mesInicio : efemeride.fecha_inicio;
+              return fechaIndicador === cell.dateStr;
+            }).sort((a, b) => {
+              const aEsPeriodo = a.fecha_inicio !== a.fecha_fin;
+              const bEsPeriodo = b.fecha_inicio !== b.fecha_fin;
+              return Number(aEsPeriodo) - Number(bEsPeriodo) || a.nombre.localeCompare(b.nombre, 'es');
+            });
+            const itemsCampanaDelDia = campanas.filter((campaign: CampanaGrid) => {
+              if (campaign.fecha_fin < mesInicio || campaign.fecha_inicio > mesFin) return false;
+              const indicatorDate = campaign.fecha_inicio < mesInicio ? mesInicio : campaign.fecha_inicio;
+              return indicatorDate === cell.dateStr;
+            });
             const esHoy = cell.dateStr === hoyStr;
 
             return (
@@ -67,7 +89,11 @@ export function GridCalendar({
                 dateStr={cell.dateStr}
                 isToday={esHoy}
                 publicaciones={itemsDelDia}
+                efemerides={itemsEfemerideDelDia}
+                campanas={itemsCampanaDelDia}
                 onTicketClick={onTicketClick}
+                onEfemerideClick={onEfemerideClick}
+                onCampaignClick={onCampaignClick}
                 onDragStart={onDragStart}
                 onDragOver={onDragOver}
                 onDrop={onDrop}
@@ -90,6 +116,19 @@ export function GridCalendar({
           <span className="h-2 w-2 rounded-full bg-[#17845b]" aria-hidden="true" />
           Aprobado / publicado
         </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-[#8aa3bd] bg-[#eef4fa]" aria-hidden="true" />
+          Efeméride puntual
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm border border-dashed border-[#c7a96b] bg-[#fbf6e9]" aria-hidden="true" />
+          Periodo
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="h-2.5 w-2.5 rounded-sm border border-[#a597d1] bg-[#f2effa]" aria-hidden="true" />
+          Campaña vinculada
+        </span>
+        <span className="text-slate-400">Finalizadas atenuadas · archivadas ocultas</span>
         <span className="ml-auto">Arrastra una publicación para cambiar su fecha</span>
       </div>
     </section>

@@ -8,6 +8,7 @@ import {
   Inbox,
   Kanban,
   Plus,
+  CalendarHeart,
   Target,
   Video,
 } from "lucide-react";
@@ -20,6 +21,7 @@ const navGroupsSocialMedia: NavGroup[] = [
   {
     label: "Social media",
     items: [
+      { href: "/social-media/efemerides", label: "Efemérides", icon: CalendarHeart },
       { href: "/social-media/campaigns", label: "Campañas", icon: Target },
       {
         href: "/social-media/grid",
@@ -47,6 +49,7 @@ export default function SocialMediaLayoutClient({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pathname = usePathname();
   const isCampaignsPage = pathname === "/social-media/campaigns";
+  const isEfemeridesPage = pathname === "/social-media/efemerides";
   const tieneAlertas =
     !!slaSummary && (slaSummary.vencidos > 0 || slaSummary.hoy > 0);
 
@@ -102,18 +105,16 @@ export default function SocialMediaLayoutClient({
             <span className="min-[400px]:hidden">{slaSummary.vencidos} venc. · {slaSummary.hoy} hoy</span>
           </span>
         ) : null)}
-        <button
-          onClick={() => isCampaignsPage
-            ? window.dispatchEvent(new Event("campaigns:create"))
-            : setIsModalOpen(true)}
+        {!isEfemeridesPage && !isCampaignsPage && <button
+          onClick={() => setIsModalOpen(true)}
           type="button"
           aria-haspopup="dialog"
           className="flex min-h-10 items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-[11px] font-bold transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0066d2] focus-visible:ring-offset-2 min-[768px]:px-3.5 min-[768px]:py-2.25 min-[768px]:text-sm"
           style={{ background: "#ed8b19", color: "#2E1600" }}
         >
           <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
-          <span>{isCampaignsPage ? "Nueva campaña" : "Nuevo ticket"}</span>
-        </button>
+          <span>Nuevo ticket</span>
+        </button>}
       </div>
     </header>
   );

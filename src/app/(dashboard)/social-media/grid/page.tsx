@@ -1,6 +1,8 @@
 import React from "react";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { Publicacion } from "@/types";
+import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
+import { getCampaignsForGridMonthAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
 
 // Esta vista necesita datos frescos en cada solicitud, sin caché de página.
@@ -25,6 +27,10 @@ export default async function ParrillaPage() {
 
   // Asegura que GridView reciba un arreglo aunque la consulta no devuelva datos.
   const lista = (publicaciones as Publicacion[]) || [];
+  const anioActual = new Date().getFullYear();
+  const mesActual = new Date().getMonth() + 1;
+  const efemeridesResult = await getEfemeridesByYearAction(anioActual);
+  const campaignsResult = await getCampaignsForGridMonthAction(anioActual, mesActual);
   return (
     <div className="space-y-5">
       {/* Encabezado: contexto, título, ayuda y total de publicaciones. */}
@@ -64,7 +70,15 @@ export default async function ParrillaPage() {
       </header>
 
       {/* La capa interactiva de la parrilla recibe los datos iniciales. */}
-      <GridView publicacionesIniciales={lista} />
+      <GridView
+        publicacionesIniciales={lista}
+        efemeridesIniciales={efemeridesResult.data}
+        anioEfemeridesInicial={anioActual}
+        errorEfemeridesInicial={efemeridesResult.success ? null : efemeridesResult.error || "No se pudieron cargar las efemérides."}
+        campanasIniciales={campaignsResult.data}
+        periodoCampanasInicial={{ anio: anioActual, mes: mesActual }}
+        errorCampanasInicial={campaignsResult.success ? null : campaignsResult.error || "No se pudieron cargar las campañas."}
+      />
     </div>
   );
 }

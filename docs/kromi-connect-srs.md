@@ -42,8 +42,9 @@ Estados usados: **Implementado**, **Parcial**, **Pendiente**, **No verificado**.
 - Tabla tipo spreadsheet para operación de publicaciones. **Pendiente:** no se encontró en las rutas auditadas.
 
 ### 2.2 Planificación Estratégica de Campañas
-- Categorización: Temporada, Evento, Efeméride, Lanzamiento, Oferta puntual. **Pendiente:** el flujo de campañas usa estatus y presupuesto, pero no esta categorización.
-- Calendario de efemérides + alianzas con proveedores como capa superpuesta a la grilla. **Pendiente.**
+- Categorización de campañas: Temporada, Evento, Efeméride, Lanzamiento, Oferta puntual. **Implementado**; la asociación muchos a muchos con efemérides queda implementada en esta actualización y requiere aplicar la migración `202609280002_campaign_efemerides.sql` en Supabase.
+- Catálogo anual independiente de efemérides: **Implementado** en `/social-media/efemerides` (alta, consulta por año, edición y eliminación; requiere aplicar la migración `202609280001_annual_efemerides.sql` en Supabase).
+- Capa anual de efemérides y campañas EFEMERIDE vinculadas en Grid: **Implementada** con indicadores y fichas de detalle; depende de las migraciones anuales y de relación. Las campañas finalizadas siguen visibles atenuadas y las archivadas se ocultan. La capa de alianzas con proveedores: **Pendiente.**
 - Informes post-mortem por campaña (alcance, interacciones, presupuesto, cualitativo). **Pendiente:** la tabla está tipada, pero no tiene consumidor identificado.
 
 ### 2.3 Recepción y Publicación de Solicitudes de Terceros
@@ -75,9 +76,9 @@ Las rutas siguientes son las identificadas en el código auditado. Las fases con
 - `/social-media/requests` — inbox y conversión/rechazo de solicitudes implementados.
 - QA pre-publicación y envío de paquete a Gerencia — **Pendiente** según código auditado.
 
-### Fase 4 — Inventario & Tipificación de Campañas — pendiente
-- Inventario de premios por sede y tipificación de campañas/efemérides — sin consumidores identificados.
-- `/social-media/campaigns` existe; su flujo usa estatus `PLANIFICADA`/`ACTIVA`/`FINALIZADA` y presupuesto, y no la categorización `tipo_campana_enum` descrita en el esquema.
+### Fase 4 — Inventario & Tipificación de Campañas — parcial
+- Inventario de premios por sede — sin consumidor identificado. La tipificación, los vínculos campaña-efemérides y su contexto en Grid ya cuentan con flujo; las alianzas con proveedores siguen pendientes.
+- `/social-media/campaigns` permite categorizar campañas y vincular múltiples efemérides anuales cuando el tipo es `EFEMERIDE`.
 
 ### Fase 5 — Analytics & Social Listening — pendiente / no verificado
 - `/reportes`, dashboard mensual, escucha social e informes post-mortem — no se encontraron en las rutas exploradas; verificar en una auditoría posterior.
@@ -271,7 +272,7 @@ Son proyecciones de `publicaciones`, pero no interfaces equivalentes: Grid permi
 
 **Implementado y confirmado:** calendario mensual con navegación de meses; filtro solo por formato; reprogramación por arrastrar y soltar; cambio de estatus desde selector sin restricciones de transición; edición rápida de título y fecha; señal visual de SLA derivada solo de `fecha_limite_brief`; enlace a Drive si hay URL; actualización optimista con rollback ante error.
 
-**No implementado en Grid:** tabla spreadsheet; editor completo de brief/guion/historial; capa de campañas o efemérides; fecha límite de rodaje. Los campos `hook_texto`, `body_texto`, `cta_texto` y `hashtags` no tienen inputs en Grid.
+**No implementado en Grid:** tabla spreadsheet; editor completo de brief/guion/historial; capa de alianzas con proveedores; fecha límite de rodaje. Las efemérides anuales y las campañas `EFEMERIDE` vinculadas se muestran desde el catálogo de `/social-media/efemerides` y sus relaciones de campaña. Los campos `hook_texto`, `body_texto`, `cta_texto` y `hashtags` no tienen inputs en Grid.
 
 ### 6.2 Kanban (`/social-media/kanban`)
 
@@ -300,7 +301,7 @@ No consulta `checklist_rodaje`; no hay guion/checklist de tomas por zona. El fil
 
 **Solicitudes (`/social-media/requests`):** el inbox consulta `solicitudes_terceros`; `processRequestAction` crea una publicación con SLA, marca la solicitud como `CONVERTIDA` y enlaza el ID. También permite rechazar solicitudes.
 
-**Campañas (`/social-media/campaigns`):** el flujo usa estatus `PLANIFICADA`/`ACTIVA`/`FINALIZADA` y presupuesto. No usa `tipo_campana_enum` ni el campo `activo` del diseño SQL descrito. No se encontró categorización ni capa visual de efemérides.
+**Campañas (`/social-media/campaigns`):** permite categorizar con `tipo_campana_enum` y vincular varias efemérides anuales a campañas de tipo `EFEMERIDE`. Grid muestra las efemérides estáticas y las campañas vinculadas en sus periodos, con detalle de ambos rangos.
 
 **Tablas tipadas sin consumidor en `src/app` según la búsqueda auditada:** `checklist_rodaje`, `inventario_premios`, `reporte_atencion_cliente`, `campana_evaluaciones` y `publicacion_canales`.
 

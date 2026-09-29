@@ -1,4 +1,6 @@
 import { Publicacion, FormatoEnum, EstatusEnum } from '@/types';
+import type { Efemeride } from '@/app/actions/efemerides/efemerides';
+import type { CampanaGrid } from '@/app/actions/campanas/campaigns';
 import type { DragEvent } from 'react';
 
 export interface GridCellProps {
@@ -6,7 +8,11 @@ export interface GridCellProps {
   dateStr: string;
   isToday: boolean;
   publicaciones: Publicacion[];
+  efemerides: Efemeride[];
+  campanas: CampanaGrid[];
   onTicketClick: (id: string) => void;
+  onEfemerideClick: (efemeride: Efemeride) => void;
+  onCampaignClick: (campaign: CampanaGrid) => void;
   onDragStart: (e: DragEvent, id: string) => void;
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent, dateStr: string) => void;
@@ -15,8 +21,12 @@ export interface GridCellProps {
 export interface GridCalendarProps {
   currentDate: Date;
   publicaciones: Publicacion[];
+  efemerides: Efemeride[];
+  campanas: CampanaGrid[];
   isPending: boolean;
   onTicketClick: (id: string) => void;
+  onEfemerideClick: (efemeride: Efemeride) => void;
+  onCampaignClick: (campaign: CampanaGrid) => void;
   onDragStart: (e: DragEvent, id: string) => void;
   onDragOver: (e: DragEvent) => void;
   onDrop: (e: DragEvent, dateStr: string) => void;
