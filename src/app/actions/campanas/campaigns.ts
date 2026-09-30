@@ -43,6 +43,11 @@ export interface CampanaGrid {
   efemerides: EfemerideCampana[];
 }
 
+export interface CampanaPublicacionGrid {
+  id: string;
+  nombre: string;
+}
+
 export interface PublicacionCampana {
   id: string;
   titulo: string;
@@ -211,6 +216,27 @@ export async function getCampaignsForGridMonthAction(anio: number, mes: number) 
       success: false,
       error: error instanceof Error ? error.message : "No se pudieron cargar las campañas para Grid.",
       data: [] as CampanaGrid[],
+    };
+  }
+}
+
+/** Load only campaigns linked to the posts currently shown in Grid. */
+export async function getCampaignsForGridPostsAction(campaignIds: string[]) {
+  const ids = [...new Set(campaignIds.filter((id) => typeof id === "string" && id.length > 0))];
+  if (!ids.length) return { success: true, data: [] as CampanaPublicacionGrid[] };
+
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from("campanas")
+      .select("id, nombre")
+      .in("id", ids);
+    if (error) return { success: false, error: error.message, data: [] as CampanaPublicacionGrid[] };
+    return { success: true, data: (data || []) as CampanaPublicacionGrid[] };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "No se pudieron cargar las campañas de las publicaciones.",
+      data: [] as CampanaPublicacionGrid[],
     };
   }
 }

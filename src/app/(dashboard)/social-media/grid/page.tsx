@@ -2,7 +2,7 @@ import React from "react";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { Publicacion } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
-import { getCampaignsForGridMonthAction } from "@/app/actions/campanas/campaigns";
+import { getCampaignsForGridMonthAction, getCampaignsForGridPostsAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
 
 // Esta vista necesita datos frescos en cada solicitud, sin caché de página.
@@ -31,6 +31,9 @@ export default async function ParrillaPage() {
   const mesActual = new Date().getMonth() + 1;
   const efemeridesResult = await getEfemeridesByYearAction(anioActual);
   const campaignsResult = await getCampaignsForGridMonthAction(anioActual, mesActual);
+  const postCampaignsResult = await getCampaignsForGridPostsAction(
+    lista.flatMap((publicacion) => publicacion.campana_id ? [publicacion.campana_id] : [])
+  );
   return (
     <div className="space-y-5">
       {/* Encabezado: contexto, título, ayuda y total de publicaciones. */}
@@ -72,6 +75,7 @@ export default async function ParrillaPage() {
       {/* La capa interactiva de la parrilla recibe los datos iniciales. */}
       <GridView
         publicacionesIniciales={lista}
+        campanasPublicacionesIniciales={postCampaignsResult.data}
         efemeridesIniciales={efemeridesResult.data}
         anioEfemeridesInicial={anioActual}
         errorEfemeridesInicial={efemeridesResult.success ? null : efemeridesResult.error || "No se pudieron cargar las efemérides."}

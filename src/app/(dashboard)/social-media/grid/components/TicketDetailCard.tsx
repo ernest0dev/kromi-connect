@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Pencil, FolderOpen } from 'lucide-react';
+import { AlertTriangle, Pencil, FolderOpen, Eye } from 'lucide-react';
 import { TicketDetailCardProps } from '../types/grid';
 import { useSLA } from '../hooks/useSLA';
 import { FORMATO_LABEL_UPPER } from '../utils/constants';
@@ -16,6 +16,8 @@ function formatDate(iso: string | null | undefined): string {
 
 export function TicketDetailCard({
   publicacion,
+  nombreCampana,
+  onViewDetails,
   isSelected,
   isEditing,
   onStartEdit,
@@ -68,6 +70,9 @@ export function TicketDetailCard({
               {publicacion.linea_contenido}
             </p>
           )}
+          <p className="-mt-1 mb-2 truncate text-[10px]" style={{ color: nombreCampana ? 'var(--morado)' : 'var(--gris)' }}>
+            Campaña · {nombreCampana || 'Sin campaña'}
+          </p>
         </>
       )}
 
@@ -106,6 +111,16 @@ export function TicketDetailCard({
         style={{
         borderColor: 'var(--borde)' }}
       >
+        <button
+          type="button"
+          onClick={onViewDetails}
+          aria-label="Ver todos los campos de la publicación"
+          className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+          style={{ borderColor: 'var(--borde)', color: 'var(--tinta)' }}
+        >
+          <Eye size={12} aria-hidden="true" />
+          Ver detalle
+        </button>
         {!isEditing && (
           <button
             onClick={onStartEdit}

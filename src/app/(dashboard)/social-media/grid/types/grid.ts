@@ -40,6 +40,8 @@ export interface TicketCardProps {
 
 export interface TicketDetailCardProps {
   publicacion: Publicacion;
+  nombreCampana: string | null;
+  onViewDetails: () => void;
   isSelected: boolean;
   isEditing: boolean;
   onStartEdit: () => void;
