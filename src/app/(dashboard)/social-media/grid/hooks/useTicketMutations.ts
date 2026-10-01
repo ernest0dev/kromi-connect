@@ -2,7 +2,7 @@
 
 import { useTransition, Dispatch, SetStateAction } from 'react';
 import { Publicacion, EstatusEnum } from '@/types';
-import { actualizarEstatusTicketAction, editarCamposRapidosTicketAction } from '@/app/actions/publicaciones/ticket-quick-actions';
+import { actualizarEstatusTicketAction } from '@/app/actions/publicaciones/ticket-quick-actions';
 import { recalcularFechasSLAAction } from '@/app/actions/publicaciones/recalculateSla';
 
 export function useTicketMutations(
@@ -47,36 +47,5 @@ export function useTicketMutations(
     });
   };
 
-  const updateFields = (pub: Publicacion, titulo: string, fechaPublicacion: string) => {
-    const tituloAnterior = pub.titulo;
-    const fechaAnterior = pub.fecha_publicacion;
-
-    setPublicaciones((prev) =>
-      prev.map((p) =>
-        p.id === pub.id
-          ? { ...p, titulo: titulo.trim(), fecha_publicacion: fechaPublicacion }
-          : p
-      )
-    );
-
-    startTransition(async () => {
-      const res = await editarCamposRapidosTicketAction({
-        publicacionId: pub.id,
-        titulo: titulo.trim(),
-        fechaPublicacion: fechaPublicacion,
-      });
-      if (!res.success) {
-        setPublicaciones((prev) =>
-          prev.map((p) =>
-            p.id === pub.id
-              ? { ...p, titulo: tituloAnterior, fecha_publicacion: fechaAnterior }
-              : p
-          )
-        );
-        alert(`No se pudo guardar: ${res.error ?? 'la acción todavía no está implementada.'}`);
-      }
-    });
-  };
-
-  return { updateStatus, updateFields, rescheduleDate, isPending };
+  return { updateStatus, rescheduleDate, isPending };
 }

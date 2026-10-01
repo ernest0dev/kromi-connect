@@ -42,18 +42,11 @@ export interface TicketDetailCardProps {
   publicacion: Publicacion;
   nombreCampana: string | null;
   onViewDetails: () => void;
+  onDelete: () => void;
+  isDeleting: boolean;
   isSelected: boolean;
-  isEditing: boolean;
-  onStartEdit: () => void;
-  onCancelEdit: () => void;
-  onSave: (titulo?: string, fechaPublicacion?: string) => Promise<void>;
+  onEdit: () => void;
   onStatusChange: (nuevoEstatus: EstatusEnum) => Promise<void>;
-}
-
-export interface TicketEditFormProps {
-  publicacion: Publicacion;
-  onSave: (titulo: string, fechaPublicacion: string) => Promise<void>;
-  onCancel: () => void;
 }
 
 export interface StatusSelectProps {

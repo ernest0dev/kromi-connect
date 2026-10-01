@@ -2,7 +2,7 @@ import React from "react";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { Publicacion } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
-import { getCampaignsForGridMonthAction, getCampaignsForGridPostsAction } from "@/app/actions/campanas/campaigns";
+import { getCampaignsForGridMonthAction, getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
 
 // Esta vista necesita datos frescos en cada solicitud, sin caché de página.
@@ -22,7 +22,12 @@ export default async function ParrillaPage() {
 
   // Registra el fallo en servidor; la vista continúa con una lista vacía.
   if (error) {
-    console.error("Error al obtener publicaciones:", error);
+    console.error("Error al obtener publicaciones:", JSON.stringify({
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    }));
   }
 
   // Asegura que GridView reciba un arreglo aunque la consulta no devuelva datos.
@@ -31,9 +36,7 @@ export default async function ParrillaPage() {
   const mesActual = new Date().getMonth() + 1;
   const efemeridesResult = await getEfemeridesByYearAction(anioActual);
   const campaignsResult = await getCampaignsForGridMonthAction(anioActual, mesActual);
-  const postCampaignsResult = await getCampaignsForGridPostsAction(
-    lista.flatMap((publicacion) => publicacion.campana_id ? [publicacion.campana_id] : [])
-  );
+  const campaignOptionsResult = await getCampaignOptionsForGridAction();
   return (
     <div className="space-y-5">
       {/* Encabezado: contexto, título, ayuda y total de publicaciones. */}
@@ -75,7 +78,8 @@ export default async function ParrillaPage() {
       {/* La capa interactiva de la parrilla recibe los datos iniciales. */}
       <GridView
         publicacionesIniciales={lista}
-        campanasPublicacionesIniciales={postCampaignsResult.data}
+        errorPublicacionesIniciales={error?.message || null}
+        campanasPublicacionesIniciales={campaignOptionsResult.data}
         efemeridesIniciales={efemeridesResult.data}
         anioEfemeridesInicial={anioActual}
         errorEfemeridesInicial={efemeridesResult.success ? null : efemeridesResult.error || "No se pudieron cargar las efemérides."}

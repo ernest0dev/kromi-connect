@@ -25,7 +25,7 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
 
     // 1. Crear carpeta dedicada en Google Drive
     const folderName = `[${input.formato}] ${input.fecha_publicacion} - ${input.titulo}`;
-    const driveFolderUrl = await createPublicacionDriveFolder(folderName);
+    const driveFolder = await createPublicacionDriveFolder(folderName);
 
     // 2. Insertar publicación en Supabase con la URL devuelta
     const { data: newPost, error } = await supabase
@@ -41,7 +41,8 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
         cta_texto: input.cta_texto || null,
         hashtags: input.hashtags || null,
         estatus: "PENDIENTE_BRIEF" as EstatusEnum,
-        drive_folder_url: driveFolderUrl,
+        drive_folder_id: driveFolder?.id || null,
+        drive_folder_url: driveFolder?.url || null,
       })
       .select()
       .single();

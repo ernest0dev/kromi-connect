@@ -46,6 +46,7 @@ export interface CampanaGrid {
 export interface CampanaPublicacionGrid {
   id: string;
   nombre: string;
+  estatus: CampanaEstatus;
 }
 
 export interface PublicacionCampana {
@@ -236,6 +237,29 @@ export async function getCampaignsForGridPostsAction(campaignIds: string[]) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "No se pudieron cargar las campañas de las publicaciones.",
+      data: [] as CampanaPublicacionGrid[],
+    };
+  }
+}
+
+export async function getCampaignOptionsForGridAction() {
+  try {
+    const { data, error } = await getSupabaseAdmin()
+      .from("campanas")
+      .select("id, nombre, estatus")
+      .order("nombre", { ascending: true });
+    if (error) return { success: false, error: error.message, data: [] as CampanaPublicacionGrid[] };
+    return {
+      success: true,
+      data: (data || []).map((campaign) => ({
+        ...campaign,
+        estatus: campaign.estatus || "PLANIFICADA",
+      })) as CampanaPublicacionGrid[],
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "No se pudieron cargar las campañas.",
       data: [] as CampanaPublicacionGrid[],
     };
   }

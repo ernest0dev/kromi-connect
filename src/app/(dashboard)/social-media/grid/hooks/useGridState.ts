@@ -11,10 +11,6 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
   });
   const [formatoFiltro, setFormatoFiltro] = useState<FormatoEnum | 'TODOS'>('TODOS');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
-  const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
-  const [editTitulo, setEditTitulo] = useState('');
-  const [editFecha, setEditFecha] = useState('');
-  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -50,18 +46,6 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
 
   const selectTicket = (id: string) => setSelectedTicketId(id);
 
-  const startEditing = (pub: Publicacion) => {
-    setEditingTicketId(pub.id);
-    setEditTitulo(pub.titulo);
-    setEditFecha(pub.fecha_publicacion);
-    setEditError(null);
-  };
-
-  const cancelEditing = () => {
-    setEditingTicketId(null);
-    setEditError(null);
-  };
-
   return {
     publicaciones,
     setPublicaciones,
@@ -71,21 +55,11 @@ export function useGridState(publicacionesIniciales: Publicacion[]) {
     setFormatoFiltro,
     selectedTicketId,
     setSelectedTicketId,
-    editingTicketId,
-    setEditingTicketId,
-    editTitulo,
-    setEditTitulo,
-    editFecha,
-    setEditFecha,
-    editError,
-    setEditError,
     publicacionesFiltradas,
     publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
     goToToday,
     selectTicket,
-    startEditing,
-    cancelEditing,
   };
 }

@@ -1,11 +1,10 @@
 'use client';
 
-import { AlertTriangle, Pencil, FolderOpen, Eye } from 'lucide-react';
+import { AlertTriangle, Pencil, FolderOpen, Eye, Trash2 } from 'lucide-react';
 import { TicketDetailCardProps } from '../types/grid';
 import { useSLA } from '../hooks/useSLA';
 import { FORMATO_LABEL_UPPER } from '../utils/constants';
 import { StatusSelect } from './StatusSelect';
-import { TicketEditForm } from './TicketEditForm';
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '';
@@ -18,11 +17,10 @@ export function TicketDetailCard({
   publicacion,
   nombreCampana,
   onViewDetails,
+  onDelete,
+  isDeleting,
   isSelected,
-  isEditing,
-  onStartEdit,
-  onCancelEdit,
-  onSave,
+  onEdit,
   onStatusChange,
 }: TicketDetailCardProps) {
   const { calcularSlaState, SLA_META } = useSLA();
@@ -53,28 +51,17 @@ export function TicketDetailCard({
         </span>
       </div>
 
-      {/* título editable */}
-      {isEditing ? (
-        <TicketEditForm
-          publicacion={publicacion}
-          onSave={onSave}
-          onCancel={onCancelEdit}
-        />
-      ) : (
-        <>
-          <h3 className="mb-[9px] line-clamp-2 text-[13px] font-bold leading-[1.35]" style={{color: 'var(--tinta)' }}>
+      <h3 className="mb-[9px] line-clamp-2 text-[13px] font-bold leading-[1.35]" style={{color: 'var(--tinta)' }}>
             {publicacion.titulo}
-          </h3>
-          {publicacion.linea_contenido && (
-            <p className="-mt-1.5 mb-2 truncate text-[10px]" style={{color: 'var(--gris)' }}>
+      </h3>
+      {publicacion.linea_contenido && (
+        <p className="-mt-1.5 mb-2 truncate text-[10px]" style={{color: 'var(--gris)' }}>
               {publicacion.linea_contenido}
-            </p>
-          )}
-          <p className="-mt-1 mb-2 truncate text-[10px]" style={{ color: nombreCampana ? 'var(--morado)' : 'var(--gris)' }}>
-            Campaña · {nombreCampana || 'Sin campaña'}
-          </p>
-        </>
+        </p>
       )}
+      <p className="-mt-1 mb-2 truncate text-[10px]" style={{ color: nombreCampana ? 'var(--morado)' : 'var(--gris)' }}>
+            Campaña · {nombreCampana || 'Sin campaña'}
+      </p>
 
       {/* cambio de estatus inline */}
       <div className="mb-[9px] flex items-center">
@@ -121,18 +108,28 @@ export function TicketDetailCard({
           <Eye size={12} aria-hidden="true" />
           Ver detalle
         </button>
-        {!isEditing && (
-          <button
-            onClick={onStartEdit}
-            aria-label="Editar título y fecha"
-            className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
-            style={{
-        borderColor: 'var(--borde)', color: 'var(--azul)' }}
-          >
-            <Pencil size={12} aria-hidden="true" />
-            Editar
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label="Editar todos los campos de la publicación"
+          className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--azul)] focus-visible:ring-offset-1"
+          style={{ borderColor: 'var(--borde)', color: 'var(--azul)' }}
+        >
+          <Pencil size={12} aria-hidden="true" />
+          Editar
+        </button>
+
+        <button
+          type="button"
+          onClick={onDelete}
+          disabled={isDeleting}
+          aria-label="Eliminar publicación"
+          className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold transition disabled:cursor-wait disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1"
+          style={{ borderColor: 'var(--borde)', color: '#b42318' }}
+        >
+          <Trash2 size={12} aria-hidden="true" />
+          {isDeleting ? 'Eliminando…' : 'Eliminar'}
+        </button>
 
         {publicacion.drive_folder_url ? (
           <a

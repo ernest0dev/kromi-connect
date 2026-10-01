@@ -38,7 +38,7 @@ export const driveClient = getDriveClient();
  * Crea una carpeta para la publicación dentro de la carpeta raíz de Kromi Connect
  * y le asigna permisos de lectura para visualización de assets.
  */
-export async function createPublicacionDriveFolder(folderName: string): Promise<string | null> {
+export async function createPublicacionDriveFolder(folderName: string): Promise<{ id: string; url: string | null } | null> {
   try {
     const drive = getDriveClient();
     const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
@@ -68,11 +68,41 @@ export async function createPublicacionDriveFolder(folderName: string): Promise<
       },
     });
 
-    return folderUrl || null;
+    return { id: folderId, url: folderUrl || null };
   } catch (error) {
     console.error('Error al crear carpeta en Google Drive:', error);
     return null;
   }
+}
+
+/** Permanently removes a Drive folder. A missing folder is considered already deleted. */
+export async function deletePublicacionDriveFolder(folderId: string): Promise<{ success: boolean; alreadyDeleted?: boolean; error?: string }> {
+  if (!folderId.trim()) return { success: false, error: 'Falta el identificador de la carpeta de Google Drive.' };
+  try {
+    await getDriveClient().files.delete({ fileId: folderId, supportsAllDrives: true });
+    return { success: true };
+  } catch (error) {
+    const status = (error as { code?: number; response?: { status?: number } })?.code
+      ?? (error as { response?: { status?: number } })?.response?.status;
+    if (status === 404) return { success: true, alreadyDeleted: true };
+    console.error('Error al eliminar carpeta de Google Drive:', error);
+    return { success: false, error: error instanceof Error ? error.message : 'No se pudo eliminar la carpeta de Google Drive.' };
+  }
+}
+
+/** Extracts a Drive file ID from supported share URL formats. */
+export function getDriveFileIdFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const patterns = [
+    /\/folders\/([a-zA-Z0-9_-]+)/,
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match?.[1]) return match[1];
+  }
+  return null;
 }
 
 /**
