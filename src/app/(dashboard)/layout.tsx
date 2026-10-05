@@ -2,7 +2,6 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { Building2, Headset } from "lucide-react";
 import SocialMediaShell from "./components/SocialMediaShell";
 import type { NavGroup } from "./components/SocialMediaShell";
 
@@ -13,15 +12,7 @@ import type { NavGroup } from "./components/SocialMediaShell";
  * social-media/layout.tsx y la nota en SocialMediaShell.tsx sobre por qué
  * el shell solo se monta aquí.
  */
-const navGroupsTransversales: NavGroup[] = [
-  {
-    label: "Transversal",
-    items: [
-      { href: "/third-parties", label: "Clientes / Aliados", icon: Building2 },
-      { href: "/support", label: "Atención / Soporte", icon: Headset },
-    ],
-  },
-];
+const navGroupsTransversales: NavGroup[] = [];
 
 export default function DashboardLayout({
   children,

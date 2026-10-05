@@ -5,12 +5,9 @@ import { usePathname } from "next/navigation";
 import {
   AlertTriangle,
   CalendarRange,
-  Inbox,
-  Kanban,
   Plus,
   CalendarHeart,
   Target,
-  Video,
 } from "lucide-react";
 import NewTicketModal from "./components/NewTicketModal";
 import { useRegisterShellSlots } from "../components/ShellSlot";
@@ -27,13 +24,6 @@ const navGroupsSocialMedia: NavGroup[] = [
         href: "/social-media/grid",
         label: "Parrilla macro",
         icon: CalendarRange,
-      },
-      { href: "/social-media/kanban", label: "Tablero kanban", icon: Kanban },
-      { href: "/social-media/shooting", label: "Modo rodaje", icon: Video },
-      {
-        href: "/social-media/requests",
-        label: "Inbox solicitudes",
-        icon: Inbox,
       },
     ],
   },
