@@ -5,6 +5,7 @@ import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
 import { getCampaignsForGridMonthAction, getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
 import { requirePermission } from "@/lib/auth/dal";
+import type { ContentCategoryOption } from "./components/ContentCategorySelector";
 
 // Esta vista necesita datos frescos en cada solicitud, sin caché de página.
 export const revalidate = 0;
@@ -34,6 +35,20 @@ export default async function ParrillaPage() {
 
   // Asegura que GridView reciba un arreglo aunque la consulta no devuelva datos.
   const lista = (publicaciones as Publicacion[]) || [];
+  const [categoriesResult, publicationCategoriesResult] = await Promise.all([
+    supabase.from("categorias_contenido").select("id, nombre").order("nombre"),
+    supabase.from("publicacion_categorias").select("publicacion_id, categoria_id"),
+  ]);
+  const categoryNames = new Map((categoriesResult.data || []).map((category) => [category.id, category.nombre]));
+  const namesByPublication = new Map<string, string[]>();
+  for (const link of publicationCategoriesResult.data || []) {
+    const name = categoryNames.get(link.categoria_id);
+    if (name) namesByPublication.set(link.publicacion_id, [...(namesByPublication.get(link.publicacion_id) || []), name]);
+  }
+  const publicacionesConTemas = lista.map((publication) => ({
+    ...publication,
+    linea_contenido: namesByPublication.get(publication.id)?.join(", ") || publication.linea_contenido,
+  }));
   const anioActual = new Date().getFullYear();
   const mesActual = new Date().getMonth() + 1;
   const efemeridesResult = await getEfemeridesByYearAction(anioActual);
@@ -79,9 +94,10 @@ export default async function ParrillaPage() {
 
       {/* La capa interactiva de la parrilla recibe los datos iniciales. */}
       <GridView
-        publicacionesIniciales={lista}
+        publicacionesIniciales={publicacionesConTemas}
         errorPublicacionesIniciales={error?.message || null}
         campanasPublicacionesIniciales={campaignOptionsResult.data}
+        categoriasContenidoIniciales={(categoriesResult.data || []) as ContentCategoryOption[]}
         efemeridesIniciales={efemeridesResult.data}
         anioEfemeridesInicial={anioActual}
         errorEfemeridesInicial={efemeridesResult.success ? null : efemeridesResult.error || "No se pudieron cargar las efemérides."}

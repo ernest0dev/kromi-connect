@@ -8,7 +8,11 @@ export type EstatusEnum =
   | 'PENDIENTE_APROBACION_GERENCIA'
   | 'APROBADO'
   | 'PROGRAMADO'
-  | 'PUBLICADO';
+  | 'PUBLICADO'
+  | 'SOLICITADO'
+  | 'EN_CORRECCION'
+  | 'CANCELADO'
+  | 'INCOMPLETO';
 export type TipoCampanaEnum = 'TEMPORADA' | 'EVENTO' | 'EFEMERIDE' | 'LANZAMIENTO' | 'OFERTA_PUNTUAL';
 export type CampanaEstatusEnum = 'PLANIFICADA' | 'ACTIVA' | 'FINALIZADA' | 'ARCHIVADA';
 export type CampanaEstatusOperativoEnum = Exclude<CampanaEstatusEnum, 'ARCHIVADA'>;

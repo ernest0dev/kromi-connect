@@ -10,6 +10,7 @@ const FORMATOS: FormatoEnum[] = ["CARRUSEL", "POST", "REEL", "STORY"];
 const ESTADOS: EstatusEnum[] = [
   "PENDIENTE_BRIEF", "EN_RODAJE", "EN_DISENO", "EN_REVISION_CM",
   "RECHAZADO_DISENO", "PENDIENTE_APROBACION_GERENCIA", "APROBADO", "PROGRAMADO", "PUBLICADO",
+  "SOLICITADO", "EN_CORRECCION", "CANCELADO", "INCOMPLETO",
 ];
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -17,7 +18,6 @@ export interface EditPublicacionInput {
   publicacionId: string;
   titulo: string;
   formato: FormatoEnum;
-  linea_contenido: string | null;
   fecha_publicacion: string;
   fecha_solicitud_diseno: string | null;
   fecha_entrega_diseno_real: string | null;
@@ -28,6 +28,7 @@ export interface EditPublicacionInput {
   cta_texto: string | null;
   hashtags: string[];
   campana_id: string | null;
+  categoria_ids: string[];
 }
 
 export async function editPublicacionAction(input: EditPublicacionInput): Promise<
@@ -59,6 +60,9 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
   if (timestampFields.some((value) => value !== null && (typeof value !== "string" || Number.isNaN(Date.parse(value))))) {
     return { success: false, error: "Una de las fechas operativas no es válida." };
   }
+  if (!Array.isArray(input.categoria_ids) || input.categoria_ids.some((id) => typeof id !== "string")) {
+    return { success: false, error: "La selección de temas no es válida." };
+  }
 
   const editAccess = await authorizeAction("social-media.posts.edit");
   if (editAccess.error) return { success: false, error: editAccess.error };
@@ -82,10 +86,13 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       if (statusAccess.error) return { success: false, error: statusAccess.error };
     }
 
+    const fechaSolicitudDiseno = input.estatus === "SOLICITADO"
+      ? input.fecha_solicitud_diseno || current.fecha_solicitud_diseno || new Date().toISOString()
+      : input.fecha_solicitud_diseno;
     const slaChanged = current.fecha_publicacion !== input.fecha_publicacion
-      || current.fecha_solicitud_diseno !== input.fecha_solicitud_diseno;
+      || current.fecha_solicitud_diseno !== fechaSolicitudDiseno;
     const slaDates = slaChanged
-      ? calcularMatrizSLA(input.fecha_publicacion, input.fecha_solicitud_diseno)
+      ? calcularMatrizSLA(input.fecha_publicacion, fechaSolicitudDiseno)
       : null;
 
     const { data, error } = await supabase
@@ -93,17 +100,18 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       .update({
         titulo: input.titulo.trim(),
         formato: input.formato,
-        linea_contenido: input.linea_contenido?.trim() || null,
         fecha_publicacion: input.fecha_publicacion,
-        fecha_solicitud_diseno: input.fecha_solicitud_diseno,
+        fecha_solicitud_diseno: fechaSolicitudDiseno,
         fecha_entrega_diseno_real: input.fecha_entrega_diseno_real,
         fecha_aprobacion_gerencia: input.fecha_aprobacion_gerencia,
         estatus: input.estatus,
-        hook_texto: input.hook_texto?.trim() || null,
-        body_texto: input.body_texto?.trim() || null,
-        cta_texto: input.cta_texto?.trim() || null,
-        hashtags: input.hashtags.map((tag) => tag.trim().replace(/^#/, "")).filter(Boolean),
         campana_id: input.campana_id,
+        ...(input.formato !== "STORY" ? {
+          hook_texto: input.hook_texto?.trim() || null,
+          body_texto: input.body_texto?.trim() || null,
+          cta_texto: input.cta_texto?.trim() || null,
+          hashtags: input.hashtags.map((tag) => tag.trim().replace(/^#/, "")).filter(Boolean),
+        } : {}),
         ...(slaDates || {}),
       })
       .eq("id", input.publicacionId)
@@ -113,9 +121,18 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
     if (error) return { success: false, error: `No se pudieron guardar los cambios: ${error.message}` };
     if (!data) return { success: false, error: "La publicación fue eliminada antes de guardar los cambios." };
 
+    const { error: categoriesError } = await supabase.rpc("replace_publicacion_categorias", {
+      p_publicacion_id: input.publicacionId,
+      p_categoria_ids: input.categoria_ids,
+    });
+    if (categoriesError) return { success: false, error: `No se pudieron guardar los temas: ${categoriesError.message}` };
+    const categoryRows = input.categoria_ids.length
+      ? await supabase.from("categorias_contenido").select("id, nombre").in("id", input.categoria_ids)
+      : { data: [], error: null };
+
     revalidatePath("/social-media/grid");
     revalidatePath("/social-media/kanban");
-    return { success: true, data: data as Publicacion };
+    return { success: true, data: { ...data, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido } as Publicacion };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Ocurrió un error inesperado al guardar la publicación." };
   }

@@ -32,7 +32,31 @@ export async function getShootingPostsAction(input?: ObtenerPautasInput) {
       return { success: false, error: error.message, data: [] };
     }
 
-    return { success: true, data: data as Publicacion[] };
+    const posts = data || [];
+    const postIds = posts.map((post) => post.id);
+    const categoryLinks = postIds.length
+      ? await supabase.from('publicacion_categorias').select('publicacion_id, categoria_id').in('publicacion_id', postIds)
+      : { data: [], error: null };
+    if (categoryLinks.error) return { success: false, error: categoryLinks.error.message, data: [] as Publicacion[] };
+    const categoryIds = [...new Set((categoryLinks.data || []).map((link) => link.categoria_id))];
+    const categoryRows = categoryIds.length
+      ? await supabase.from('categorias_contenido').select('id, nombre').in('id', categoryIds)
+      : { data: [], error: null };
+    if (categoryRows.error) return { success: false, error: categoryRows.error.message, data: [] as Publicacion[] };
+    const namesByCategoryId = new Map((categoryRows.data || []).map((category) => [category.id, category.nombre]));
+    const namesByPostId = new Map<string, string[]>();
+    for (const link of categoryLinks.data || []) {
+      const name = namesByCategoryId.get(link.categoria_id);
+      if (name) namesByPostId.set(link.publicacion_id, [...(namesByPostId.get(link.publicacion_id) || []), name]);
+    }
+
+    return {
+      success: true,
+      data: posts.map((post) => ({
+        ...post,
+        linea_contenido: namesByPostId.get(post.id)?.join(', ') || post.linea_contenido,
+      })) as Publicacion[],
+    };
   } catch (err: any) {
     return { success: false, error: err.message, data: [] };
   }

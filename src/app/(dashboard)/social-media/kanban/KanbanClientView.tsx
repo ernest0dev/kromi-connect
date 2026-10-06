@@ -8,15 +8,21 @@ interface Props {
   publicacionesIniciales: Publicacion[];
 }
 
-// Configuración de las 7 Columnas del Flujo Operativo
+// Estados del flujo operativo de publicaciones.
 const KANBAN_COLUMNAS: { id: EstatusEnum; label: string; color: string }[] = [
-  { id: 'PENDIENTE_BRIEF', label: 'Brief Pendiente', color: 'border-slate-500' },
+  { id: 'PENDIENTE_BRIEF', label: 'Pendiente · completar brief', color: 'border-slate-500' },
+  { id: 'INCOMPLETO', label: 'Incompleto', color: 'border-slate-400' },
+  { id: 'SOLICITADO', label: 'Solicitado a diseño', color: 'border-indigo-500' },
   { id: 'EN_RODAJE', label: 'En Rodaje', color: 'border-amber-500' },
   { id: 'EN_DISENO', label: 'En Diseño', color: 'border-sky-500' },
+  { id: 'EN_CORRECCION', label: 'En corrección de diseño', color: 'border-orange-500' },
+  { id: 'RECHAZADO_DISENO', label: 'Rechazado por diseño', color: 'border-red-500' },
   { id: 'EN_REVISION_CM', label: 'En Revisión CM', color: 'border-purple-500' },
+  { id: 'PENDIENTE_APROBACION_GERENCIA', label: 'Por aprobación', color: 'border-yellow-500' },
   { id: 'APROBADO', label: 'Aprobado', color: 'border-emerald-500' },
   { id: 'PROGRAMADO', label: 'Programado', color: 'border-teal-500' },
   { id: 'PUBLICADO', label: 'Publicado', color: 'border-blue-500' },
+  { id: 'CANCELADO', label: 'Cancelado', color: 'border-slate-300' },
 ];
 
 const FORMATO_BADGES: Record<FormatoEnum, { bg: string; text: string }> = {

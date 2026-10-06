@@ -4,11 +4,16 @@ import React, { useId, useState, useTransition } from 'react';
 import { X, Loader2, TriangleAlert, FolderPlus } from 'lucide-react';
 import { FormatoEnum, Publicacion } from '@/types';
 import { createPostWithDriveAction } from '@/app/actions/publicaciones/create';
+import { ContentCategorySelector } from '../grid/components/ContentCategorySelector';
+import type { ContentCategoryOption } from '../grid/components/ContentCategorySelector';
+import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
   onCreated?: (publicacion: Publicacion) => void;
+  categories: ContentCategoryOption[];
+  campaigns: CampanaPublicacionGrid[];
 }
 
 const FORMATO_OPCIONES: { value: FormatoEnum; label: string; hint: string }[] = [
@@ -24,20 +29,21 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--tinta)',
 };
 
-export default function NuevoTicketModal({ isOpen, onClose, onCreated }: Props) {
+export default function NuevoTicketModal({ isOpen, onClose, onCreated, categories, campaigns }: Props) {
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const formId = useId();
 
   const [titulo, setTitulo] = useState('');
   const [formato, setFormato] = useState<FormatoEnum>('REEL');
-  const [lineaContenido, setLineaContenido] = useState('');
   const [fechaPublicacion, setFechaPublicacion] = useState('');
 
   const [hookTexto, setHookTexto] = useState('');
   const [bodyTexto, setBodyTexto] = useState('');
   const [ctaTexto, setCtaTexto] = useState('');
   const [hashtagsRaw, setHashtagsRaw] = useState('');
+  const [categoryIds, setCategoryIds] = useState<string[]>([]);
+  const [campanaId, setCampanaId] = useState('');
 
   if (!isOpen) return null;
 
@@ -58,22 +64,24 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated }: Props) 
       const res = await createPostWithDriveAction({
         titulo,
         formato,
-        linea_contenido: lineaContenido,
+        categoria_ids: categoryIds,
+        campana_id: campanaId || null,
         fecha_publicacion: fechaPublicacion,
-        hook_texto: hookTexto || undefined,
-        body_texto: bodyTexto || undefined,
-        cta_texto: ctaTexto || undefined,
-        hashtags: hashtagsArray,
+        hook_texto: formato === 'STORY' ? undefined : hookTexto || undefined,
+        body_texto: formato === 'STORY' ? undefined : bodyTexto || undefined,
+        cta_texto: formato === 'STORY' ? undefined : ctaTexto || undefined,
+        hashtags: formato === 'STORY' ? [] : hashtagsArray,
       });
 
       if (res.success) {
         setTitulo('');
-        setLineaContenido('');
         setFechaPublicacion('');
         setHookTexto('');
         setBodyTexto('');
         setCtaTexto('');
         setHashtagsRaw('');
+        setCategoryIds([]);
+        setCampanaId('');
         if (res.data) onCreated?.(res.data as Publicacion);
         onClose();
       } else {
@@ -158,20 +166,17 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated }: Props) 
               </select>
             </div>
 
+            {formato === 'STORY' && <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900 md:col-span-2">Story es solo imagen/diseño y no lleva copy.</p>}
+
             <div className="space-y-1.5">
-              <label htmlFor={`${formId}-linea`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
-                Línea comercial
-              </label>
-              <input
-                id={`${formId}-linea`}
-                type="text"
-                placeholder="Promociones, charcutería…"
-                value={lineaContenido}
-                onChange={(e) => setLineaContenido(e.target.value)}
-                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none"
-                style={inputStyle}
-              />
+              <label htmlFor={`${formId}-campaign`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>Campaña (opcional)</label>
+              <select id={`${formId}-campaign`} value={campanaId} onChange={(event) => setCampanaId(event.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none" style={inputStyle}>
+                <option value="">Sin campaña</option>
+                {campaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.nombre}{campaign.estatus === 'ARCHIVADA' ? ' · Archivada' : ''}</option>)}
+              </select>
             </div>
+
+            <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
 
             <div className="space-y-1.5 md:col-span-2">
               <label htmlFor={`${formId}-fecha`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
@@ -187,13 +192,13 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated }: Props) 
                 style={inputStyle}
               />
               <p className="text-[11px]" style={{ color: 'var(--gris)' }}>
-                El límite de brief y rodaje se calcula automáticamente (regla SLA 3+2).
+                El límite del brief se calcula a 5 días calendario antes de la publicación. La fecha estimada de diseño se calcula cuando se solicita.
               </p>
             </div>
           </div>
 
           {/* Bloque 2: Copy */}
-          <div className="space-y-3 pt-4 border-t" style={{ borderColor: 'var(--borde)' }}>
+          {formato !== 'STORY' && <div className="space-y-3 pt-4 border-t" style={{ borderColor: 'var(--borde)' }}>
             <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--gris)' }}>
               Brief de copy
             </h3>
@@ -259,7 +264,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated }: Props) 
                 />
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* Acciones */}
           <div className="pt-4 border-t flex items-center justify-end gap-3" style={{ borderColor: 'var(--borde)' }}>

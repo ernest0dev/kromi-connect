@@ -13,6 +13,8 @@ import NewTicketModal from "./components/NewTicketModal";
 import { useRegisterShellSlots } from "../components/ShellSlot";
 import type { NavGroup } from "../components/SocialMediaShell";
 import type { SlaSummary } from "./layout";
+import type { ContentCategoryOption } from "./grid/components/ContentCategorySelector";
+import type { CampanaPublicacionGrid } from "@/app/actions/campanas/campaigns";
 
 const navGroupsSocialMedia: NavGroup[] = [
   {
@@ -32,9 +34,13 @@ const navGroupsSocialMedia: NavGroup[] = [
 export default function SocialMediaLayoutClient({
   children,
   slaSummary,
+  contentCategories,
+  campaigns,
 }: {
   children: React.ReactNode;
   slaSummary: SlaSummary | null;
+  contentCategories: ContentCategoryOption[];
+  campaigns: CampanaPublicacionGrid[];
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pathname = usePathname();
@@ -117,6 +123,8 @@ export default function SocialMediaLayoutClient({
       <NewTicketModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        categories={contentCategories}
+        campaigns={campaigns}
       />
     </>
   );

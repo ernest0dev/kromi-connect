@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { authorizeAction } from '@/lib/auth/dal';
 import { EstatusEnum } from '@/types';
 import { recalculateSlaDates } from './recalculateSla';
+import { calcularMatrizSLA } from '@/utils/sla';
 
 export async function actualizarEstatusTicketAction(input: {
   publicacionId: string;
@@ -21,9 +22,27 @@ export async function actualizarEstatusTicketAction(input: {
 
     const supabase = getSupabaseAdmin();
 
+    const { data: current, error: currentError } = await supabase
+      .from('publicaciones')
+      .select('fecha_publicacion, fecha_solicitud_diseno')
+      .eq('id', publicacionId)
+      .maybeSingle();
+    if (currentError || !current) {
+      return { success: false, error: currentError?.message || 'La publicación ya no existe.' };
+    }
+
+    const update: { estatus: EstatusEnum; fecha_solicitud_diseno?: string; fecha_limite_brief?: string; fecha_entrega_diseno_estimada?: string | null } = {
+      estatus: nuevoEstatus,
+    };
+    if (nuevoEstatus === 'SOLICITADO' && !current.fecha_solicitud_diseno) {
+      const requestedAt = new Date().toISOString();
+      update.fecha_solicitud_diseno = requestedAt;
+      Object.assign(update, calcularMatrizSLA(current.fecha_publicacion, requestedAt));
+    }
+
     const { error: updateError } = await supabase
       .from('publicaciones')
-      .update({ estatus: nuevoEstatus })
+      .update(update)
       .eq('id', publicacionId);
 
     if (updateError) {

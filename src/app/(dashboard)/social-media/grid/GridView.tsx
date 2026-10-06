@@ -15,6 +15,8 @@ import { GridCalendar } from './components/GridCalendar';
 import { TicketDetailCard } from './components/TicketDetailCard';
 import { TicketEditModal } from './components/TicketEditModal';
 import { deletePublicacionAction, DeletePublicacionMode } from '@/app/actions/publicaciones/delete';
+import type { ContentCategoryOption } from './components/ContentCategorySelector';
+import { ESTATUS_STYLE } from './utils/constants';
 
 interface Props {
   publicacionesIniciales: Publicacion[];
@@ -26,9 +28,10 @@ interface Props {
   periodoCampanasInicial: { anio: number; mes: number };
   errorCampanasInicial: string | null;
   campanasPublicacionesIniciales: CampanaPublicacionGrid[];
+  categoriasContenidoIniciales: ContentCategoryOption[];
 }
 
-export default function GridView({ publicacionesIniciales, errorPublicacionesIniciales, efemeridesIniciales, anioEfemeridesInicial, errorEfemeridesInicial, campanasIniciales, periodoCampanasInicial, errorCampanasInicial, campanasPublicacionesIniciales }: Props) {
+export default function GridView({ publicacionesIniciales, errorPublicacionesIniciales, efemeridesIniciales, anioEfemeridesInicial, errorEfemeridesInicial, campanasIniciales, periodoCampanasInicial, errorCampanasInicial, campanasPublicacionesIniciales, categoriasContenidoIniciales }: Props) {
   const {
     setPublicaciones,
     currentDate,
@@ -239,11 +242,14 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onCreated={handleTicketCreated}
+        categories={categoriasContenidoIniciales}
+        campaigns={campanasPublicacionesIniciales}
       />
 
       {editingPublication && <TicketEditModal
         publicacion={editingPublication}
         campanas={campanasPublicaciones}
+        categories={categoriasContenidoIniciales}
         onClose={() => setEditingPublication(null)}
         onSaved={(updatedPublication) => {
           setPublicaciones((current) => current.map((publication) => publication.id === updatedPublication.id ? updatedPublication : publication));
@@ -294,8 +300,7 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
           </header>
           <dl className="grid grid-cols-1 gap-3 p-5 sm:grid-cols-2">
             {([
-              ['ID', selectedPublication.id],
-              ['Campaña', selectedPublication.campana_id ? nombreCampanaPorId.get(selectedPublication.campana_id) || selectedPublication.campana_id : 'Sin campaña'],
+              ['Campaña', selectedPublication.campana_id ? nombreCampanaPorId.get(selectedPublication.campana_id) || 'Campaña vinculada' : 'Sin campaña'],
               ['Título', selectedPublication.titulo],
               ['Formato', selectedPublication.formato],
               ['Línea de contenido', selectedPublication.linea_contenido],
@@ -305,14 +310,12 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
               ['Entrega de diseño estimada', selectedPublication.fecha_entrega_diseno_estimada],
               ['Entrega de diseño real', selectedPublication.fecha_entrega_diseno_real],
               ['Aprobación de gerencia', selectedPublication.fecha_aprobacion_gerencia],
-              ['Estado', selectedPublication.estatus],
-              ['Hook', selectedPublication.hook_texto],
-              ['Cuerpo', selectedPublication.body_texto],
-              ['CTA', selectedPublication.cta_texto],
-              ['Hashtags', selectedPublication.hashtags?.join(' ')],
-              ['Versión del copy', selectedPublication.version_copy],
-              ['Creador (ID)', selectedPublication.creador_id],
-              ['Diseñador (ID)', selectedPublication.disenador_id],
+              ['Estado', ESTATUS_STYLE[selectedPublication.estatus].label],
+              ['Hook', selectedPublication.formato === 'STORY' ? 'No aplica a Story' : selectedPublication.hook_texto],
+              ['Cuerpo', selectedPublication.formato === 'STORY' ? 'No aplica a Story' : selectedPublication.body_texto],
+              ['CTA', selectedPublication.formato === 'STORY' ? 'No aplica a Story' : selectedPublication.cta_texto],
+              ['Hashtags', selectedPublication.formato === 'STORY' ? 'No aplica a Story' : selectedPublication.hashtags?.join(' ')],
+              ['Versión del copy', selectedPublication.formato === 'STORY' ? 'No aplica a Story' : selectedPublication.version_copy],
               ['Creado', selectedPublication.created_at],
               ['Actualizado', selectedPublication.updated_at],
             ] as [string, string | number | string[] | null | undefined][]).map(([label, value]) => (
@@ -324,7 +327,7 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
             <div className="min-w-0 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
               <dt className="text-[10px] font-bold uppercase tracking-wide text-slate-500">Carpeta de Google Drive</dt>
               <dd className="mt-1 break-all text-sm text-slate-800">
-                {selectedPublication.drive_folder_url ? <a href={selectedPublication.drive_folder_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline">Abrir carpeta · {selectedPublication.drive_folder_id || selectedPublication.drive_folder_url}</a> : selectedPublication.drive_folder_id || '—'}
+                {selectedPublication.drive_folder_url ? <a href={selectedPublication.drive_folder_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-700 underline">Abrir carpeta de assets</a> : 'Sin carpeta de Drive vinculada'}
               </dd>
             </div>
           </dl>

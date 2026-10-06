@@ -111,6 +111,21 @@ export interface Database {
           }
         ];
       };
+      categorias_contenido: {
+        Row: { id: string; codigo: string; nombre: string; created_at: string };
+        Insert: { id?: string; codigo: string; nombre: string; created_at?: string };
+        Update: { id?: string; codigo?: string; nombre?: string; created_at?: string };
+        Relationships: [];
+      };
+      publicacion_categorias: {
+        Row: { publicacion_id: string; categoria_id: string; created_at: string };
+        Insert: { publicacion_id: string; categoria_id: string; created_at?: string };
+        Update: { publicacion_id?: string; categoria_id?: string; created_at?: string };
+        Relationships: [
+          { foreignKeyName: 'publicacion_categorias_publicacion_id_fkey'; columns: ['publicacion_id']; referencedRelation: 'publicaciones'; referencedColumns: ['id'] },
+          { foreignKeyName: 'publicacion_categorias_categoria_id_fkey'; columns: ['categoria_id']; referencedRelation: 'categorias_contenido'; referencedColumns: ['id'] }
+        ];
+      };
       publicaciones: {
         Row: {
           id: string;
@@ -478,6 +493,10 @@ export interface Database {
           p_confirmar_desvinculacion: boolean;
         };
         Returns: string;
+      };
+      replace_publicacion_categorias: {
+        Args: { p_publicacion_id: string; p_categoria_ids: string[] };
+        Returns: undefined;
       };
     };
     Enums: {

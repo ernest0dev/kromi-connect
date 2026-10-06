@@ -3,6 +3,7 @@ import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { calcularSlaState } from "./grid/utils/sla";
 import SocialMediaLayoutClient from "./SocialMediaLayoutClient";
 import { requirePermission } from "@/lib/auth/dal";
+import { getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
 
 export interface SlaSummary {
   vencidos: number;
@@ -36,8 +37,17 @@ export default async function SocialMediaLayout({
         { vencidos: 0, hoy: 0 }
       );
 
+  const [categoriesResult, campaignsResult] = await Promise.all([
+    supabase.from("categorias_contenido").select("id, nombre").order("nombre"),
+    getCampaignOptionsForGridAction(),
+  ]);
+
   return (
-    <SocialMediaLayoutClient slaSummary={slaSummary}>
+    <SocialMediaLayoutClient
+      slaSummary={slaSummary}
+      contentCategories={(categoriesResult.data || []).map(({ id, nombre }) => ({ id, nombre }))}
+      campaigns={campaignsResult.data}
+    >
       {children}
     </SocialMediaLayoutClient>
   );

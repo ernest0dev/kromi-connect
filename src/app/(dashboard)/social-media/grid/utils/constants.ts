@@ -16,14 +16,18 @@ export const FORMATO_LABEL_UPPER: Record<FormatoEnum, string> = {
 
 export const ESTATUS_ORDEN: EstatusEnum[] = [
   'PENDIENTE_BRIEF',
+  'SOLICITADO',
   'EN_RODAJE',
   'EN_DISENO',
   'EN_REVISION_CM',
   'RECHAZADO_DISENO',
+  'EN_CORRECCION',
   'PENDIENTE_APROBACION_GERENCIA',
   'APROBADO',
   'PROGRAMADO',
   'PUBLICADO',
+  'INCOMPLETO',
+  'CANCELADO',
 ];
 
 /**
@@ -36,13 +40,17 @@ export const ESTATUS_STYLE: Record<
   EstatusEnum,
   { label: string; dotVar: string; bgVar: string; textVar: string }
 > = {
-  PENDIENTE_BRIEF: { label: 'Brief pendiente', dotVar: 'var(--gris)', bgVar: 'var(--hueso)', textVar: 'var(--gris)' },
+  PENDIENTE_BRIEF: { label: 'Pendiente · completar brief', dotVar: 'var(--gris)', bgVar: 'var(--hueso)', textVar: 'var(--gris)' },
+  SOLICITADO: { label: 'Solicitado a diseño', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
   EN_RODAJE: { label: 'En rodaje', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
   EN_DISENO: { label: 'En diseño', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
   EN_REVISION_CM: { label: 'En revisión CM', dotVar: 'var(--azul)', bgVar: 'color-mix(in srgb, var(--azul) 12%, white)', textVar: 'var(--azul-osc)' },
   RECHAZADO_DISENO: { label: 'Rechazado', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
-  PENDIENTE_APROBACION_GERENCIA: { label: 'Pendiente gerencia', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
+  EN_CORRECCION: { label: 'En corrección de diseño', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
+  PENDIENTE_APROBACION_GERENCIA: { label: 'Por aprobación de gerencia', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
   APROBADO: { label: 'Aprobado', dotVar: 'var(--verde)', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', textVar: '#256B3A' },
   PROGRAMADO: { label: 'Programado', dotVar: 'var(--verde)', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', textVar: '#256B3A' },
   PUBLICADO: { label: 'Publicado', dotVar: 'var(--verde)', bgVar: 'color-mix(in srgb, var(--verde) 12%, white)', textVar: '#256B3A' },
+  INCOMPLETO: { label: 'Incompleto', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
+  CANCELADO: { label: 'Cancelado', dotVar: 'var(--gris)', bgVar: 'var(--hueso)', textVar: 'var(--gris)' },
 };

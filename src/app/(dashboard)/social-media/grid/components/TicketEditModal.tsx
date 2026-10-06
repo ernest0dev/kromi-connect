@@ -6,6 +6,8 @@ import { EstatusEnum, FormatoEnum, Publicacion } from '@/types';
 import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
 import { editPublicacionAction, EditPublicacionInput } from '@/app/actions/publicaciones/edit';
 import { ESTATUS_ORDEN, ESTATUS_STYLE, FORMATO_LABEL_UPPER } from '../utils/constants';
+import { ContentCategorySelector } from './ContentCategorySelector';
+import type { ContentCategoryOption } from './ContentCategorySelector';
 
 const FORMATOS: FormatoEnum[] = ['CARRUSEL', 'POST', 'REEL', 'STORY'];
 const controlClass = 'ui-control w-full rounded-lg px-3 py-2 text-sm';
@@ -28,17 +30,21 @@ function toIsoTimestamp(value: string): string | null {
 interface Props {
   publicacion: Publicacion;
   campanas: CampanaPublicacionGrid[];
+  categories: ContentCategoryOption[];
   onClose: () => void;
   onSaved: (publicacion: Publicacion) => void;
 }
 
-export function TicketEditModal({ publicacion, campanas, onClose, onSaved }: Props) {
+export function TicketEditModal({ publicacion, campanas, categories, onClose, onSaved }: Props) {
   const formId = useId();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
   const [titulo, setTitulo] = useState(publicacion.titulo);
   const [formato, setFormato] = useState(publicacion.formato);
-  const [linea, setLinea] = useState(publicacion.linea_contenido || '');
+  const [categoryIds, setCategoryIds] = useState(() => (publicacion.linea_contenido || '').split(', ').flatMap((name) => {
+    const category = categories.find((item) => item.nombre === name);
+    return category ? [category.id] : [];
+  }));
   const [fechaPublicacion, setFechaPublicacion] = useState(publicacion.fecha_publicacion);
   const [fechaSolicitudDiseno, setFechaSolicitudDiseno] = useState(toLocalDateTime(publicacion.fecha_solicitud_diseno));
   const [fechaEntregaReal, setFechaEntregaReal] = useState(toLocalDateTime(publicacion.fecha_entrega_diseno_real));
@@ -50,7 +56,8 @@ export function TicketEditModal({ publicacion, campanas, onClose, onSaved }: Pro
   const [hashtags, setHashtags] = useState((publicacion.hashtags || []).join(', '));
   const [campanaId, setCampanaId] = useState(publicacion.campana_id || '');
   const slaWillChange = publicacion.fecha_publicacion !== fechaPublicacion
-    || toLocalDateTime(publicacion.fecha_solicitud_diseno) !== fechaSolicitudDiseno;
+    || toLocalDateTime(publicacion.fecha_solicitud_diseno) !== fechaSolicitudDiseno
+    || (estatus === 'SOLICITADO' && !fechaSolicitudDiseno);
 
   const field = (label: string, control: ReactNode, full = false) => (
     <div className={`space-y-1.5 ${full ? 'sm:col-span-2' : ''}`}>
@@ -66,7 +73,7 @@ export function TicketEditModal({ publicacion, campanas, onClose, onSaved }: Pro
       publicacionId: publicacion.id,
       titulo,
       formato,
-      linea_contenido: linea,
+      categoria_ids: categoryIds,
       fecha_publicacion: fechaPublicacion,
       fecha_solicitud_diseno: toIsoTimestamp(fechaSolicitudDiseno),
       fecha_entrega_diseno_real: toIsoTimestamp(fechaEntregaReal),
@@ -85,7 +92,7 @@ export function TicketEditModal({ publicacion, campanas, onClose, onSaved }: Pro
         setError(result.error);
         return;
       }
-      onSaved(result.data);
+      onSaved({ ...result.data, linea_contenido: categories.filter((category) => categoryIds.includes(category.id)).map((category) => category.nombre).join(', ') || null });
     });
   };
 
@@ -109,11 +116,13 @@ export function TicketEditModal({ publicacion, campanas, onClose, onSaved }: Pro
               {field('Título *', <input required maxLength={200} value={titulo} onChange={(event) => setTitulo(event.target.value)} className={controlClass} style={controlStyle} />, true)}
               {field('Formato', <select value={formato} onChange={(event) => setFormato(event.target.value as FormatoEnum)} className={controlClass} style={controlStyle}>{FORMATOS.map((value) => <option key={value} value={value}>{FORMATO_LABEL_UPPER[value]}</option>)}</select>)}
               {field('Campaña', <select value={campanaId} onChange={(event) => setCampanaId(event.target.value)} className={controlClass} style={controlStyle}><option value="">Sin campaña</option>{campanas.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.nombre}{campaign.estatus === 'ARCHIVADA' ? ' · Archivada' : ''}</option>)}</select>)}
-              {field('Línea de contenido', <input value={linea} onChange={(event) => setLinea(event.target.value)} className={controlClass} style={controlStyle} />, true)}
-              {field('Hook', <input value={hook} onChange={(event) => setHook(event.target.value)} className={controlClass} style={controlStyle} />, true)}
-              {field('Cuerpo', <textarea rows={4} value={body} onChange={(event) => setBody(event.target.value)} className={controlClass} style={controlStyle} />)}
-              {field('CTA', <textarea rows={4} value={cta} onChange={(event) => setCta(event.target.value)} className={controlClass} style={controlStyle} />)}
-              {field('Hashtags', <input value={hashtags} onChange={(event) => setHashtags(event.target.value)} placeholder="Uno, dos, tres" className={controlClass} style={controlStyle} />, true)}
+              <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
+              {formato === 'STORY' ? <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">Story es solo imagen/diseño. El copy guardado previamente se conserva, pero no aplica a este formato.</p> : <>
+                {field('Hook', <input value={hook} onChange={(event) => setHook(event.target.value)} className={controlClass} style={controlStyle} />, true)}
+                {field('Cuerpo', <textarea rows={4} value={body} onChange={(event) => setBody(event.target.value)} className={controlClass} style={controlStyle} />)}
+                {field('CTA', <textarea rows={4} value={cta} onChange={(event) => setCta(event.target.value)} className={controlClass} style={controlStyle} />)}
+                {field('Hashtags', <input value={hashtags} onChange={(event) => setHashtags(event.target.value)} placeholder="Uno, dos, tres" className={controlClass} style={controlStyle} />, true)}
+              </>}
             </div>
           </fieldset>
 
@@ -133,13 +142,9 @@ export function TicketEditModal({ publicacion, campanas, onClose, onSaved }: Pro
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {field('Límite del brief · automático', <input readOnly value={slaWillChange ? 'Se recalculará al guardar' : publicacion.fecha_limite_brief || '—'} className={controlClass} style={controlStyle} />)}
               {field('Entrega estimada · automática', <input readOnly value={slaWillChange ? 'Se recalculará al guardar' : publicacion.fecha_entrega_diseno_estimada || '—'} className={controlClass} style={controlStyle} />)}
-              {field('Versión del copy · informativa', <input readOnly value={String(publicacion.version_copy)} className={controlClass} style={controlStyle} />)}
-              {field('Identificador', <input readOnly value={publicacion.id} className={controlClass} style={controlStyle} />)}
+              {field('Versión del copy · informativa', <input readOnly value={formato === 'STORY' ? 'No aplica a Story' : String(publicacion.version_copy)} className={controlClass} style={controlStyle} />)}
               {field('Creado', <input readOnly value={publicacion.created_at} className={controlClass} style={controlStyle} />)}
               {field('Última actualización', <input readOnly value={publicacion.updated_at} className={controlClass} style={controlStyle} />)}
-              {field('ID de Drive', <input readOnly value={publicacion.drive_folder_id || '—'} className={controlClass} style={controlStyle} />)}
-              {field('Creador (ID)', <input readOnly value={publicacion.creador_id || '—'} className={controlClass} style={controlStyle} />)}
-              {field('Diseñador (ID)', <input readOnly value={publicacion.disenador_id || '—'} className={controlClass} style={controlStyle} />)}
             </div>
             {publicacion.drive_folder_url && <a href={publicacion.drive_folder_url} target="_blank" rel="noopener noreferrer" className="inline-block text-xs font-semibold text-blue-700 underline">Abrir carpeta de Google Drive</a>}
             <p className="text-[11px] text-slate-500">La versión del copy es informativa y no cambia al editar. El límite del brief y la entrega estimada se calculan automáticamente.</p>
