@@ -432,11 +432,39 @@ export interface Database {
           }
         ];
       };
+      profiles: {
+        Row: {
+          user_id: string;
+          full_name: string | null;
+          role_code: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          full_name?: string | null;
+          role_code?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          user_id?: string;
+          full_name?: string | null;
+          role_code?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
     };
     Functions: {
+      has_permission: {
+        Args: { required_permission: string };
+        Returns: boolean;
+      };
       save_campaign_with_efemerides: {
         Args: {
           p_campana_id: string | null;

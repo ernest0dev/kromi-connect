@@ -2,7 +2,7 @@
 
 > Documento interno de seguimiento operativo de desarrollo. No apto para distribución externa ni comercial.
 > Stack objetivo: Next.js (App Router) + Supabase/PostgreSQL + Server Actions.
-> **Estado del documento:** las secciones 1–5 expresan el alcance y diseño objetivo; la sección 6 contrasta ese diseño con una auditoría parcial del código. En la sección 2, cada requisito incluye su estado de implementación conocido.
+> **Estado del documento:** las secciones 1–5 expresan el alcance y diseño funcional; la sección 6 contrasta ese diseño con el código inspeccionado. La sección 7 documenta la base de autenticación/autorización añadida en la sesión del 5 de octubre de 2026. El código y las migraciones aún requieren validación en el proyecto Supabase desplegado.
 
 ---
 
@@ -235,7 +235,7 @@ CREATE TABLE campana_evaluaciones (
 
 - **Cálculo de fechas SLA:** debe vivir como lógica de aplicación (Server Action `recalcularFechasSLA(publicacionId, nuevaFechaPublicacion)`), no como trigger de DB en esta fase — facilita ajustar la regla 3+2 sin migraciones.
 - **Quick Reschedule:** una sola Server Action que actualiza `fecha_publicacion` y dispara el recálculo en cascada de `fecha_limite_brief` y `fecha_entrega_diseno_estimada`.
-- **RLS:** en fase 1, policy única por `role = 'social_media'` con acceso total a las 8 tablas. Diseñar las policies ya pensando en roles futuros (`role = 'diseno'`, `role = 'gerencia'`) aunque no se implementen aún.
+- **Autorización/RLS:** se abandona el diseño de una policy única con acceso total. La base implementada usa perfiles vinculados a `auth.users`, roles y permisos explícitos; las policies se expresan mediante `has_permission(...)`. Ver §7. Las migraciones aún deben aplicarse y verificarse en Supabase.
 - **Conversión de solicitud a ticket:** Server Action que crea row en `publicaciones` copiando `descripcion` → `body_texto` y `materiales_adjuntos_url[]` → referencia inicial de Drive, y actualiza `solicitudes_terceros.publicacion_id` + `estatus_solicitud = 'CONVERTIDA'`.
 - **Trazabilidad de premios:** `inventario_premios.solicitud_id` es opcional — se llena solo cuando el premio proviene de un acuerdo/oferta canalizado vía `solicitudes_terceros` (ej. Compras o Proveedor); premios gestionados directamente por Mercadeo pueden dejarlo en `NULL`.
 - **Checklist de rodaje:** `area_tienda` pasó a `TEXT` libre para admitir zonas específicas no enumerables de antemano; `sucursal` (enum) queda como el filtro estructurado por sede para reportes y vistas.
@@ -313,9 +313,69 @@ La auditoría adjunta no confirmó lo siguiente; no se debe asumir que esté imp
 
 - Flujos completos de `/support` y `/third-parties` (se confirmó su existencia y forma general, no todas sus mutaciones).
 - Ubicación alternativa de `/dashboard` y `/reportes` fuera de los árboles explorados.
-- Policies RLS efectivamente configuradas en Supabase. Las server actions revisadas usan `getSupabaseAdmin()` (Service Role), por lo que RLS no parece ser el control de acceso aplicado por esos flujos.
+- Policies RLS efectivamente configuradas en Supabase. El repositorio ahora contiene migraciones y comprobaciones de permisos para páginas y Server Actions. Algunas acciones de negocio usan el cliente Service Role, que omite RLS; por eso sus comprobaciones de permiso en servidor son esenciales. El código preparado no demuestra que las migraciones ya se hayan aplicado al proyecto desplegado.
 - Interacción de cambio de estatus por drag-and-drop en algún componente auxiliar de Kanban.
 - Configuración PWA de `/social-media/shooting`.
 - Trabajo en progreso en ramas distintas de `main`.
 
 La auditoría describe revisión de código, no validación del despliegue ni de las policies en el proyecto vivo.
+
+---
+
+## 7. Autenticación, roles y permisos (base implementada; despliegue pendiente)
+
+### 7.1 Estado y alcance
+
+Se añadió una base de login/logout con Supabase Auth y sesiones SSR mediante `@supabase/ssr` (`^0.12.7`). El registro público no forma parte del flujo: las cuentas se crean en Supabase Auth y el trigger genera su perfil con rol inicial `pending`. Los usuarios autenticados sin perfil habilitado o con rol `pending` reciben acceso pendiente. Este trabajo está en el repositorio; todavía no confirma que las migraciones se hayan ejecutado en el proyecto Supabase.
+
+### 7.2 Roles definidos
+
+Los códigos persistidos son estables y usan inglés; los nombres visibles están en español:
+
+| Código | Etiqueta | Acceso actual |
+|---|---|---|
+| `pending` | Acceso pendiente | Sin vistas de negocio |
+| `social-media` | Social Media | Grid, campañas y efemérides según permisos concedidos |
+| `events` | Eventos | Sin permisos de negocio asignados |
+| `design` | Diseño | Sin permisos de negocio asignados |
+| `internal` | Interno | Sin permisos de negocio asignados |
+| `customer-support` | Atención al cliente | Sin permisos de negocio asignados |
+| `management` | Gerencia | Sin permisos de negocio asignados |
+| `admin` | Administrador | Puede gestionar roles/perfiles; no recibe permisos de negocio automáticamente |
+
+El rol `admin` se limita al control de acceso (`can_manage_access()`); no equivale a acceso completo a publicaciones, campañas o tickets. El módulo `/support` queda sin acceso habilitado hasta que se definan permisos para ese rol. Los futuros módulos requieren definir nuevos permisos y asignarlos explícitamente. La interfaz puede ocultar navegación sin permiso, pero la decisión de acceso se vuelve a comprobar en servidor.
+
+### 7.3 Catálogo de permisos actualmente aprobado
+
+- `social-media.grid.read` para abrir Grid.
+- `social-media.posts.{read,create,edit,reschedule,status.update,delete}` para las operaciones existentes de publicaciones desde Grid. El rol puede eliminar publicaciones.
+- `social-media.campaigns.{read,create,update,status.update,archive,evaluation.create}` para campañas.
+- `social-media.efemerides.{read,create,update,delete}` para efemérides.
+
+`customer-support` no recibe permisos. Las rutas existentes de Kanban, solicitudes, rodaje, soporte y terceros tienen comprobaciones de permiso, pero sus códigos no se conceden actualmente; por tanto, quedan denegadas. Los roles `events`, `design`, `internal` y `management` tampoco reciben concesiones hasta que se definan vistas y operaciones. Esta lista es la asignación actual, no un catálogo cerrado: se puede ampliar con migraciones posteriores.
+
+### 7.4 Componentes del repositorio
+
+| Ubicación | Responsabilidad |
+|---|---|
+| `src/lib/supabase/browser.ts` | Cliente Supabase para componentes cliente que lo necesiten. |
+| `src/lib/supabase/server.ts` | Cliente SSR del servidor, lectura/escritura de cookies. |
+| `src/proxy.ts` | Actualización de sesión/cookies SSR por petición; no sustituye autorización. |
+| `src/lib/auth/permissions.ts` | Tipos de roles, etiquetas y permisos. |
+| `src/lib/auth/dal.ts` | Verificación de usuario, perfil y permisos; guardas de páginas y acciones. |
+| `src/app/actions/auth.ts` | Acciones de login con contraseña y logout. |
+| `src/app/(auth)/login/` | Vista y formulario de inicio de sesión. |
+| `src/app/(auth)/access-pending/` | Vista para usuario sin rol habilitado. |
+| `src/app/(dashboard)/layout.tsx` y `components/DashboardShell.tsx` | Protección del área autenticada y datos de usuario/rol en la navegación. |
+| `supabase/migrations/202610050001_auth_roles_permissions.sql` | Tablas de roles/permisos/perfiles, funciones auxiliares, trigger y concesiones actuales. |
+| `supabase/migrations/202610060001_role_permission_policies.sql` | RLS y policies de las tablas de negocio incluidas en la migración. |
+
+Las páginas y Server Actions existentes se guardan según sus permisos. Algunas operaciones aún acceden a datos mediante el cliente administrativo Service Role, que omite RLS: en esos flujos la autorización depende de la comprobación explícita en la Server Action. No se debe exponer ese cliente ni su secreto al navegador.
+
+### 7.5 Aplicación pendiente en Supabase
+
+Ejecutar el contenido de las migraciones en Supabase SQL Editor, en orden: primero `202610050001_auth_roles_permissions.sql`, luego revisar y ejecutar `202610060001_role_permission_policies.sql`. La segunda migración activa RLS, revoca privilegios API y elimina policies preexistentes de las tablas enumeradas para reemplazarlas; `atencion_cliente` queda sin privilegios API para `anon`/`authenticated` ni policies de acceso hasta que se aprueben permisos. Antes de ejecutarla se deben revisar las policies existentes y confirmar que no protejan flujos ajenos al sistema. Luego hay que validar login/logout, perfiles, asignaciones, lecturas y mutaciones con usuarios de cada rol en el proyecto.
+
+Para mantener la documentación del modelo, guardar ambas capturas en `docs/`: `supabase-schema-public.png` para tablas, relaciones, funciones y policies del esquema `public`; `supabase-schema-auth.png` para `auth.users` y objetos del esquema `auth` relevantes a la identidad. Son vistas complementarias: el perfil de aplicación se enlaza a `auth.users.id` mediante `profiles.user_id`.
+
+No se ejecutaron pruebas automatizadas ni build durante esta sesión. La instalación del paquete está reflejada en `package.json` y lockfiles, pero la integración aún necesita esa validación.

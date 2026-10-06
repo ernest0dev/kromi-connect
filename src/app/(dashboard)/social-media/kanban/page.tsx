@@ -1,10 +1,12 @@
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { Publicacion, EstatusEnum } from '@/types';
 import KanbanClientView from './KanbanClientView';
+import { requirePermission } from "@/lib/auth/dal";
 
 export const revalidate = 0;
 
 export default async function KanbanPage() {
+  await requirePermission("social-media.kanban.read");
   const supabase = await getSupabaseAdmin();
 
   const { data: publicaciones, error } = await supabase

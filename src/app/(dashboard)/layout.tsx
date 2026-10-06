@@ -1,29 +1,21 @@
-"use client";
-
 import React from "react";
-import { usePathname } from "next/navigation";
-import SocialMediaShell from "./components/SocialMediaShell";
-import type { NavGroup } from "./components/SocialMediaShell";
+import { requireUser } from "@/lib/auth/dal";
+import { ROLE_LABELS, type AppRole } from "@/lib/auth/permissions";
+import DashboardShell from "./components/DashboardShell";
+import { redirect } from "next/navigation";
 
-/**
- * Grupos de navegación transversales, siempre visibles sin importar el
- * perfil activo. Los grupos exclusivos de un perfil (ej. social-media) se
- * agregan dinámicamente en el layout de ese perfil — ver
- * social-media/layout.tsx y la nota en SocialMediaShell.tsx sobre por qué
- * el shell solo se monta aquí.
- */
-const navGroupsTransversales: NavGroup[] = [];
-
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const pathname = usePathname();
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { user, profile } = await requireUser();
+  const role = profile.role_code as AppRole;
+  if (role === "pending") redirect("/access-pending");
 
   return (
-    <SocialMediaShell navGroups={navGroupsTransversales} activePath={pathname}>
+    <DashboardShell
+      roleLabel={ROLE_LABELS[role] ?? "Usuario"}
+      roleInitials={ROLE_LABELS[role]?.slice(0, 2).toUpperCase() ?? "KC"}
+      userEmail={user.email ?? ""}
+    >
       {children}
-    </SocialMediaShell>
+    </DashboardShell>
   );
 }

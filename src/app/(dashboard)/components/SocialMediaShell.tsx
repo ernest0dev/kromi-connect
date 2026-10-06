@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { LucideIcon } from "lucide-react";
 import { ShellSlotProvider, useShellSlot } from "./ShellSlot";
+import { logoutAction } from "@/app/actions/auth";
 
 export interface NavItem {
   href: string;
@@ -23,6 +24,7 @@ interface SocialMediaShellProps {
   children: React.ReactNode;
   roleLabel?: string;
   roleInitials?: string;
+  userEmail?: string;
 }
 
 /**
@@ -45,6 +47,7 @@ function ShellInner({
   children,
   roleLabel = "Social Media Manager",
   roleInitials = "SM",
+  userEmail = "",
 }: SocialMediaShellProps) {
   const { topbar, extraNavGroups } = useShellSlot();
   const campaignsView = activePath === "/social-media/campaigns";
@@ -143,11 +146,20 @@ function ShellInner({
               <p className="truncate text-[11px] font-semibold text-white">
                 {roleLabel}
               </p>
+              {userEmail && <p className="truncate text-[10px] text-white/65">{userEmail}</p>}
               <span className="text-[11px] text-white/55 block">
                 Rol activo
               </span>
             </div>
           </div>
+          <form action={logoutAction} className="mt-3">
+            <button
+              type="submit"
+              className="w-full rounded-lg border border-white/20 px-3 py-2 text-left text-xs font-semibold text-white/85 transition hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              Cerrar sesión
+            </button>
+          </form>
         </div>
       </aside>
 

@@ -4,12 +4,14 @@ import { Publicacion } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
 import { getCampaignsForGridMonthAction, getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
+import { requirePermission } from "@/lib/auth/dal";
 
 // Esta vista necesita datos frescos en cada solicitud, sin caché de página.
 export const revalidate = 0;
 
 // Componente de servidor: carga las publicaciones antes de renderizar la parrilla.
 export default async function ParrillaPage() {
+  await requirePermission("social-media.grid.read");
   // getSupabaseAdmin es sincrónico; se obtiene directamente sin await
   // Obtiene el cliente de Supabase para consultar la tabla de publicaciones.
   const supabase = getSupabaseAdmin();

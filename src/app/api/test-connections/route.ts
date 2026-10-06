@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { driveClient } from '@/lib/googleDrive';
+import { getAuthContext } from '@/lib/auth/dal';
 
 export async function GET() {
+  const context = await getAuthContext();
+  if (!context || context.role !== 'admin') {
+    return NextResponse.json({ error: 'No encontrado.' }, { status: 404 });
+  }
+
   const results = {
     supabase: { status: 'PENDING', message: '' },
     googleDrive: { status: 'PENDING', message: '', parentFolderFound: false },

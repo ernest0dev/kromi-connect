@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
+import { authorizeAction } from '@/lib/auth/dal';
 import { calcularMatrizSLA } from '@/utils/sla';
 import { Publicacion } from '@/types';
 
@@ -24,6 +25,8 @@ export interface RecalcularFechasSLAResponse {
 export async function recalculateSlaDates(
   input: RecalcularFechasSLAInput
 ): Promise<RecalcularFechasSLAResponse> {
+  const access = await authorizeAction('social-media.posts.reschedule');
+  if (access.error) return { success: false, error: access.error };
   try {
     const { publicacionId, nuevaFechaPublicacion } = input;
 

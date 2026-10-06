@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { EstatusEnum, FormatoEnum, Publicacion } from "@/types";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 import { calcularMatrizSLA } from "@/utils/sla";
 
 const FORMATOS: FormatoEnum[] = ["CARRUSEL", "POST", "REEL", "STORY"];
@@ -59,15 +60,27 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
     return { success: false, error: "Una de las fechas operativas no es válida." };
   }
 
+  const editAccess = await authorizeAction("social-media.posts.edit");
+  if (editAccess.error) return { success: false, error: editAccess.error };
+
   try {
     const supabase = getSupabaseAdmin();
     const { data: current, error: readError } = await supabase
       .from("publicaciones")
-      .select("fecha_publicacion, fecha_solicitud_diseno")
+      .select("fecha_publicacion, fecha_solicitud_diseno, estatus")
       .eq("id", input.publicacionId)
       .maybeSingle();
     if (readError) return { success: false, error: `No se pudo consultar la publicación: ${readError.message}` };
     if (!current) return { success: false, error: "La publicación ya no existe." };
+
+    if (current.fecha_publicacion !== input.fecha_publicacion) {
+      const rescheduleAccess = await authorizeAction("social-media.posts.reschedule");
+      if (rescheduleAccess.error) return { success: false, error: rescheduleAccess.error };
+    }
+    if (current.estatus !== input.estatus) {
+      const statusAccess = await authorizeAction("social-media.posts.status.update");
+      if (statusAccess.error) return { success: false, error: statusAccess.error };
+    }
 
     const slaChanged = current.fecha_publicacion !== input.fecha_publicacion
       || current.fecha_solicitud_diseno !== input.fecha_solicitud_diseno;

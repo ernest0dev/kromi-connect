@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 
 export interface TicketSoporte {
   id: string;
@@ -16,6 +17,8 @@ export interface TicketSoporte {
 }
 
 export async function getSupportTicketsAction() {
+  const access = await authorizeAction("customer-support.tickets.read");
+  if (access.error) return { success: false, error: access.error, data: [] };
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -38,6 +41,8 @@ export async function createSupportTicketAction(datos: {
   descripcion: string;
   prioridad: "BAJA" | "MEDIA" | "ALTA" | "CRITICA";
 }) {
+  const access = await authorizeAction("customer-support.tickets.create");
+  if (access.error) return { success: false, error: access.error };
   try {
     const supabase = getSupabaseAdmin();
     const { error } = await supabase.from("atencion_cliente").insert([
@@ -60,6 +65,8 @@ export async function updateSupportTicketStatusAction(
   ticketId: string,
   nuevoEstatus: "ABIERTO" | "EN_PROCESO" | "RESUELTO" | "CERRADO",
 ) {
+  const access = await authorizeAction("customer-support.tickets.status.update");
+  if (access.error) return { success: false, error: access.error };
   try {
     const supabase = getSupabaseAdmin();
     const { error } = await supabase

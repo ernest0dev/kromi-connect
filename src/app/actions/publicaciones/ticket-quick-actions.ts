@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
+import { authorizeAction } from '@/lib/auth/dal';
 import { EstatusEnum } from '@/types';
 import { recalculateSlaDates } from './recalculateSla';
 
@@ -9,6 +10,8 @@ export async function actualizarEstatusTicketAction(input: {
   publicacionId: string;
   nuevoEstatus: EstatusEnum;
 }): Promise<{ success: boolean; error?: string }> {
+  const access = await authorizeAction('social-media.posts.status.update');
+  if (access.error) return { success: false, error: access.error };
   try {
     const { publicacionId, nuevoEstatus } = input;
 
@@ -47,9 +50,17 @@ export async function editarCamposRapidosTicketAction(input: {
   titulo?: string;
   fechaPublicacion?: string;
 }): Promise<{ success: boolean; error?: string }> {
-  try {
-    const { publicacionId, titulo, fechaPublicacion } = input;
+  const { publicacionId, titulo, fechaPublicacion } = input;
 
+  if (fechaPublicacion) {
+    const access = await authorizeAction('social-media.posts.reschedule');
+    if (access.error) return { success: false, error: access.error };
+  }
+  if (titulo) {
+    const access = await authorizeAction('social-media.posts.edit');
+    if (access.error) return { success: false, error: access.error };
+  }
+  try {
     if (!publicacionId) {
       return { success: false, error: 'Se requiere publicacionId' };
     }

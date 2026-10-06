@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 
 export interface Tercero {
   id: string;
@@ -15,6 +16,8 @@ export interface Tercero {
 }
 
 export async function getThirdPartiesAction() {
+  const access = await authorizeAction("third-parties.read");
+  if (access.error) return { success: false, error: access.error, data: [] };
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -37,6 +40,8 @@ export async function createThirdPartyAction(datos: {
   contacto_email?: string;
   contacto_telefono?: string;
 }) {
+  const access = await authorizeAction("third-parties.create");
+  if (access.error) return { success: false, error: access.error };
   try {
     const supabase = getSupabaseAdmin();
     const { error } = await supabase.from("terceros").insert([datos]);

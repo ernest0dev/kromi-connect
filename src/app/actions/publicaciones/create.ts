@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 import { createPublicacionDriveFolder } from "@/lib/googleDrive";
 import { FormatoEnum, EstatusEnum } from "@/types";
 
@@ -20,6 +21,9 @@ export interface CreatePostInput {
 }
 
 export async function createPostWithDriveAction(input: CreatePostInput) {
+  const access = await authorizeAction("social-media.posts.create");
+  if (access.error) return { success: false, error: access.error };
+  if (!access.context) return { success: false, error: "Inicia sesión para continuar." };
   try {
     const supabase = getSupabaseAdmin();
 
@@ -41,6 +45,7 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
         cta_texto: input.cta_texto || null,
         hashtags: input.hashtags || null,
         estatus: "PENDIENTE_BRIEF" as EstatusEnum,
+        creador_id: access.context.user.id,
         drive_folder_id: driveFolder?.id || null,
         drive_folder_url: driveFolder?.url || null,
       })

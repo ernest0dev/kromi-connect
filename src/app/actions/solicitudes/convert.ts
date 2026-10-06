@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { calcularMatrizSLA } from "@/utils/sla";
+import { authorizeAction } from "@/lib/auth/dal";
 
 export async function getRequestsAction() {
+  const access = await authorizeAction("social-media.requests.read");
+  if (access.error) return { success: false, error: access.error, data: [] };
   try {
     const supabase = getSupabaseAdmin();
     const { data, error } = await supabase
@@ -29,6 +32,9 @@ export async function processRequestAction(
     campana_id?: string;
   },
 ) {
+  const access = await authorizeAction("social-media.requests.process");
+  if (access.error) return { success: false, error: access.error };
+  if (!access.context) return { success: false, error: "Inicia sesión para continuar." };
   try {
     const supabase = getSupabaseAdmin();
 
@@ -66,6 +72,7 @@ export async function processRequestAction(
           fecha_entrega_diseno_estimada,
           campana_id: datosPublicacion.campana_id || null,
           estatus: "PENDIENTE_BRIEF",
+          creador_id: access.context.user.id,
         },
       ])
       .select()

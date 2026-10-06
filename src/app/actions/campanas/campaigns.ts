@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 import { TipoCampanaEnum } from "@/types/enums";
 
 export type CampanaEstatus = "PLANIFICADA" | "ACTIVA" | "FINALIZADA" | "ARCHIVADA";
@@ -89,6 +90,8 @@ function validateEfemerideSelection(tipo: TipoCampanaEnum, ids?: string[]) {
 }
 
 export async function getCampaignsAction() {
+  const access = await authorizeAction("social-media.campaigns.read");
+  if (access.error) return { success: false, error: access.error, data: [] as Campana[] };
   try {
     const supabase = getSupabaseAdmin();
     const { data: campaigns, error } = await supabase
@@ -155,6 +158,8 @@ export async function getCampaignsAction() {
 }
 
 export async function getCampaignsForGridMonthAction(anio: number, mes: number) {
+  const access = await authorizeAction("social-media.campaigns.read");
+  if (access.error) return { success: false, error: access.error, data: [] as CampanaGrid[] };
   if (!Number.isInteger(anio) || anio < 1 || anio > 9999 || !Number.isInteger(mes) || mes < 1 || mes > 12) {
     return { success: false, error: "El mes solicitado no es válido.", data: [] as CampanaGrid[] };
   }
@@ -223,6 +228,8 @@ export async function getCampaignsForGridMonthAction(anio: number, mes: number) 
 
 /** Load only campaigns linked to the posts currently shown in Grid. */
 export async function getCampaignsForGridPostsAction(campaignIds: string[]) {
+  const access = await authorizeAction("social-media.posts.read");
+  if (access.error) return { success: false, error: access.error, data: [] as CampanaPublicacionGrid[] };
   const ids = [...new Set(campaignIds.filter((id) => typeof id === "string" && id.length > 0))];
   if (!ids.length) return { success: true, data: [] as CampanaPublicacionGrid[] };
 
@@ -243,6 +250,8 @@ export async function getCampaignsForGridPostsAction(campaignIds: string[]) {
 }
 
 export async function getCampaignOptionsForGridAction() {
+  const access = await authorizeAction("social-media.campaigns.read");
+  if (access.error) return { success: false, error: access.error, data: [] as CampanaPublicacionGrid[] };
   try {
     const { data, error } = await getSupabaseAdmin()
       .from("campanas")
@@ -274,6 +283,8 @@ export async function createCampaignAction(input: {
   presupuesto?: number;
   efemeride_ids?: string[];
 }) {
+  const access = await authorizeAction("social-media.campaigns.create");
+  if (access.error) return { success: false, error: access.error };
   if (!input.nombre.trim()) return { success: false, error: "El nombre es obligatorio." };
   if (!TIPOS_CAMPANA.includes(input.tipo_campana)) return { success: false, error: "La categoría no es válida." };
   if (!input.fecha_inicio || !input.fecha_fin || input.fecha_fin < input.fecha_inicio) {
@@ -315,6 +326,8 @@ export async function updateCampaignAction(id: string, input: {
   efemeride_ids?: string[];
   confirmar_desvinculacion?: boolean;
 }) {
+  const access = await authorizeAction("social-media.campaigns.update");
+  if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la campaña." };
   if (!input.nombre.trim()) return { success: false, error: "El nombre es obligatorio." };
   if (!TIPOS_CAMPANA.includes(input.tipo_campana)) return { success: false, error: "La categoría no es válida." };
@@ -363,6 +376,8 @@ export async function updateCampaignAction(id: string, input: {
 }
 
 export async function updateCampaignStatusAction(id: string, status: CampanaEstatus) {
+  const access = await authorizeAction("social-media.campaigns.status.update");
+  if (access.error) return { success: false, error: access.error };
   if (!id || !ESTADOS_CAMPANA.includes(status)) return { success: false, error: "El estado indicado no es válido." };
   try {
     const { error } = await getSupabaseAdmin().from("campanas")
@@ -376,6 +391,8 @@ export async function updateCampaignStatusAction(id: string, status: CampanaEsta
 }
 
 export async function archiveCampaignAction(id: string) {
+  const access = await authorizeAction("social-media.campaigns.archive");
+  if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la campaña." };
   try {
     const supabase = getSupabaseAdmin();
@@ -400,6 +417,8 @@ export async function archiveCampaignAction(id: string) {
 }
 
 export async function restoreCampaignAction(id: string) {
+  const access = await authorizeAction("social-media.campaigns.archive");
+  if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la campaña." };
   try {
     const supabase = getSupabaseAdmin();
@@ -434,6 +453,8 @@ export async function saveCampaignEvaluationAction(input: {
   informe_cualitativo?: string;
   observaciones?: string;
 }) {
+  const access = await authorizeAction("social-media.campaigns.evaluation.create");
+  if (access.error) return { success: false, error: access.error };
   if (!input.campana_id) return { success: false, error: "Falta la campaña del informe." };
   const metrics = [input.alcance_total, input.interacciones_totales, input.presupuesto_ejecutado];
   if (metrics.some((value) => value != null && (!Number.isFinite(value) || value < 0))) {

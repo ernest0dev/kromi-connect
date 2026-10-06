@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 import { deletePublicacionDriveFolder, getDriveFileIdFromUrl } from "@/lib/googleDrive";
 
 export type DeletePublicacionMode = "delete-drive-first" | "keep-drive" | "delete-record-only";
@@ -18,6 +19,8 @@ export async function deletePublicacionAction(
   publicacionId: string,
   mode: DeletePublicacionMode = "delete-drive-first",
 ): Promise<DeletePublicacionResult> {
+  const access = await authorizeAction("social-media.posts.delete");
+  if (access.error) return { success: false, stage: "database", error: access.error };
   if (!publicacionId || !/^[0-9a-f-]{36}$/i.test(publicacionId)) {
     return { success: false, stage: "database", error: "El identificador de la publicación no es válido." };
   }

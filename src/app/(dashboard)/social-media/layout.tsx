@@ -2,6 +2,7 @@ import React from "react";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { calcularSlaState } from "./grid/utils/sla";
 import SocialMediaLayoutClient from "./SocialMediaLayoutClient";
+import { requirePermission } from "@/lib/auth/dal";
 
 export interface SlaSummary {
   vencidos: number;
@@ -13,6 +14,7 @@ export default async function SocialMediaLayout({
 }: {
   children: React.ReactNode;
 }) {
+  await requirePermission("social-media.grid.read");
   const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("publicaciones")

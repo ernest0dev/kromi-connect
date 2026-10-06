@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 
 export interface Efemeride {
   id: string;
@@ -40,6 +41,8 @@ function validateInput(input: {
 }
 
 export async function getEfemeridesByYearAction(anio: number) {
+  const access = await authorizeAction("social-media.efemerides.read");
+  if (access.error) return { success: false, error: access.error, data: [] as Efemeride[] };
   if (!Number.isInteger(anio) || anio < 1 || anio > 9999) {
     return { success: false, error: "El año no es válido.", data: [] as Efemeride[] };
   }
@@ -63,6 +66,8 @@ export async function getEfemeridesByYearAction(anio: number) {
 }
 
 export async function getEfemeridesInYearRangeAction(anioInicio: number, anioFin: number) {
+  const access = await authorizeAction("social-media.efemerides.read");
+  if (access.error) return { success: false, error: access.error, data: [] as Efemeride[] };
   if (
     !Number.isInteger(anioInicio) || !Number.isInteger(anioFin) ||
     anioInicio < 1 || anioFin > 9999 || anioFin < anioInicio
@@ -94,6 +99,8 @@ export async function createEfemerideAction(input: {
   fecha_fin: string;
   descripcion?: string;
 }) {
+  const access = await authorizeAction("social-media.efemerides.create");
+  if (access.error) return { success: false, error: access.error };
   const validationError = validateInput(input);
   if (validationError) return { success: false, error: validationError };
 
@@ -120,6 +127,8 @@ export async function updateEfemerideAction(id: string, input: {
   fecha_fin: string;
   descripcion?: string;
 }) {
+  const access = await authorizeAction("social-media.efemerides.update");
+  if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la efeméride." };
   const validationError = validateInput(input);
   if (validationError) return { success: false, error: validationError };
@@ -141,6 +150,8 @@ export async function updateEfemerideAction(id: string, input: {
 }
 
 export async function deleteEfemerideAction(id: string) {
+  const access = await authorizeAction("social-media.efemerides.delete");
+  if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la efeméride." };
   try {
     const supabase = getSupabaseAdmin();

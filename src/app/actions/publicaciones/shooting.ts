@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { authorizeAction } from "@/lib/auth/dal";
 import { Publicacion } from "@/types";
 
 export interface ObtenerPautasInput {
@@ -10,6 +11,8 @@ export interface ObtenerPautasInput {
 }
 
 export async function getShootingPostsAction(input?: ObtenerPautasInput) {
+  const access = await authorizeAction("social-media.shooting.read");
+  if (access.error) return { success: false, error: access.error, data: [] as Publicacion[] };
   try {
     const supabase = getSupabaseAdmin();
 
@@ -39,6 +42,8 @@ export async function updateShootingStatusAction(
   publicacionId: string,
   nuevoEstatus: "EN_DISENO" | "EN_RODAJE",
 ) {
+  const access = await authorizeAction("social-media.shooting.status.update");
+  if (access.error) return { success: false, error: access.error };
   try {
     const supabase = getSupabaseAdmin();
 
