@@ -37,7 +37,7 @@ Se definieron 6 tipos enumerados en el esquema `public` para sustituir los campo
 | `estatus_enum` | `PENDIENTE_BRIEF`, `EN_RODAJE`, `EN_DISENO`, `EN_REVISION_CM`, `RECHAZADO_DISENO`, `PENDIENTE_APROBACION_GERENCIA`, `APROBADO`, `PROGRAMADO`, `PUBLICADO` | `publicaciones` |
 | `tipo_campana_enum` | `TEMPORADA`, `EVENTO`, `EFEMERIDE`, `LANZAMIENTO`, `OFERTA_PUNTUAL` | `campanas` |
 | `departamento_enum` | `COMPRAS`, `SELECCION`, `PROVEEDOR`, `GERENCIA`, `EVENTOS` | `solicitudes_terceros` |
-| `canal_enum` | `INSTAGRAM`, `TIKTOK`, `YOUTUBE_SHORTS`, `FACEBOOK` | `publicacion_canales`, `reporte_atencion_cliente` |
+| `canal_enum` | `INSTAGRAM`, `TIKTOK`, `YOUTUBE`, `FACEBOOK` | `publicacion_canales`, `reporte_atencion_cliente` |
 | `sede_enum` | `PREBO`, `MANONGO` | `checklist_rodaje`, `inventario_premios` |
 
 **Nota de diseño:** dos campos que originalmente eran candidatos a enumeración se mantuvieron deliberadamente como `TEXT` libre por la naturaleza no acotable de su dominio:
