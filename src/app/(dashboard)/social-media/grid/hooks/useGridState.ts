@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Publicacion, FormatoEnum } from '@/types';
+import { PublicacionConCuentas, FormatoEnum } from '@/types';
 
-export function useGridState(publicacionesIniciales: Publicacion[]) {
-  const [publicaciones, setPublicaciones] = useState<Publicacion[]>(publicacionesIniciales);
+export function useGridState(publicacionesIniciales: PublicacionConCuentas[]) {
+  const [publicaciones, setPublicaciones] = useState<PublicacionConCuentas[]>(publicacionesIniciales);
   const [currentDate, setCurrentDate] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);

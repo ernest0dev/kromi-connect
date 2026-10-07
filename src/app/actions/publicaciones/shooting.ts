@@ -1,30 +1,25 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { authorizeAction } from "@/lib/auth/dal";
-import { Publicacion } from "@/types";
+import { EstatusEnum, Publicacion } from "@/types";
 
 export interface ObtenerPautasInput {
-  sede?: string;
-  estatus?: string[];
+  estatus?: EstatusEnum[];
 }
 
 export async function getShootingPostsAction(input?: ObtenerPautasInput) {
   const access = await authorizeAction("social-media.shooting.read");
   if (access.error) return { success: false, error: access.error, data: [] as Publicacion[] };
+  if (!access.context) return { success: false, error: "Inicia sesión para continuar.", data: [] as Publicacion[] };
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = access.context.supabase;
 
     let query = supabase
       .from("publicaciones")
       .select("*")
       .in("estatus", input?.estatus || ["PENDIENTE_BRIEF", "EN_RODAJE"])
       .order("fecha_publicacion", { ascending: true });
-
-    if (input?.sede) {
-      query = query.eq("sede", input.sede);
-    }
 
     const { data, error } = await query;
 
@@ -68,8 +63,16 @@ export async function updateShootingStatusAction(
 ) {
   const access = await authorizeAction("social-media.shooting.status.update");
   if (access.error) return { success: false, error: access.error };
+  if (!access.context) return { success: false, error: "Inicia sesión para continuar." };
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = access.context.supabase;
+
+    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc("user_has_all_publication_accounts", {
+      p_publicacion_id: publicacionId,
+    });
+    if (accountScopeError || !canManageAllAccounts) {
+      return { success: false, error: accountScopeError?.message || "Para cambiar el estado necesitas tener asignadas todas las cuentas destino." };
+    }
 
     const { error } = await supabase
       .from("publicaciones")

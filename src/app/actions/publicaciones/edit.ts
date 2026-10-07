@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { EstatusEnum, FormatoEnum, Publicacion } from "@/types";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
+import { EstatusEnum, FormatoEnum, Publicacion, PublicacionConCuentas } from "@/types";
 import { authorizeAction } from "@/lib/auth/dal";
 import { calcularMatrizSLA } from "@/utils/sla";
 
@@ -29,10 +28,11 @@ export interface EditPublicacionInput {
   hashtags: string[];
   campana_id: string | null;
   categoria_ids: string[];
+  social_account_ids: string[];
 }
 
 export async function editPublicacionAction(input: EditPublicacionInput): Promise<
-  { success: true; data: Publicacion } | { success: false; error: string }
+  { success: true; data: PublicacionConCuentas } | { success: false; error: string }
 > {
   if (!input || typeof input !== "object") {
     return { success: false, error: "No se recibieron datos de edición válidos." };
@@ -64,11 +64,31 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
     return { success: false, error: "La selección de temas no es válida." };
   }
 
+  if (!Array.isArray(input.social_account_ids) || input.social_account_ids.length === 0 || input.social_account_ids.some((id) => typeof id !== "string" || !UUID_PATTERN.test(id))) {
+    return { success: false, error: "Selecciona al menos una cuenta social válida." };
+  }
+
   const editAccess = await authorizeAction("social-media.posts.edit");
   if (editAccess.error) return { success: false, error: editAccess.error };
+  if (!editAccess.context) return { success: false, error: "Inicia sesión para continuar." };
 
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = editAccess.context.supabase;
+    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc("user_has_all_publication_accounts", {
+      p_publicacion_id: input.publicacionId,
+    });
+    if (accountScopeError || !canManageAllAccounts) {
+      return { success: false, error: accountScopeError?.message || "Para editar esta publicación necesitas tener asignadas todas sus cuentas destino." };
+    }
+    const selectedAccountIds = [...new Set(input.social_account_ids)];
+    const { data: assignedAccounts, error: accountsError } = await supabase
+      .from("social_accounts")
+      .select("id, platform")
+      .in("id", selectedAccountIds);
+    if (accountsError) return { success: false, error: `No se pudieron validar las cuentas: ${accountsError.message}` };
+    if ((assignedAccounts || []).length !== selectedAccountIds.length) {
+      return { success: false, error: "Una o más cuentas ya no están asignadas a tu usuario o están inactivas." };
+    }
     const { data: current, error: readError } = await supabase
       .from("publicaciones")
       .select("fecha_publicacion, fecha_solicitud_diseno, estatus")
@@ -95,44 +115,35 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       ? calcularMatrizSLA(input.fecha_publicacion, fechaSolicitudDiseno)
       : null;
 
-    const { data, error } = await supabase
-      .from("publicaciones")
-      .update({
-        titulo: input.titulo.trim(),
-        formato: input.formato,
-        fecha_publicacion: input.fecha_publicacion,
-        fecha_solicitud_diseno: fechaSolicitudDiseno,
-        fecha_entrega_diseno_real: input.fecha_entrega_diseno_real,
-        fecha_aprobacion_gerencia: input.fecha_aprobacion_gerencia,
-        estatus: input.estatus,
-        campana_id: input.campana_id,
-        ...(input.formato !== "STORY" ? {
-          hook_texto: input.hook_texto?.trim() || null,
-          body_texto: input.body_texto?.trim() || null,
-          cta_texto: input.cta_texto?.trim() || null,
-          hashtags: input.hashtags.map((tag) => tag.trim().replace(/^#/, "")).filter(Boolean),
-        } : {}),
-        ...(slaDates || {}),
-      })
-      .eq("id", input.publicacionId)
-      .select()
-      .maybeSingle();
-
-    if (error) return { success: false, error: `No se pudieron guardar los cambios: ${error.message}` };
-    if (!data) return { success: false, error: "La publicación fue eliminada antes de guardar los cambios." };
-
-    const { error: categoriesError } = await supabase.rpc("replace_publicacion_categorias", {
+    const { data: publicationJson, error } = await supabase.rpc("update_publicacion_with_relations", {
       p_publicacion_id: input.publicacionId,
+      p_titulo: input.titulo.trim(),
+      p_formato: input.formato,
+      p_fecha_publicacion: input.fecha_publicacion,
+      p_campana_id: input.campana_id,
+      p_fecha_solicitud_diseno: fechaSolicitudDiseno,
+      p_fecha_entrega_diseno_real: input.fecha_entrega_diseno_real,
+      p_fecha_aprobacion_gerencia: input.fecha_aprobacion_gerencia,
+      p_estatus: input.estatus,
+      p_hook_texto: input.hook_texto?.trim() || null,
+      p_body_texto: input.body_texto?.trim() || null,
+      p_cta_texto: input.cta_texto?.trim() || null,
+      p_hashtags: input.hashtags.map((tag) => tag.trim().replace(/^#/, "")).filter(Boolean),
+      p_fecha_limite_brief: slaDates?.fecha_limite_brief || null,
+      p_fecha_entrega_diseno_estimada: slaDates?.fecha_entrega_diseno_estimada || null,
+      p_social_account_ids: selectedAccountIds,
       p_categoria_ids: input.categoria_ids,
     });
-    if (categoriesError) return { success: false, error: `No se pudieron guardar los temas: ${categoriesError.message}` };
+    if (error) return { success: false, error: `No se pudieron guardar los cambios: ${error.message}` };
+    const data = publicationJson as unknown as Publicacion;
+    if (!data?.id) return { success: false, error: "Supabase no devolvió la publicación actualizada." };
     const categoryRows = input.categoria_ids.length
       ? await supabase.from("categorias_contenido").select("id, nombre").in("id", input.categoria_ids)
       : { data: [], error: null };
 
     revalidatePath("/social-media/grid");
     revalidatePath("/social-media/kanban");
-    return { success: true, data: { ...data, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido } as Publicacion };
+    return { success: true, data: { ...data, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Ocurrió un error inesperado al guardar la publicación." };
   }

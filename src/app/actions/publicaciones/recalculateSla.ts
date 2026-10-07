@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { authorizeAction } from '@/lib/auth/dal';
 import { calcularMatrizSLA } from '@/utils/sla';
 import { Publicacion } from '@/types';
@@ -27,6 +26,7 @@ export async function recalculateSlaDates(
 ): Promise<RecalcularFechasSLAResponse> {
   const access = await authorizeAction('social-media.posts.reschedule');
   if (access.error) return { success: false, error: access.error };
+  if (!access.context) return { success: false, error: 'Inicia sesión para continuar.' };
   try {
     const { publicacionId, nuevaFechaPublicacion } = input;
 
@@ -34,7 +34,14 @@ export async function recalculateSlaDates(
       return { success: false, error: 'Se requieren publicacionId y nuevaFechaPublicacion' };
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = access.context.supabase;
+
+    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc('user_has_all_publication_accounts', {
+      p_publicacion_id: input.publicacionId,
+    });
+    if (accountScopeError || !canManageAllAccounts) {
+      return { success: false, error: accountScopeError?.message || 'Para reprogramar esta publicación necesitas tener asignadas todas sus cuentas destino.' };
+    }
 
     // 1. Obtener el registro actual para validar existencia y fecha de solicitud a diseño
     const { data: publicacionExistente, error: fetchError } = await supabase

@@ -2,12 +2,13 @@
 
 import { FormEvent, ReactNode, CSSProperties, useId, useState, useTransition } from 'react';
 import { Loader2, X } from 'lucide-react';
-import { EstatusEnum, FormatoEnum, Publicacion } from '@/types';
+import { EstatusEnum, FormatoEnum, PublicacionConCuentas, SocialAccountOption } from '@/types';
 import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
 import { editPublicacionAction, EditPublicacionInput } from '@/app/actions/publicaciones/edit';
 import { ESTATUS_ORDEN, ESTATUS_STYLE, FORMATO_LABEL_UPPER } from '../utils/constants';
 import { ContentCategorySelector } from './ContentCategorySelector';
 import type { ContentCategoryOption } from './ContentCategorySelector';
+import { SocialAccountSelector } from '../../components/SocialAccountSelector';
 
 const FORMATOS: FormatoEnum[] = ['CARRUSEL', 'POST', 'REEL', 'STORY'];
 const controlClass = 'ui-control w-full rounded-lg px-3 py-2 text-sm';
@@ -28,14 +29,15 @@ function toIsoTimestamp(value: string): string | null {
 }
 
 interface Props {
-  publicacion: Publicacion;
+  publicacion: PublicacionConCuentas;
   campanas: CampanaPublicacionGrid[];
   categories: ContentCategoryOption[];
+  accounts: SocialAccountOption[];
   onClose: () => void;
-  onSaved: (publicacion: Publicacion) => void;
+  onSaved: (publicacion: PublicacionConCuentas) => void;
 }
 
-export function TicketEditModal({ publicacion, campanas, categories, onClose, onSaved }: Props) {
+export function TicketEditModal({ publicacion, campanas, categories, accounts, onClose, onSaved }: Props) {
   const formId = useId();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
@@ -55,6 +57,7 @@ export function TicketEditModal({ publicacion, campanas, categories, onClose, on
   const [cta, setCta] = useState(publicacion.cta_texto || '');
   const [hashtags, setHashtags] = useState((publicacion.hashtags || []).join(', '));
   const [campanaId, setCampanaId] = useState(publicacion.campana_id || '');
+  const [socialAccountIds, setSocialAccountIds] = useState(publicacion.social_account_ids);
   const slaWillChange = publicacion.fecha_publicacion !== fechaPublicacion
     || toLocalDateTime(publicacion.fecha_solicitud_diseno) !== fechaSolicitudDiseno
     || (estatus === 'SOLICITADO' && !fechaSolicitudDiseno);
@@ -74,6 +77,7 @@ export function TicketEditModal({ publicacion, campanas, categories, onClose, on
       titulo,
       formato,
       categoria_ids: categoryIds,
+      social_account_ids: socialAccountIds,
       fecha_publicacion: fechaPublicacion,
       fecha_solicitud_diseno: toIsoTimestamp(fechaSolicitudDiseno),
       fecha_entrega_diseno_real: toIsoTimestamp(fechaEntregaReal),
@@ -117,6 +121,7 @@ export function TicketEditModal({ publicacion, campanas, categories, onClose, on
               {field('Formato', <select value={formato} onChange={(event) => setFormato(event.target.value as FormatoEnum)} className={controlClass} style={controlStyle}>{FORMATOS.map((value) => <option key={value} value={value}>{FORMATO_LABEL_UPPER[value]}</option>)}</select>)}
               {field('Campaña', <select value={campanaId} onChange={(event) => setCampanaId(event.target.value)} className={controlClass} style={controlStyle}><option value="">Sin campaña</option>{campanas.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.nombre}{campaign.estatus === 'ARCHIVADA' ? ' · Archivada' : ''}</option>)}</select>)}
               <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
+              <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} />
               {formato === 'STORY' ? <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900 sm:col-span-2">Story es solo imagen/diseño. El copy guardado previamente se conserva, pero no aplica a este formato.</p> : <>
                 {field('Hook', <input value={hook} onChange={(event) => setHook(event.target.value)} className={controlClass} style={controlStyle} />, true)}
                 {field('Cuerpo', <textarea rows={4} value={body} onChange={(event) => setBody(event.target.value)} className={controlClass} style={controlStyle} />)}

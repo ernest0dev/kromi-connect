@@ -15,6 +15,7 @@ import type { NavGroup } from "../components/SocialMediaShell";
 import type { SlaSummary } from "./layout";
 import type { ContentCategoryOption } from "./grid/components/ContentCategorySelector";
 import type { CampanaPublicacionGrid } from "@/app/actions/campanas/campaigns";
+import type { SocialAccountOption } from "@/types";
 
 const navGroupsSocialMedia: NavGroup[] = [
   {
@@ -36,11 +37,13 @@ export default function SocialMediaLayoutClient({
   slaSummary,
   contentCategories,
   campaigns,
+  accounts,
 }: {
   children: React.ReactNode;
   slaSummary: SlaSummary | null;
   contentCategories: ContentCategoryOption[];
   campaigns: CampanaPublicacionGrid[];
+  accounts: SocialAccountOption[];
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const pathname = usePathname();
@@ -125,6 +128,7 @@ export default function SocialMediaLayoutClient({
         onClose={() => setIsModalOpen(false)}
         categories={contentCategories}
         campaigns={campaigns}
+        accounts={accounts}
       />
     </>
   );

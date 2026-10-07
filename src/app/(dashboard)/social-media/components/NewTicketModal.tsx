@@ -2,18 +2,20 @@
 
 import React, { useId, useState, useTransition } from 'react';
 import { X, Loader2, TriangleAlert, FolderPlus } from 'lucide-react';
-import { FormatoEnum, Publicacion } from '@/types';
+import { FormatoEnum, PublicacionConCuentas, SocialAccountOption } from '@/types';
 import { createPostWithDriveAction } from '@/app/actions/publicaciones/create';
 import { ContentCategorySelector } from '../grid/components/ContentCategorySelector';
 import type { ContentCategoryOption } from '../grid/components/ContentCategorySelector';
 import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
+import { SocialAccountSelector } from './SocialAccountSelector';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onCreated?: (publicacion: Publicacion) => void;
+  onCreated?: (publicacion: PublicacionConCuentas) => void;
   categories: ContentCategoryOption[];
   campaigns: CampanaPublicacionGrid[];
+  accounts: SocialAccountOption[];
 }
 
 const FORMATO_OPCIONES: { value: FormatoEnum; label: string; hint: string }[] = [
@@ -29,7 +31,7 @@ const inputStyle: React.CSSProperties = {
   color: 'var(--tinta)',
 };
 
-export default function NuevoTicketModal({ isOpen, onClose, onCreated, categories, campaigns }: Props) {
+export default function NuevoTicketModal({ isOpen, onClose, onCreated, categories, campaigns, accounts }: Props) {
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const formId = useId();
@@ -44,6 +46,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
   const [hashtagsRaw, setHashtagsRaw] = useState('');
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [campanaId, setCampanaId] = useState('');
+  const [socialAccountIds, setSocialAccountIds] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -53,6 +56,10 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
 
     if (!titulo || !fechaPublicacion) {
       setErrorMessage('El título y la fecha de publicación son requeridos.');
+      return;
+    }
+    if (!socialAccountIds.length) {
+      setErrorMessage('Selecciona al menos una cuenta de destino.');
       return;
     }
 
@@ -65,6 +72,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         titulo,
         formato,
         categoria_ids: categoryIds,
+        social_account_ids: socialAccountIds,
         campana_id: campanaId || null,
         fecha_publicacion: fechaPublicacion,
         hook_texto: formato === 'STORY' ? undefined : hookTexto || undefined,
@@ -82,7 +90,8 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         setHashtagsRaw('');
         setCategoryIds([]);
         setCampanaId('');
-        if (res.data) onCreated?.(res.data as Publicacion);
+        setSocialAccountIds([]);
+        if (res.data) onCreated?.(res.data);
         onClose();
       } else {
         setErrorMessage(res.error || 'Ocurrió un error al crear la publicación.');
@@ -177,6 +186,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
             </div>
 
             <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
+            <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} />
 
             <div className="space-y-1.5 md:col-span-2">
               <label htmlFor={`${formId}-fecha`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>

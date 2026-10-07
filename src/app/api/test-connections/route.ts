@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { driveClient } from '@/lib/googleDrive';
 import { getAuthContext } from '@/lib/auth/dal';
 
@@ -14,10 +13,9 @@ export async function GET() {
     googleDrive: { status: 'PENDING', message: '', parentFolderFound: false },
   };
 
-  // 1. Validar conexión con Supabase usando el cliente Admin (Service Role)
+  // 1. Validar Supabase con el cliente de sesión; la consulta también respeta RLS.
   try {
-    const supabaseAdmin = getSupabaseAdmin();
-    const { data, error } = await supabaseAdmin
+    const { error } = await context.supabase
       .from('publicaciones')
       .select('id')
       .limit(1);

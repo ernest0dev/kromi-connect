@@ -1,6 +1,5 @@
 import React from "react";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
-import { Publicacion } from "@/types";
+import { PublicacionConCuentas } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
 import { getCampaignsForGridMonthAction, getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
@@ -12,11 +11,7 @@ export const revalidate = 0;
 
 // Componente de servidor: carga las publicaciones antes de renderizar el calendario de contenido.
 export default async function CalendarioPage() {
-  await requirePermission("social-media.grid.read");
-  // getSupabaseAdmin es sincrónico; se obtiene directamente sin await
-  // Obtiene el cliente de Supabase para consultar la tabla de publicaciones.
-  const supabase = getSupabaseAdmin();
-
+  const { supabase } = await requirePermission("social-media.grid.read");
   // Recupera las publicaciones y las ordena por fecha ascendente.
   const { data: publicaciones, error } = await supabase
     .from("publicaciones")
@@ -34,11 +29,22 @@ export default async function CalendarioPage() {
   }
 
   // Asegura que GridView reciba un arreglo aunque la consulta no devuelva datos.
-  const lista = (publicaciones as Publicacion[]) || [];
-  const [categoriesResult, publicationCategoriesResult] = await Promise.all([
+  const [accountsResult, destinationsResult, categoriesResult, publicationCategoriesResult] = await Promise.all([
+    supabase.from("social_accounts").select("id, platform, handle, display_name, active").order("display_name"),
+    supabase.from("publicacion_canales").select("publicacion_id, social_account_id"),
     supabase.from("categorias_contenido").select("id, nombre").order("nombre"),
     supabase.from("publicacion_categorias").select("publicacion_id, categoria_id"),
   ]);
+  const accounts = accountsResult.data || [];
+  const accountIdsByPublication = new Map<string, string[]>();
+  for (const destination of destinationsResult.data || []) {
+    if (!destination.social_account_id) continue;
+    accountIdsByPublication.set(destination.publicacion_id, [...(accountIdsByPublication.get(destination.publicacion_id) || []), destination.social_account_id]);
+  }
+  const lista: PublicacionConCuentas[] = (publicaciones || []).map((publication) => ({
+    ...publication,
+    social_account_ids: accountIdsByPublication.get(publication.id) || [],
+  }));
   const categoryNames = new Map((categoriesResult.data || []).map((category) => [category.id, category.nombre]));
   const namesByPublication = new Map<string, string[]>();
   for (const link of publicationCategoriesResult.data || []) {
@@ -98,6 +104,7 @@ export default async function CalendarioPage() {
         errorPublicacionesIniciales={error?.message || null}
         campanasPublicacionesIniciales={campaignOptionsResult.data}
         categoriasContenidoIniciales={(categoriesResult.data || []) as ContentCategoryOption[]}
+        cuentasSocialesIniciales={accounts.map(({ id, platform, handle, display_name, active }) => ({ id, platform, handle, display_name, active }))}
         efemeridesIniciales={efemeridesResult.data}
         anioEfemeridesInicial={anioActual}
         errorEfemeridesInicial={efemeridesResult.success ? null : efemeridesResult.error || "No se pudieron cargar las efemérides."}

@@ -1,13 +1,13 @@
 'use client';
 
 import { useTransition, Dispatch, SetStateAction } from 'react';
-import { Publicacion, EstatusEnum } from '@/types';
+import { PublicacionConCuentas, EstatusEnum } from '@/types';
 import { actualizarEstatusTicketAction } from '@/app/actions/publicaciones/ticket-quick-actions';
 import { recalcularFechasSLAAction } from '@/app/actions/publicaciones/recalculateSla';
 
 export function useTicketMutations(
-  setPublicaciones: Dispatch<SetStateAction<Publicacion[]>>,
-  publicacionesIniciales: Publicacion[],
+  setPublicaciones: Dispatch<SetStateAction<PublicacionConCuentas[]>>,
+  publicacionesIniciales: PublicacionConCuentas[],
 ) {
   const [isPending, startTransition] = useTransition();
 
@@ -28,7 +28,7 @@ export function useTicketMutations(
     });
   };
 
-  const updateStatus = (pub: Publicacion, nuevoEstatus: EstatusEnum) => {
+  const updateStatus = (pub: PublicacionConCuentas, nuevoEstatus: EstatusEnum) => {
     const estatusAnterior = pub.estatus;
     setPublicaciones((prev) =>
       prev.map((p) => (p.id === pub.id ? { ...p, estatus: nuevoEstatus } : p))

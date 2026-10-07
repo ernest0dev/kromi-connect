@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { authorizeAction } from "@/lib/auth/dal";
 import { deletePublicacionDriveFolder, getDriveFileIdFromUrl } from "@/lib/googleDrive";
 
@@ -21,6 +20,7 @@ export async function deletePublicacionAction(
 ): Promise<DeletePublicacionResult> {
   const access = await authorizeAction("social-media.posts.delete");
   if (access.error) return { success: false, stage: "database", error: access.error };
+  if (!access.context) return { success: false, stage: "database", error: "Inicia sesión para continuar." };
   if (!publicacionId || !/^[0-9a-f-]{36}$/i.test(publicacionId)) {
     return { success: false, stage: "database", error: "El identificador de la publicación no es válido." };
   }
@@ -31,7 +31,7 @@ export async function deletePublicacionAction(
   let driveDeleted = false;
   let driveFolderId: string | null = null;
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = access.context.supabase;
     const { data: publication, error: readError } = await supabase
       .from("publicaciones")
       .select("id, drive_folder_id, drive_folder_url")
@@ -40,6 +40,13 @@ export async function deletePublicacionAction(
 
     if (readError) return { success: false, stage: "database", error: `No se pudo consultar la publicación: ${readError.message}` };
     if (!publication) return { success: false, stage: "database", error: "La publicación ya no existe o no se encontró." };
+
+    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc("user_has_all_publication_accounts", {
+      p_publicacion_id: publicacionId,
+    });
+    if (accountScopeError || !canManageAllAccounts) {
+      return { success: false, stage: "database", error: accountScopeError?.message || "No tienes acceso a todas las cuentas destino de esta publicación." };
+    }
 
     driveFolderId = publication.drive_folder_id || getDriveFileIdFromUrl(publication.drive_folder_url);
     const hasDriveReference = !!publication.drive_folder_id || !!publication.drive_folder_url;

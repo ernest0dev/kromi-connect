@@ -1,5 +1,4 @@
 import React from "react";
-import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { calcularSlaState } from "./grid/utils/sla";
 import SocialMediaLayoutClient from "./SocialMediaLayoutClient";
 import { requirePermission } from "@/lib/auth/dal";
@@ -15,8 +14,7 @@ export default async function SocialMediaLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requirePermission("social-media.grid.read");
-  const supabase = getSupabaseAdmin();
+  const { supabase } = await requirePermission("social-media.grid.read");
   const { data, error } = await supabase
     .from("publicaciones")
     .select("fecha_limite_brief");
@@ -41,12 +39,17 @@ export default async function SocialMediaLayout({
     supabase.from("categorias_contenido").select("id, nombre").order("nombre"),
     getCampaignOptionsForGridAction(),
   ]);
+  const { data: accountsResult } = await supabase
+    .from("social_accounts")
+    .select("id, platform, handle, display_name, active")
+    .order("display_name");
 
   return (
     <SocialMediaLayoutClient
       slaSummary={slaSummary}
       contentCategories={(categoriesResult.data || []).map(({ id, nombre }) => ({ id, nombre }))}
       campaigns={campaignsResult.data}
+      accounts={(accountsResult || []).map(({ id, platform, handle, display_name, active }) => ({ id, platform, handle, display_name, active }))}
     >
       {children}
     </SocialMediaLayoutClient>

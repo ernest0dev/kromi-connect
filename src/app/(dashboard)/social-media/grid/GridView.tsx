@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useTransition } from 'react';
-import { Publicacion } from '@/types';
+import { PublicacionConCuentas, SocialAccountOption } from '@/types';
 import { getEfemeridesByYearAction } from '@/app/actions/efemerides/efemerides';
 import type { Efemeride } from '@/app/actions/efemerides/efemerides';
 import { getCampaignsForGridMonthAction } from '@/app/actions/campanas/campaigns';
@@ -19,7 +19,7 @@ import type { ContentCategoryOption } from './components/ContentCategorySelector
 import { ESTATUS_STYLE } from './utils/constants';
 
 interface Props {
-  publicacionesIniciales: Publicacion[];
+  publicacionesIniciales: PublicacionConCuentas[];
   errorPublicacionesIniciales: string | null;
   efemeridesIniciales: Efemeride[];
   anioEfemeridesInicial: number;
@@ -29,9 +29,10 @@ interface Props {
   errorCampanasInicial: string | null;
   campanasPublicacionesIniciales: CampanaPublicacionGrid[];
   categoriasContenidoIniciales: ContentCategoryOption[];
+  cuentasSocialesIniciales: SocialAccountOption[];
 }
 
-export default function GridView({ publicacionesIniciales, errorPublicacionesIniciales, efemeridesIniciales, anioEfemeridesInicial, errorEfemeridesInicial, campanasIniciales, periodoCampanasInicial, errorCampanasInicial, campanasPublicacionesIniciales, categoriasContenidoIniciales }: Props) {
+export default function GridView({ publicacionesIniciales, errorPublicacionesIniciales, efemeridesIniciales, anioEfemeridesInicial, errorEfemeridesInicial, campanasIniciales, periodoCampanasInicial, errorCampanasInicial, campanasPublicacionesIniciales, categoriasContenidoIniciales, cuentasSocialesIniciales }: Props) {
   const {
     setPublicaciones,
     currentDate,
@@ -47,6 +48,7 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
     selectTicket,
   } = useGridState(publicacionesIniciales);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState('ALL');
   const [efemerides, setEfemerides] = useState(efemeridesIniciales);
   const [efemeridesYearLoaded, setEfemeridesYearLoaded] = useState(anioEfemeridesInicial);
   const [efemeridesError, setEfemeridesError] = useState(errorEfemeridesInicial || '');
@@ -56,9 +58,9 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
   const [campanasError, setCampanasError] = useState(errorCampanasInicial || '');
   const [campanasPublicaciones] = useState(campanasPublicacionesIniciales);
   const nombreCampanaPorId = new Map(campanasPublicaciones.map((campana) => [campana.id, campana.nombre]));
-  const [selectedPublication, setSelectedPublication] = useState<Publicacion | null>(null);
-  const [editingPublication, setEditingPublication] = useState<Publicacion | null>(null);
-  const [publicationToDelete, setPublicationToDelete] = useState<Publicacion | null>(null);
+  const [selectedPublication, setSelectedPublication] = useState<PublicacionConCuentas | null>(null);
+  const [editingPublication, setEditingPublication] = useState<PublicacionConCuentas | null>(null);
+  const [publicationToDelete, setPublicationToDelete] = useState<PublicacionConCuentas | null>(null);
   const [deleteStage, setDeleteStage] = useState<'confirm' | 'drive-error' | 'database-error' | null>(null);
   const [deleteError, setDeleteError] = useState('');
   const [deleteDriveAlreadyDone, setDeleteDriveAlreadyDone] = useState(false);
@@ -72,6 +74,12 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
 
   const { handleDragStart, handleDragOver, handleDrop } =
     useDragDrop(rescheduleDate);
+  const publicacionesPorCuenta = selectedAccountId === 'ALL'
+    ? publicacionesFiltradas
+    : publicacionesFiltradas.filter((publication) => publication.social_account_ids.includes(selectedAccountId));
+  const publicacionesMesPorCuenta = selectedAccountId === 'ALL'
+    ? publicacionesMesFiltradas
+    : publicacionesMesFiltradas.filter((publication) => publication.social_account_ids.includes(selectedAccountId));
 
   const closeDeleteDialog = () => {
     if (isDeletingPublication) return;
@@ -156,7 +164,7 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [selectedTicketId, publicacionesMesFiltradas]);
 
-  const handleTicketCreated = (publicacion: Publicacion) => {
+  const handleTicketCreated = (publicacion: PublicacionConCuentas) => {
     setPublicaciones((prev) =>
       [...prev.filter((item) => item.id !== publicacion.id), publicacion].sort(
         (a, b) => a.fecha_publicacion.localeCompare(b.fecha_publicacion)
@@ -184,10 +192,17 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
           onCreateClick={() => setIsCreateOpen(true)}
           onFiltroChange={setFormatoFiltro}
         />
+        <div className="flex items-center gap-2">
+          <label htmlFor="grid-social-account" className="text-xs font-semibold ui-text-muted">Cuenta:</label>
+          <select id="grid-social-account" value={selectedAccountId} onChange={(event) => setSelectedAccountId(event.target.value)} className="ui-control rounded-lg px-3 py-2 text-xs">
+            <option value="ALL">Todas mis cuentas</option>
+            {cuentasSocialesIniciales.map((account) => <option key={account.id} value={account.id}>{account.platform} · {account.display_name}</option>)}
+          </select>
+        </div>
 
         <GridCalendar
           currentDate={currentDate}
-          publicaciones={publicacionesFiltradas}
+          publicaciones={publicacionesPorCuenta}
           efemerides={efemerides}
           campanas={campanas}
           isPending={isPending}
@@ -211,12 +226,12 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
             </p>
           </div>
           <span className="ui-badge">
-            {publicacionesMesFiltradas.length} publicaciones
+            {publicacionesMesPorCuenta.length} publicaciones
           </span>
         </div>
 
         <div className="grid grid-cols-1 min-[761px]:grid-cols-2 min-[1100px]:grid-cols-3 gap-3">
-          {publicacionesMesFiltradas.length > 0 ? publicacionesMesFiltradas.map((pub) => (
+          {publicacionesMesPorCuenta.length > 0 ? publicacionesMesPorCuenta.map((pub) => (
             <TicketDetailCard
               key={pub.id}
               publicacion={pub}
@@ -244,12 +259,14 @@ export default function GridView({ publicacionesIniciales, errorPublicacionesIni
         onCreated={handleTicketCreated}
         categories={categoriasContenidoIniciales}
         campaigns={campanasPublicacionesIniciales}
+        accounts={cuentasSocialesIniciales}
       />
 
       {editingPublication && <TicketEditModal
         publicacion={editingPublication}
         campanas={campanasPublicaciones}
         categories={categoriasContenidoIniciales}
+        accounts={cuentasSocialesIniciales}
         onClose={() => setEditingPublication(null)}
         onSaved={(updatedPublication) => {
           setPublicaciones((current) => current.map((publication) => publication.id === updatedPublication.id ? updatedPublication : publication));

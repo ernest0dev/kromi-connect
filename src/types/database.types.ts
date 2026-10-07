@@ -218,6 +218,7 @@ export interface Database {
           canal: CanalEnum;
           estado_publicacion: string;
           url_publicacion: string | null;
+          social_account_id: string | null;
         };
         Insert: {
           id?: string;
@@ -225,6 +226,7 @@ export interface Database {
           canal: CanalEnum;
           estado_publicacion?: string;
           url_publicacion?: string | null;
+          social_account_id?: string | null;
         };
         Update: {
           id?: string;
@@ -232,6 +234,7 @@ export interface Database {
           canal?: CanalEnum;
           estado_publicacion?: string;
           url_publicacion?: string | null;
+          social_account_id?: string | null;
         };
         Relationships: [
           {
@@ -239,7 +242,48 @@ export interface Database {
             columns: ['publicacion_id'];
             referencedRelation: 'publicaciones';
             referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'publicacion_canales_social_account_id_fkey';
+            columns: ['social_account_id'];
+            referencedRelation: 'social_accounts';
+            referencedColumns: ['id'];
           }
+        ];
+      };
+      social_accounts: {
+        Row: {
+          id: string;
+          platform: CanalEnum;
+          handle: string;
+          display_name: string;
+          active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          platform: CanalEnum;
+          handle: string;
+          display_name: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          platform?: CanalEnum;
+          handle?: string;
+          display_name?: string;
+          active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      user_social_accounts: {
+        Row: { user_id: string; social_account_id: string; assigned_at: string };
+        Insert: { user_id: string; social_account_id: string; assigned_at?: string };
+        Update: { user_id?: string; social_account_id?: string; assigned_at?: string };
+        Relationships: [
+          { foreignKeyName: 'user_social_accounts_social_account_id_fkey'; columns: ['social_account_id']; referencedRelation: 'social_accounts'; referencedColumns: ['id'] }
         ];
       };
       checklist_rodaje: {
@@ -497,6 +541,50 @@ export interface Database {
       replace_publicacion_categorias: {
         Args: { p_publicacion_id: string; p_categoria_ids: string[] };
         Returns: undefined;
+      };
+      create_publicacion_with_relations: {
+        Args: {
+          p_titulo: string;
+          p_formato: FormatoEnum;
+          p_fecha_publicacion: string;
+          p_campana_id: string | null;
+          p_fecha_limite_brief: string | null;
+          p_hook_texto: string | null;
+          p_body_texto: string | null;
+          p_cta_texto: string | null;
+          p_hashtags: string[] | null;
+          p_drive_folder_id: string | null;
+          p_drive_folder_url: string | null;
+          p_social_account_ids: string[];
+          p_categoria_ids: string[];
+        };
+        Returns: Json;
+      };
+      update_publicacion_with_relations: {
+        Args: {
+          p_publicacion_id: string;
+          p_titulo: string;
+          p_formato: FormatoEnum;
+          p_fecha_publicacion: string;
+          p_campana_id: string | null;
+          p_fecha_solicitud_diseno: string | null;
+          p_fecha_entrega_diseno_real: string | null;
+          p_fecha_aprobacion_gerencia: string | null;
+          p_estatus: EstatusEnum;
+          p_hook_texto: string | null;
+          p_body_texto: string | null;
+          p_cta_texto: string | null;
+          p_hashtags: string[] | null;
+          p_fecha_limite_brief: string | null;
+          p_fecha_entrega_diseno_estimada: string | null;
+          p_social_account_ids: string[];
+          p_categoria_ids: string[];
+        };
+        Returns: Json;
+      };
+      user_has_all_publication_accounts: {
+        Args: { p_publicacion_id: string };
+        Returns: boolean;
       };
     };
     Enums: {

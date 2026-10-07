@@ -8,6 +8,19 @@ export type PublicacionUpdate = Database['public']['Tables']['publicaciones']['U
 
 export type ChecklistRodaje = Database['public']['Tables']['checklist_rodaje']['Row'];
 export type PublicacionCanal = Database['public']['Tables']['publicacion_canales']['Row'];
+export type SocialAccount = Database['public']['Tables']['social_accounts']['Row'];
+
+export interface SocialAccountOption {
+  id: string;
+  platform: CanalEnum;
+  handle: string;
+  display_name: string;
+  active: boolean;
+}
+
+export interface PublicacionConCuentas extends Publicacion {
+  social_account_ids: string[];
+}
 
 // Tipos Extendidos / DTOs para Frontend y Server Actions
 export interface PublicacionConDetalles extends Publicacion {

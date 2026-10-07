@@ -1,11 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { authorizeAction } from '@/lib/auth/dal';
 import { EstatusEnum } from '@/types';
 import { recalculateSlaDates } from './recalculateSla';
 import { calcularMatrizSLA } from '@/utils/sla';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export async function actualizarEstatusTicketAction(input: {
   publicacionId: string;
@@ -13,6 +13,7 @@ export async function actualizarEstatusTicketAction(input: {
 }): Promise<{ success: boolean; error?: string }> {
   const access = await authorizeAction('social-media.posts.status.update');
   if (access.error) return { success: false, error: access.error };
+  if (!access.context) return { success: false, error: 'Inicia sesión para continuar.' };
   try {
     const { publicacionId, nuevoEstatus } = input;
 
@@ -20,7 +21,14 @@ export async function actualizarEstatusTicketAction(input: {
       return { success: false, error: 'Se requieren publicacionId y nuevoEstatus' };
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = access.context.supabase;
+
+    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc('user_has_all_publication_accounts', {
+      p_publicacion_id: publicacionId,
+    });
+    if (accountScopeError || !canManageAllAccounts) {
+      return { success: false, error: accountScopeError?.message || 'Para cambiar el estado necesitas tener asignadas todas las cuentas destino.' };
+    }
 
     const { data: current, error: currentError } = await supabase
       .from('publicaciones')
@@ -70,6 +78,7 @@ export async function editarCamposRapidosTicketAction(input: {
   fechaPublicacion?: string;
 }): Promise<{ success: boolean; error?: string }> {
   const { publicacionId, titulo, fechaPublicacion } = input;
+  let supabase: Awaited<ReturnType<typeof createSupabaseServerClient>> | null = null;
 
   if (fechaPublicacion) {
     const access = await authorizeAction('social-media.posts.reschedule');
@@ -78,6 +87,8 @@ export async function editarCamposRapidosTicketAction(input: {
   if (titulo) {
     const access = await authorizeAction('social-media.posts.edit');
     if (access.error) return { success: false, error: access.error };
+    if (!access.context) return { success: false, error: 'Inicia sesión para continuar.' };
+    supabase = access.context.supabase;
   }
   try {
     if (!publicacionId) {
@@ -88,7 +99,19 @@ export async function editarCamposRapidosTicketAction(input: {
       return { success: false, error: 'No se proporcionaron campos para actualizar.' };
     }
 
-    const supabase = getSupabaseAdmin();
+    if (!supabase) {
+      const access = await authorizeAction('social-media.posts.reschedule');
+      if (access.error) return { success: false, error: access.error };
+      if (!access.context) return { success: false, error: 'Inicia sesión para continuar.' };
+      supabase = access.context.supabase;
+    }
+
+    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc('user_has_all_publication_accounts', {
+      p_publicacion_id: publicacionId,
+    });
+    if (accountScopeError || !canManageAllAccounts) {
+      return { success: false, error: accountScopeError?.message || 'Para editar esta publicación necesitas tener asignadas todas sus cuentas destino.' };
+    }
 
     // Si viene fechaPublicacion, delegar en recalculateSlaDates que ya hace
     // el update de fecha + recálculo SLA 3+2 + revalidatePath
