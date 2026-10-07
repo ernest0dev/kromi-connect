@@ -18,7 +18,7 @@ El proyecto **no cumple todavía con el SRS de forma integral**. Existe una base
 
 | Área | Cobertura aproximada | Dictamen |
 |---|---:|---|
-| Fase 1: parrilla, Kanban y briefing | 45–55% | Base visible implementada, flujos incompletos |
+| Fase 1: calendario de contenido, Kanban y briefing | 45–55% | Base visible implementada, flujos incompletos |
 | Fase 2: producción, rodaje y assets | 10–20% | Vista básica y enlace a Drive; sin checklist/PWA/visor real |
 | Fase 3: terceros y aprobaciones | 15–25% | Inbox parcial; conversión y QA incompletos |
 | Fase 4: inventario y campañas | 5–15% | Campañas básicas; sin inventario ni efemérides |
@@ -71,7 +71,7 @@ El layout operativo está definido en `src/app/(dashboard)/layout.tsx:32-88`. El
 No existen rutas ni aliases para:
 
 - `/dashboard`
-- `/parrilla`
+- `/calendario`
 - `/rodaje`
 - `/solicitudes`
 - `/reportes`
@@ -93,7 +93,7 @@ En el código actual:
 - El layout muestra un perfil “Social Media Manager”, sedes y la etiqueta SLA como contenido estático: `src/app/(dashboard)/layout.tsx:92-127`.
 - No hay autenticación ni selección real de rol.
 
-### 4.2 Parrilla, calendario, Kanban y spreadsheet
+### 4.2 Calendario de contenido, Kanban y spreadsheet
 
 **Estado: parcial.**
 
@@ -115,10 +115,10 @@ Evidencia:
 
 Faltantes o desviaciones:
 
-- No existe una ruta `/parrilla`.
+- No existe una ruta `/calendario`.
 - No hay vista tipo spreadsheet.
 - Calendario y Kanban son rutas separadas, no tres vistas sobre el mismo componente/dataset como plantea el SRS.
-- No hay edición completa del ticket desde la parrilla.
+- No hay edición completa del ticket desde el calendario de contenido.
 - No hay alertas de SLA vencido/próximo.
 - No hay una capa visual de efemérides.
 - No hay persistencia o sincronización de vistas tipo tabla.
@@ -444,13 +444,13 @@ El documento afirma que:
 
 - `crearPublicacionConDriveAction` persiste copy granular y calcula SLA.
 - `convertirSolicitudATicketAction` convierte solicitudes según el SRS.
-- Las rutas `/parrilla` se revalidan.
+- Las rutas `/calendario` se revalidan.
 
 El código actual no cumple esas afirmaciones:
 
 - La acción real se llama `createPostWithDriveAction` y no persiste copy granular ni calcula SLA.
 - La conversión real se llama `processRequestAction` y no enlaza la solicitud con la publicación.
-- Las rutas revalidadas son `/grid` y `/kanban`, no `/parrilla`.
+- Las rutas revalidadas son `/grid` y `/kanban`, no `/calendario`.
 
 ### `docs/supabase-db-migration.md`
 
@@ -530,7 +530,7 @@ El test existente solo navega `/requests`, `/kanban`, `/shooting` y `/grid`; no 
 ### Prioridad 2: completar Fase 1
 
 1. Crear `/dashboard` con alertas y accesos rápidos.
-2. Unificar calendario, Kanban y spreadsheet bajo `/parrilla` o mantener rutas compatibles con aliases.
+2. Unificar calendario, Kanban y spreadsheet bajo `/calendario` o mantener rutas compatibles con aliases.
 3. Implementar editor multi-tab y historial de revisiones.
 4. Completar transiciones de estado y aprobación.
 

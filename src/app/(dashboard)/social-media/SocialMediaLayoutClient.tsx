@@ -24,7 +24,7 @@ const navGroupsSocialMedia: NavGroup[] = [
       { href: "/social-media/campaigns", label: "Campañas", icon: Target },
       {
         href: "/social-media/grid",
-        label: "Parrilla macro",
+        label: "Calendario de contenido",
         icon: CalendarRange,
       },
     ],

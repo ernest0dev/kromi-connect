@@ -21,7 +21,7 @@ El esquema `public` partía de un estado rudimentario compuesto por 3 tablas (`c
 - Todas las llaves primarias migradas a tipo `UUID`, generadas vía `gen_random_uuid()`.
 - 6 tipos enumerados nuevos para gobernar los dominios de estado/categoría.
 - Expansión de 3 a 8 tablas relacionales, cubriendo la totalidad de los bloques funcionales de la Fase 1 del SRS.
-- Automatizaciones de timestamp e índices de rendimiento aplicados sobre las rutas de consulta más frecuentes (Kanban, Grilla, PWA de rodaje).
+- Automatizaciones de timestamp e índices de rendimiento aplicados sobre las rutas de consulta más frecuentes (Kanban, Calendario, PWA de rodaje).
 - Row Level Security habilitado en la totalidad de las tablas del esquema.
 - Carga de datos semilla (seed data) ejecutada y verificada contra un escenario operativo real.
 
@@ -239,7 +239,7 @@ EXECUTE FUNCTION update_updated_at_column();
 
 | Índice | Tabla | Columnas | Propósito |
 |---|---|---|---|
-| `idx_publicaciones_fecha_estatus` | `publicaciones` | `(fecha_publicacion, estatus)` | Optimización de consultas de Vista Kanban (agrupación por `estatus`) y Grilla Calendario (rango de fechas) |
+| `idx_publicaciones_fecha_estatus` | `publicaciones` | `(fecha_publicacion, estatus)` | Optimización de consultas de Vista Kanban (agrupación por `estatus`) y Calendario de contenido (rango de fechas) |
 | `idx_checklist_publicacion_sucursal` | `checklist_rodaje` | `(publicacion_id, sucursal)` | Optimización de la vista PWA móvil de rodaje, filtrada por sede en piso de tienda |
 | `idx_solicitudes_estatus` | `solicitudes_terceros` | `(estatus_solicitud)` | Búsqueda filtrada del inbox por estado de solicitud |
 | `idx_publicacion_canales_canal` | `publicacion_canales` | `(canal)` | Búsqueda filtrada por canal de distribución |

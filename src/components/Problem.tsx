@@ -20,7 +20,7 @@ export function Problem() {
               <div className="ba-item flex items-start gap-3 text-[15px]">
                 <span className="ba-ico mt-px flex h-[22px] w-[22px] flex-none items-center justify-center rounded-md text-[13px] font-extrabold">–</span>
                 <span>
-                  Planificación de grilla y brief en hojas de cálculo separadas,
+                  Planificación de calendario de contenido y brief en hojas de cálculo separadas,
                   sin vínculo entre sí.
                 </span>
               </div>

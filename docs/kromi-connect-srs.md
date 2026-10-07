@@ -11,7 +11,7 @@
 **Rol unificado (fase inicial):** Estrategia/Especialista en Redes Sociales + Creador de Contenido/Producción, bajo un único `role` y set de permisos (RLS policy única en esta fase; sin distinción de sub-permisos todavía).
 
 **Alcance operativo:**
-- Planificación de grilla mensual.
+- Planificación de calendario de contenido mensual.
 - Redacción de briefs y copys.
 - Coordinación de rodaje en sede (Prebo, Mañongo).
 - Gestión de solicitudes de terceros (inbox).
@@ -33,7 +33,7 @@
 Estados usados: **Implementado**, **Parcial**, **Pendiente**, **No verificado**. Se refieren al código inspeccionado en la auditoría de la sección 6 y no implican verificación del entorno Supabase desplegado.
 
 ### 2.1 Generación y Gestión de Contenido
-- Planificación de grilla mensual y cálculo automatizado de fechas. **Parcial:** `/social-media/grid` muestra calendario mensual y permite reprogramar; el SLA implementado calcula `fecha_limite_brief = fecha_publicacion - 5 días`. La fecha límite de rodaje (`fecha_publicacion - 3 días`) no está implementada.
+- Planificación de calendario de contenido mensual y cálculo automatizado de fechas. **Parcial:** `/social-media/grid` muestra calendario mensual y permite reprogramar; el SLA implementado calcula `fecha_limite_brief = fecha_publicacion - 5 días`. La fecha límite de rodaje (`fecha_publicacion - 3 días`) no está implementada.
 - Generación de cronograma de producción y guiones de rodaje para piso de tienda. **Parcial:** existe `/social-media/shooting`, pero muestra publicaciones e idea principal; no usa `checklist_rodaje` ni ofrece guion estructurado por tomas/zonas.
 - Creación de solicitudes de diseño (brief técnico: dimensiones, copy versionado, badges). **Parcial:** Kanban muestra hook, body, CTA y hashtags; Grid solo permite editar título y fecha. No se verificó un editor técnico completo de brief.
 - Flujo de revisión/corrección/aprobación con estados de retorno explícitos. **Parcial:** hay cambio de estatus, pero Grid permite cualquier transición y el Kanban no tiene interacción de arrastre de estado confirmada.
@@ -260,7 +260,7 @@ CREATE TABLE campana_evaluaciones (
 
 ### 6.0 Nomenclatura de Grid y Kanban
 
-El diseño inicial describía `/parrilla` como tres vistas del mismo dataset. El código separa Grid y Kanban en rutas independientes, cada una con su propio estado y capacidades:
+El diseño inicial describía `/calendario` como tres vistas del mismo dataset. El código separa Grid y Kanban en rutas independientes, cada una con su propio estado y capacidades:
 
 - `/social-media/grid`: calendario macro mensual.
 - `/social-media/kanban`: tablero por estatus.

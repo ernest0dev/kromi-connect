@@ -15,7 +15,7 @@ const EMPTY_NAV_GROUPS: NavGroup[] = [];
  * Este contexto lo resuelve: el shell (sidebar + topbar) se monta UNA sola
  * vez, en (dashboard)/layout.tsx. Layouts hijos que necesiten:
  *  - agregar sus propios grupos de navegación (ej. social-media añade
- *    "Campañas", "Parrilla macro", etc. antes del grupo "Transversal"), o
+ *    "Campañas", "Calendario de contenido", etc. antes del grupo "Transversal"), o
  *  - agregar contenido al topbar (ej. botón "Nuevo ticket" + indicador SLA)
  * lo hacen registrándolo aquí, en vez de volver a renderizar el shell.
  */

@@ -10,8 +10,8 @@ import type { ContentCategoryOption } from "./components/ContentCategorySelector
 // Esta vista necesita datos frescos en cada solicitud, sin caché de página.
 export const revalidate = 0;
 
-// Componente de servidor: carga las publicaciones antes de renderizar la parrilla.
-export default async function ParrillaPage() {
+// Componente de servidor: carga las publicaciones antes de renderizar el calendario de contenido.
+export default async function CalendarioPage() {
   await requirePermission("social-media.grid.read");
   // getSupabaseAdmin es sincrónico; se obtiene directamente sin await
   // Obtiene el cliente de Supabase para consultar la tabla de publicaciones.
@@ -69,7 +69,7 @@ export default async function ParrillaPage() {
             className="mb-1.5 text-[21px] font-bold leading-[1.15] md:text-[25px]"
             style={{fontFamily: "var(--font-display)", color: "var(--tinta)" }}
           >
-            Parrilla macro de contenidos
+            Calendario de contenido
           </h1>
           <p className="text-[13px] ui-text-muted">
             Planifica publicaciones y reprograma entregables desde el
@@ -92,7 +92,7 @@ export default async function ParrillaPage() {
         </div>
       </header>
 
-      {/* La capa interactiva de la parrilla recibe los datos iniciales. */}
+      {/* La capa interactiva del calendario recibe los datos iniciales. */}
       <GridView
         publicacionesIniciales={publicacionesConTemas}
         errorPublicacionesIniciales={error?.message || null}

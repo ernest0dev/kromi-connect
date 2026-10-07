@@ -19,7 +19,7 @@ export interface RecalcularFechasSLAResponse {
 
 /**
  * Server Action: recalculateSlaDates
- * Soporta "Quick Reschedule" (Drag & Drop desde la Grilla/Calendario).
+ * Soporta "Quick Reschedule" (Drag & Drop desde el calendario).
  * Actualiza la fecha_publicacion en Supabase y recorta hacia atrás las fechas de SLA (Regla 3+2).
  */
 export async function recalculateSlaDates(

@@ -3,9 +3,9 @@
 const features = [
   {
     icon: "P",
-    title: "Parrilla con tres vistas",
+    title: "Calendario de contenido con tres vistas",
     description:
-      "Calendario macro, Kanban por estatus y tabla tipo spreadsheet, todas sobre el mismo dataset — sin duplicar información.",
+      "Calendario de contenido, Kanban por estatus y tabla tipo spreadsheet, todas sobre el mismo dataset — sin duplicar información.",
     color: "bg-[var(--azul)]",
   },
   {
