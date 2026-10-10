@@ -10,6 +10,7 @@ export default async function KanbanPage() {
   const { data: publicaciones, error } = await supabase
     .from('publicaciones')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) {

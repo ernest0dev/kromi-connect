@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { authorizeAction } from "@/lib/auth/dal";
 import { EstatusEnum, Publicacion } from "@/types";
+import { transitionPublicationAction } from './workflow';
 
 export interface ObtenerPautasInput {
   estatus?: EstatusEnum[];
@@ -18,6 +19,7 @@ export async function getShootingPostsAction(input?: ObtenerPautasInput) {
     let query = supabase
       .from("publicaciones")
       .select("*")
+      .is('deleted_at', null)
       .in("estatus", input?.estatus || ["PENDIENTE_BRIEF", "EN_RODAJE"])
       .order("fecha_publicacion", { ascending: true });
 
@@ -59,34 +61,9 @@ export async function getShootingPostsAction(input?: ObtenerPautasInput) {
 
 export async function updateShootingStatusAction(
   publicacionId: string,
-  nuevoEstatus: "EN_DISENO" | "EN_RODAJE",
+  nuevoEstatus: "SOLICITADO" | "EN_RODAJE",
 ) {
-  const access = await authorizeAction("social-media.shooting.status.update");
-  if (access.error) return { success: false, error: access.error };
-  if (!access.context) return { success: false, error: "Inicia sesión para continuar." };
-  try {
-    const supabase = access.context.supabase;
-
-    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc("user_has_all_publication_accounts", {
-      p_publicacion_id: publicacionId,
-    });
-    if (accountScopeError || !canManageAllAccounts) {
-      return { success: false, error: accountScopeError?.message || "Para cambiar el estado necesitas tener asignadas todas las cuentas destino." };
-    }
-
-    const { error } = await supabase
-      .from("publicaciones")
-      .update({ estatus: nuevoEstatus, updated_at: new Date().toISOString() })
-      .eq("id", publicacionId);
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    revalidatePath("/shooting");
-    revalidatePath("/kanban");
-    return { success: true };
-  } catch (err: any) {
-    return { success: false, error: err.message };
-  }
+  const result = await transitionPublicationAction({ publicationId: publicacionId, status: nuevoEstatus });
+  revalidatePath('/social-media/shooting');
+  return result;
 }

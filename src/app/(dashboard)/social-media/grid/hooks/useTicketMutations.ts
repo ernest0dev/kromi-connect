@@ -2,7 +2,7 @@
 
 import { useTransition, Dispatch, SetStateAction } from 'react';
 import { PublicacionConCuentas, EstatusEnum } from '@/types';
-import { actualizarEstatusTicketAction } from '@/app/actions/publicaciones/ticket-quick-actions';
+import { transitionPublicationAction } from '@/app/actions/publicaciones/workflow';
 import { recalcularFechasSLAAction } from '@/app/actions/publicaciones/recalculateSla';
 
 export function useTicketMutations(
@@ -28,18 +28,16 @@ export function useTicketMutations(
     });
   };
 
-  const updateStatus = (pub: PublicacionConCuentas, nuevoEstatus: EstatusEnum) => {
+  const updateStatus = (pub: PublicacionConCuentas, nuevoEstatus: EstatusEnum, reason?: string) => {
     const estatusAnterior = pub.estatus;
     setPublicaciones((prev) =>
       prev.map((p) => (p.id === pub.id ? { ...p, estatus: nuevoEstatus } : p))
     );
 
     startTransition(async () => {
-      const res = await actualizarEstatusTicketAction({
-        publicacionId: pub.id,
-        nuevoEstatus,
-      });
+      const res = await transitionPublicationAction({ publicationId: pub.id, status: nuevoEstatus, reason });
       if (!res.success) {
+        alert(`No se pudo cambiar el estado: ${res.error}`);
         setPublicaciones((prev) =>
           prev.map((p) => (p.id === pub.id ? { ...p, estatus: estatusAnterior } : p))
         );

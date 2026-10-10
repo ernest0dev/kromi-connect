@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Editar flujo y SLA</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:40px;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:0 12px;font-size:14px;color:#10233F}
+.fld[readonly]{background:#F3F0E9;color:#3C4663}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:vertical}
+.hint{font-size:12px;color:#5E6680;margin-top:6px;line-height:1.4}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:40px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+.tab{height:44px;padding:0 4px;margin-right:20px;border:0;border-bottom:2px solid transparent;background:transparent;font-size:14px;font-weight:600;color:#5E6680;cursor:pointer}
+.tab.on{color:#10233F;border-bottom-color:#0066D2}
+</style>
+</helmet>
+<div style="width: 760px; height: 937px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="padding: 22px 28px 0; border-bottom: 1px solid #E7E4DC">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<div class="sec">Editar publicación</div>
+<h1 style="margin: 4px 0 0; font-size: 22px; font-weight: 700">Día de la Alimentación</h1>
+<div style="display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap">
+<span class="tag" style="background: #E6ECFC; color: #1F3C9C">En revisión</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Reel · vie 16 oct 2026</span>
+</div>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+<div style="display: flex; margin-top: 14px">
+<button type="button" class="tab">Contenido</button>
+<button type="button" class="tab">Producción</button>
+<button type="button" class="tab on">Flujo y SLA</button>
+<button type="button" class="tab">Historial</button>
+</div>
+</div>
+
+<div style="flex: 1; padding: 22px 28px; display: flex; flex-direction: column; gap: 22px; overflow: hidden">
+
+<div style="border: 1px solid #E7E4DC; border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div>
+<div class="sec">Estado actual</div>
+<div style="font-size: 16px; font-weight: 700; margin-top: 4px">En revisión</div>
+</div>
+<div style="display: flex; gap: 10px">
+<button type="button" class="btn">Pedir corrección</button>
+</div>
+</div>
+<div>
+<label class="lbl" for="motivo">Motivo (obligatorio si pides corrección)</label>
+<textarea class="fld" id="motivo" rows="2" placeholder="Qué debe cambiar en el diseño o en el copy"></textarea>
+</div>
+<div class="hint" style="margin-top: 0">Al pedir corrección, la publicación pasa a En corrección y el diseñador ve tu motivo. Las fechas de abajo se fijan solas al cambiar de estado.</div>
+</div>
+
+<div>
+<div class="sec" style="margin-bottom: 12px">SLA de producción</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="border-radius: 10px; background: #E3F4EA; padding: 12px">
+<div style="font-size: 12px; font-weight: 600; color: #14573A">Brief</div>
+<div style="font-size: 15px; font-weight: 700; color: #14573A; margin-top: 4px">Límite dom 11 oct</div>
+<div style="font-size: 12px; color: #14573A; margin-top: 2px">A tiempo · mañana</div>
+</div>
+<div style="border-radius: 10px; background: #F3F0E9; padding: 12px">
+<div style="font-size: 12px; font-weight: 600; color: #3C4663">Rodaje</div>
+<div style="font-size: 15px; font-weight: 700; margin-top: 4px">No requerido</div>
+<div style="font-size: 12px; color: #5E6680; margin-top: 2px">Actívalo en Producción</div>
+</div>
+<div style="border-radius: 10px; background: #FFF1D0; padding: 12px">
+<div style="font-size: 12px; font-weight: 600; color: #6B4600">Diseño</div>
+<div style="font-size: 15px; font-weight: 700; color: #6B4600; margin-top: 4px">Sin solicitud</div>
+<div style="font-size: 12px; color: #6B4600; margin-top: 2px">Está en revisión sin fecha de solicitud</div>
+</div>
+</div>
+</div>
+
+<div>
+<div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px">
+<div class="sec">Fechas del flujo</div>
+<a href="#" style="font-size: 13px; font-weight: 600; color: #0066D2">Corregir fecha (requiere permiso)</a>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px">
+<div>
+<label class="lbl" for="fp">Publicación *</label>
+<input class="fld" id="fp" value="vie 16 oct 2026" style="background: #fff">
+</div>
+<div>
+<label class="lbl" for="lb">Límite del brief · automático</label>
+<input class="fld" id="lb" value="dom 11 oct 2026" readonly>
+</div>
+<div>
+<label class="lbl" for="ee">Entrega estimada · automática</label>
+<input class="fld" id="ee" value="Se calcula al solicitar diseño" readonly>
+</div>
+<div>
+<label class="lbl" for="sd">Solicitud de diseño</label>
+<input class="fld" id="sd" value="—" readonly>
+</div>
+<div>
+<label class="lbl" for="er">Entrega real de diseño</label>
+<input class="fld" id="er" value="—" readonly>
+</div>
+</div>
+<div class="hint">Las horas se muestran en hora de Caracas. Una entrega real no puede estar en el futuro ni antes de la solicitud.</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<div>
+<label class="lbl" for="cr">Creador</label>
+<input class="fld" id="cr" value="Sin registrar" readonly>
+</div>
+<div>
+<label class="lbl" for="di">Diseñador</label>
+<select class="fld" id="di"><option>Sin asignar</option></select>
+</div>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4">
+<div style="font-size: 12px; color: #5E6680">Actualizado 5 oct 2026, 12:15 p. m. · Creado 1 oct 2026, 1:03 p. m.</div>
+<div style="display: flex; gap: 10px">
+<button type="button" class="btn" style="border-color: transparent; background: transparent">Cancelar</button>
+<button type="button" class="btn pri">Guardar cambios</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":937}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

@@ -3,8 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { authorizeAction } from "@/lib/auth/dal";
 import { createPublicacionDriveFolder, deletePublicacionDriveFolder } from "@/lib/googleDrive";
-import { FormatoEnum, PublicacionConCuentas } from "@/types";
+import { FormatoEnum, PublicacionConCuentas, SedeEnum } from "@/types";
 import { calcularMatrizSLA } from "@/utils/sla";
+import { normalizeHashtagArray } from "@/utils/hashtags";
 
 const FORMATOS_VALIDOS: FormatoEnum[] = ["CARRUSEL", "POST", "REEL", "STORY"];
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -15,6 +16,7 @@ export interface CreatePostInput {
   titulo: string;
   formato: FormatoEnum;
   fecha_publicacion: string;
+  hora_publicacion?: string | null;
   campana_id?: string | null;
   categoria_ids?: string[];
   social_account_ids?: string[];
@@ -22,6 +24,10 @@ export interface CreatePostInput {
   body_texto?: string;
   cta_texto?: string;
   hashtags?: string[];
+  requiere_rodaje?: boolean;
+  fecha_rodaje?: string | null;
+  sedes?: SedeEnum[];
+  prioridad?: number;
 }
 
 export async function createPostWithDriveAction(input: CreatePostInput) {
@@ -47,6 +53,14 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
   if (input.formato === "STORY" && [input.hook_texto, input.body_texto, input.cta_texto, ...(input.hashtags || [])].some(Boolean)) {
     return { success: false, error: "Las Stories no admiten campos de copy." };
   }
+  if (input.hora_publicacion && !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.hora_publicacion)) return { success: false, error: 'La hora de publicación no es válida.' };
+  const sedes = input.sedes || [];
+  if (!Array.isArray(sedes) || sedes.some((sede) => !['PREBO', 'MANONGO'].includes(sede))) return { success: false, error: 'La selección de sedes no es válida.' };
+  const prioridad = input.prioridad ?? 2;
+  if (![1, 2, 3].includes(prioridad)) return { success: false, error: 'La prioridad no es válida.' };
+  const fechaRodaje = input.requiere_rodaje
+    ? input.fecha_rodaje || new Date(new Date(`${input.fecha_publicacion}T00:00:00Z`).getTime() - 3 * 86400000).toISOString().slice(0, 10)
+    : null;
   const categoryIds = input.categoria_ids ?? [];
   if (!Array.isArray(categoryIds) || categoryIds.some((id) => typeof id !== "string" || !UUID_PATTERN.test(id))) {
     return { success: false, error: "La selección de temas no es válida." };
@@ -62,6 +76,9 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
     if (accountsError) return { success: false, error: `No se pudieron validar las cuentas: ${accountsError.message}` };
     if ((assignedAccounts || []).length !== selectedAccountIds.length) {
       return { success: false, error: "Una o más cuentas ya no están asignadas a tu usuario o están inactivas." };
+    }
+    if (input.formato === 'STORY' && (assignedAccounts || []).some((account) => account.platform === 'YOUTUBE')) {
+      return { success: false, error: 'YouTube no admite Stories. Quita esa cuenta o cambia el formato.' };
     }
 
     // 1. Crear carpeta dedicada en Google Drive
@@ -79,7 +96,7 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
       p_hook_texto: input.formato === "STORY" ? null : input.hook_texto?.trim() || null,
       p_body_texto: input.formato === "STORY" ? null : input.body_texto?.trim() || null,
       p_cta_texto: input.formato === "STORY" ? null : input.cta_texto?.trim() || null,
-      p_hashtags: input.formato === "STORY" ? null : input.hashtags || null,
+      p_hashtags: input.formato === "STORY" ? null : normalizeHashtagArray(input.hashtags || []),
       p_drive_folder_id: driveFolder?.id || null,
       p_drive_folder_url: driveFolder?.url || null,
       p_social_account_ids: selectedAccountIds,
@@ -91,7 +108,23 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
       }
       return { success: false, error: `Error en base de datos: ${error.message}` };
     }
-    const newPost = publicationJson as unknown as PublicacionConCuentas;
+    if (input.hora_publicacion) {
+      const { data: hourSaved, error: hourError } = await supabase.rpc('set_publication_hour', {
+        p_publicacion_id: (publicationJson as { id: string }).id,
+        p_hora_publicacion: input.hora_publicacion,
+      });
+      if (hourError || hourSaved !== true) return { success: false, error: `La publicación se creó, pero no se pudo guardar la hora: ${hourError?.message || 'vuelve a editarla'}` };
+    }
+    const publicationId = (publicationJson as { id: string }).id;
+    const { data: productionSaved, error: productionError } = await supabase.rpc('set_publication_production', {
+      p_publicacion_id: publicationId,
+      p_requiere_rodaje: input.requiere_rodaje || false,
+      p_fecha_rodaje: fechaRodaje,
+      p_sedes: sedes,
+      p_prioridad: prioridad,
+    });
+    if (productionError || productionSaved !== true) return { success: false, error: `La publicación se creó, pero no se pudo guardar Producción: ${productionError?.message || 'intenta editarla nuevamente'}` };
+    const newPost = { ...(publicationJson as unknown as PublicacionConCuentas), hora_publicacion: input.hora_publicacion || null, requiere_rodaje: input.requiere_rodaje || false, fecha_rodaje: fechaRodaje, sedes, prioridad };
     if (!newPost?.id) return { success: false, error: "Supabase no devolvió la publicación creada." };
     const categoryRows = categoryIds.length
       ? await supabase.from("categorias_contenido").select("id, nombre").in("id", categoryIds)

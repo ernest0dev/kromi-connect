@@ -20,7 +20,7 @@ export default function ShootingClientView({ pautasIniciales }: Props) {
 
   const handleCompletarRodaje = (id: string) => {
     startTransition(async () => {
-      const res = await updateShootingStatusAction(id, "EN_DISENO");
+      const res = await updateShootingStatusAction(id, "SOLICITADO");
       if (res.success) {
         setPautas((prev) => prev.filter((item) => item.id !== id));
       } else {

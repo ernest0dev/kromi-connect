@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertTriangle, Pencil, FolderOpen, Eye, Trash2 } from 'lucide-react';
+import { AlertTriangle, Pencil, FolderOpen, Eye, Archive, Ban } from 'lucide-react';
 import { TicketDetailCardProps } from '../types/grid';
 import { useSLA } from '../hooks/useSLA';
 import { FORMATO_LABEL_UPPER } from '../utils/constants';
@@ -16,8 +16,10 @@ function formatDate(iso: string | null | undefined): string {
 export function TicketDetailCard({
   publicacion,
   nombreCampana,
+  formatoLabel,
   onViewDetails,
-  onDelete,
+  onArchive,
+  onCancel,
   isDeleting,
   isSelected,
   onEdit,
@@ -47,7 +49,7 @@ export function TicketDetailCard({
           className="ui-badge shrink-0 rounded-[5px] px-[7px] py-[3px] font-bold uppercase"
           style={{background: 'var(--hueso)', borderColor: 'var(--borde)', color: 'var(--gris)' }}
         >
-          {FORMATO_LABEL_UPPER[publicacion.formato]}
+          {formatoLabel.toLocaleUpperCase('es') || FORMATO_LABEL_UPPER[publicacion.formato]}
         </span>
       </div>
 
@@ -121,15 +123,16 @@ export function TicketDetailCard({
 
         <button
           type="button"
-          onClick={onDelete}
+          onClick={onArchive}
           disabled={isDeleting}
-          aria-label="Eliminar publicación"
+          aria-label="Mover publicación al Archivo"
           className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold transition disabled:cursor-wait disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-1"
-          style={{ borderColor: 'var(--borde)', color: '#b42318' }}
+          style={{ borderColor: 'var(--borde)', color: 'var(--gris)' }}
         >
-          <Trash2 size={12} aria-hidden="true" />
-          {isDeleting ? 'Eliminando…' : 'Eliminar'}
+          <Archive size={12} aria-hidden="true" />
+          {isDeleting ? 'Archivando…' : 'Archivo'}
         </button>
+        {publicacion.estatus !== 'CANCELADO' && <button type="button" onClick={onCancel} className="flex items-center gap-1.5 rounded-md border px-2 py-[5px] text-[10px] font-bold text-red-700" style={{ borderColor: 'var(--borde)' }}><Ban size={12} aria-hidden="true" />Cancelar</button>}
 
         {publicacion.drive_folder_url ? (
           <a
@@ -144,8 +147,8 @@ export function TicketDetailCard({
             <span>Ver assets</span>
           </a>
         ) : (
-          <span className="text-[10px] italic" style={{color: 'var(--gris)' }}>
-            Sin carpeta vinculada
+          <span className="text-[10px] font-semibold text-amber-700">
+            Drive pendiente
           </span>
         )}
       </div>

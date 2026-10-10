@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { EstatusEnum, FormatoEnum, Publicacion, PublicacionConCuentas } from "@/types";
 import { authorizeAction } from "@/lib/auth/dal";
 import { calcularMatrizSLA } from "@/utils/sla";
+import { normalizeHashtagArray } from "@/utils/hashtags";
 
 const FORMATOS: FormatoEnum[] = ["CARRUSEL", "POST", "REEL", "STORY"];
 const ESTADOS: EstatusEnum[] = [
@@ -18,6 +19,7 @@ export interface EditPublicacionInput {
   titulo: string;
   formato: FormatoEnum;
   fecha_publicacion: string;
+  hora_publicacion: string | null;
   fecha_solicitud_diseno: string | null;
   fecha_entrega_diseno_real: string | null;
   fecha_aprobacion_gerencia: string | null;
@@ -42,6 +44,7 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
   }
   if (typeof input.titulo !== "string" || !input.titulo.trim()) return { success: false, error: "El título es obligatorio." };
   if (!FORMATOS.includes(input.formato)) return { success: false, error: "El formato indicado no es válido." };
+  if (input.hora_publicacion && !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.hora_publicacion)) return { success: false, error: 'La hora de publicación no es válida.' };
   if (!ESTADOS.includes(input.estatus)) return { success: false, error: "El estado indicado no es válido." };
   const publicationDate = /^\d{4}-\d{2}-\d{2}$/.test(input.fecha_publicacion)
     ? new Date(`${input.fecha_publicacion}T00:00:00Z`)
@@ -89,9 +92,12 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
     if ((assignedAccounts || []).length !== selectedAccountIds.length) {
       return { success: false, error: "Una o más cuentas ya no están asignadas a tu usuario o están inactivas." };
     }
+    if (input.formato === 'STORY' && (assignedAccounts || []).some((account) => account.platform === 'YOUTUBE')) {
+      return { success: false, error: 'YouTube no admite Stories. Quita esa cuenta o cambia el formato.' };
+    }
     const { data: current, error: readError } = await supabase
       .from("publicaciones")
-      .select("fecha_publicacion, fecha_solicitud_diseno, estatus")
+      .select("fecha_publicacion, fecha_solicitud_diseno, fecha_entrega_diseno_real, fecha_aprobacion_gerencia, estatus")
       .eq("id", input.publicacionId)
       .maybeSingle();
     if (readError) return { success: false, error: `No se pudo consultar la publicación: ${readError.message}` };
@@ -101,14 +107,9 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       const rescheduleAccess = await authorizeAction("social-media.posts.reschedule");
       if (rescheduleAccess.error) return { success: false, error: rescheduleAccess.error };
     }
-    if (current.estatus !== input.estatus) {
-      const statusAccess = await authorizeAction("social-media.posts.status.update");
-      if (statusAccess.error) return { success: false, error: statusAccess.error };
-    }
+    if (current.estatus !== input.estatus) return { success: false, error: "El estado solo cambia mediante las acciones del flujo." };
 
-    const fechaSolicitudDiseno = input.estatus === "SOLICITADO"
-      ? input.fecha_solicitud_diseno || current.fecha_solicitud_diseno || new Date().toISOString()
-      : input.fecha_solicitud_diseno;
+    const fechaSolicitudDiseno = current.fecha_solicitud_diseno;
     const slaChanged = current.fecha_publicacion !== input.fecha_publicacion
       || current.fecha_solicitud_diseno !== fechaSolicitudDiseno;
     const slaDates = slaChanged
@@ -122,19 +123,24 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       p_fecha_publicacion: input.fecha_publicacion,
       p_campana_id: input.campana_id,
       p_fecha_solicitud_diseno: fechaSolicitudDiseno,
-      p_fecha_entrega_diseno_real: input.fecha_entrega_diseno_real,
-      p_fecha_aprobacion_gerencia: input.fecha_aprobacion_gerencia,
-      p_estatus: input.estatus,
+      p_fecha_entrega_diseno_real: current.fecha_entrega_diseno_real,
+      p_fecha_aprobacion_gerencia: current.fecha_aprobacion_gerencia,
+      p_estatus: current.estatus,
       p_hook_texto: input.hook_texto?.trim() || null,
       p_body_texto: input.body_texto?.trim() || null,
       p_cta_texto: input.cta_texto?.trim() || null,
-      p_hashtags: input.hashtags.map((tag) => tag.trim().replace(/^#/, "")).filter(Boolean),
+      p_hashtags: normalizeHashtagArray(input.hashtags),
       p_fecha_limite_brief: slaDates?.fecha_limite_brief || null,
       p_fecha_entrega_diseno_estimada: slaDates?.fecha_entrega_diseno_estimada || null,
       p_social_account_ids: selectedAccountIds,
       p_categoria_ids: input.categoria_ids,
     });
     if (error) return { success: false, error: `No se pudieron guardar los cambios: ${error.message}` };
+    const { data: hourSaved, error: hourError } = await supabase.rpc('set_publication_hour', {
+      p_publicacion_id: input.publicacionId,
+      p_hora_publicacion: input.hora_publicacion,
+    });
+    if (hourError || hourSaved !== true) return { success: false, error: `El contenido se guardó, pero no se pudo actualizar la hora: ${hourError?.message || 'intenta nuevamente'}` };
     const data = publicationJson as unknown as Publicacion;
     if (!data?.id) return { success: false, error: "Supabase no devolvió la publicación actualizada." };
     const categoryRows = input.categoria_ids.length
@@ -143,7 +149,7 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
 
     revalidatePath("/social-media/grid");
     revalidatePath("/social-media/kanban");
-    return { success: true, data: { ...data, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
+    return { success: true, data: { ...data, hora_publicacion: input.hora_publicacion, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Ocurrió un error inesperado al guardar la publicación." };
   }

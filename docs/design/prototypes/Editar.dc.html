@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Editar publicación</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:40px;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:0 12px;font-size:14px;color:#10233F}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:vertical}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:13px;color:#3C4663;cursor:pointer}
+.chip.on{background:#E6F0FB;border-color:#0066D2;color:#002F80;font-weight:600}
+.hint{font-size:12px;color:#5E6680;margin-top:6px;line-height:1.4}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:40px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+.tab{height:44px;padding:0 4px;margin-right:20px;border:0;border-bottom:2px solid transparent;background:transparent;font-size:14px;font-weight:600;color:#5E6680;cursor:pointer}
+.tab.on{color:#10233F;border-bottom-color:#0066D2}
+</style>
+</helmet>
+<div style="width: 760px; height: 1073px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="padding: 22px 28px 0; border-bottom: 1px solid #E7E4DC">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<div class="sec">Editar publicación</div>
+<h1 style="margin: 4px 0 0; font-size: 22px; font-weight: 700">Día de la Alimentación</h1>
+<div style="display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap">
+<span class="tag" style="background: #E6ECFC; color: #1F3C9C">En revisión</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Reel · vie 16 oct 2026</span>
+</div>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+<div style="display: flex; margin-top: 14px">
+<button type="button" class="tab on">Contenido</button>
+<button type="button" class="tab">Producción</button>
+<button type="button" class="tab">Flujo y SLA</button>
+<button type="button" class="tab">Historial</button>
+</div>
+</div>
+
+<div style="flex: 1; padding: 22px 28px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px">
+<div>
+<label class="lbl" for="t">Título *</label>
+<input class="fld" id="t" value="Día de la Alimentación">
+</div>
+<div>
+<label class="lbl" for="f">Formato *</label>
+<select class="fld" id="f"><option>Reel · 9:16</option></select>
+</div>
+<div>
+<label class="lbl" for="c">Campaña</label>
+<select class="fld" id="c"><option>Sin campaña</option></select>
+</div>
+</div>
+
+<div>
+<span class="lbl">Temas de contenido</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<button type="button" class="chip" style="border-style: dashed; color: #8A5A00; background: #FFF8E6; border-color: #D9A441">Heredado: Lácteos y víveres · asignar tema</button>
+<button type="button" class="chip">Ofertas</button>
+<button type="button" class="chip">Fruver</button>
+<button type="button" class="chip">Online</button>
+<button type="button" class="chip">General</button>
+<button type="button" class="chip">Más…</button>
+</div>
+<div class="hint">Esta publicación no tiene temas en el catálogo; solo conserva el texto anterior de línea de contenido.</div>
+</div>
+
+<div>
+<div style="display: flex; align-items: baseline; justify-content: space-between">
+<span class="lbl">Cuentas de destino *</span>
+<span style="font-size: 12px; color: #14573A; font-weight: 600">Tienes acceso a todas las cuentas de esta publicación</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<label style="display: flex; align-items: center; gap: 10px; border: 1px solid #D2CCC0; border-radius: 10px; padding: 10px 12px; font-size: 13px">
+<input type="checkbox" style="width: 18px; height: 18px; accent-color: #0066D2">
+<span><span style="font-weight: 600; display: block">YouTube</span><span style="color: #5E6680; font-size: 12px">@kromichannel…</span></span>
+</label>
+<label style="display: flex; align-items: center; gap: 10px; border: 1px solid #0066D2; background: #F0F6FD; border-radius: 10px; padding: 10px 12px; font-size: 13px">
+<input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #0066D2">
+<span><span style="font-weight: 600; display: block">Instagram</span><span style="color: #5E6680; font-size: 12px">@kromimarket</span></span>
+</label>
+<label style="display: flex; align-items: center; gap: 10px; border: 1px solid #D2CCC0; border-radius: 10px; padding: 10px 12px; font-size: 13px">
+<input type="checkbox" style="width: 18px; height: 18px; accent-color: #0066D2">
+<span><span style="font-weight: 600; display: block">TikTok</span><span style="color: #5E6680; font-size: 12px">@kromimarket.oficial</span></span>
+</label>
+</div>
+</div>
+
+<div style="border-top: 1px solid #E7E4DC; padding-top: 18px; display: flex; flex-direction: column; gap: 14px">
+<div class="sec">Brief de copy</div>
+<div>
+<label class="lbl" for="h">Hook</label>
+<input class="fld" id="h" value="¿Sabías que elegir bien lo que comes es la decisión más importante del día? 💭">
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px">
+<div>
+<label class="lbl" for="b">Cuerpo</label>
+<textarea class="fld" id="b" rows="8">Hoy, en el Día Mundial de la Alimentación, recordamos la importancia de comer con conciencia y cuidar lo que llevamos a nuestra mesa. No se trata de complicarse, sino de aprender a elegir mejor para ti y tu familia.
+
+En Kromi Market te lo hacemos más fácil con productos frescos y de calidad en un solo lugar.</textarea>
+</div>
+<div>
+<label class="lbl" for="cta">CTA</label>
+<textarea class="fld" id="cta" rows="8">Descarga la App de Kromi Market en Google Play y recibe lo mejor para tu nutrición directo en casa. (Link en la bio)</textarea>
+</div>
+</div>
+<div>
+<span class="lbl">Hashtags</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center">
+<span class="chip on" style="height: 28px">#DíaMundialDeLaAlimentación <span style="font-weight: 400">×</span></span>
+<span class="chip on" style="height: 28px">#KromiMarket <span style="font-weight: 400">×</span></span>
+<span class="chip on" style="height: 28px">#Alimentacion <span style="font-weight: 400">×</span></span>
+<span class="chip on" style="height: 28px">#AppKromi <span style="font-weight: 400">×</span></span>
+<span style="font-size: 13px; color: #5E6680">Agregar…</span>
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; background: #F3F0E9; border-radius: 10px; padding: 10px 14px; font-size: 13px">
+<span style="color: #3C4663">Caption armado: hook + cuerpo + CTA + hashtags · 398 caracteres</span>
+<button type="button" class="btn" style="height: 30px; padding: 0 12px; font-size: 13px">Vista previa</button>
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 1px solid #E7E4DC; border-radius: 10px; padding: 10px 14px; font-size: 13px">
+<span style="color: #3C4663">Carpeta de Drive: <strong>[REEL] 2026-10-16 - Día de la Alimentación</strong></span>
+<a href="#" style="color: #0066D2; font-weight: 600">Abrir carpeta</a>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4">
+<div style="font-size: 12px; color: #5E6680">Actualizado 5 oct 2026, 12:15 p. m. · Creado 1 oct 2026, 1:03 p. m.</div>
+<div style="display: flex; gap: 10px">
+<button type="button" class="btn" style="border-color: transparent; background: transparent">Cancelar</button>
+<button type="button" class="btn pri">Guardar cambios</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":1073}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

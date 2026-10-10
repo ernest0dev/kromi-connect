@@ -1,0 +1,148 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-09T23:40:00Z"
+  },
+  "title": "Modales de publicación",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 640,
+      "h": 1503,
+      "title": "Crear publicación",
+      "radius": 16
+    },
+    "Editar.dc.html": {
+      "x": 720,
+      "y": 0,
+      "w": 760,
+      "h": 1073,
+      "title": "Editar · Contenido",
+      "radius": 16
+    },
+    "EditarFlujo.dc.html": {
+      "x": 1560,
+      "y": 0,
+      "w": 760,
+      "h": 937,
+      "title": "Editar · Flujo y SLA",
+      "radius": 16
+    },
+    "Detalle.dc.html": {
+      "x": 2400,
+      "y": 0,
+      "w": 760,
+      "h": 861,
+      "title": "Detalle de publicación",
+      "radius": 16
+    },
+    "EditarSoloLectura.dc.html": {
+      "x": 3240,
+      "y": 0,
+      "w": 760,
+      "h": 1093,
+      "title": "Editar · Solo lectura",
+      "radius": 16
+    },
+    "CrearStory.dc.html": {
+      "x": 0,
+      "y": 1800,
+      "w": 640,
+      "h": 1054,
+      "title": "Crear · Story",
+      "radius": 16
+    },
+    "CrearAvisos.dc.html": {
+      "x": 720,
+      "y": 1800,
+      "w": 640,
+      "h": 1131,
+      "title": "Crear · Errores y avisos",
+      "radius": 16
+    },
+    "DetalleVacio.dc.html": {
+      "x": 1440,
+      "y": 1800,
+      "w": 760,
+      "h": 699,
+      "title": "Detalle · Vacío y Drive fallido",
+      "radius": 16
+    },
+    "Archivo.dc.html": {
+      "x": 2280,
+      "y": 1800,
+      "w": 1000,
+      "h": 640,
+      "title": "Archivo · Publicaciones",
+      "radius": 16
+    },
+    "Dialogos.dc.html": {
+      "x": 0,
+      "y": 3340,
+      "w": 1320,
+      "h": 400,
+      "title": "Diálogos",
+      "radius": 16
+    },
+    "CrearMovil.dc.html": {
+      "x": 1400,
+      "y": 3340,
+      "w": 390,
+      "h": 1711,
+      "title": "Crear · 390 px",
+      "radius": 16
+    },
+    "DetalleMovil.dc.html": {
+      "x": 1870,
+      "y": 3340,
+      "w": 390,
+      "h": 1063,
+      "title": "Detalle · 390 px",
+      "radius": 16
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Editar.dc.html",
+    "EditarFlujo.dc.html",
+    "Detalle.dc.html",
+    "EditarSoloLectura.dc.html",
+    "CrearStory.dc.html",
+    "CrearAvisos.dc.html",
+    "DetalleVacio.dc.html",
+    "Archivo.dc.html",
+    "Dialogos.dc.html",
+    "CrearMovil.dc.html",
+    "DetalleMovil.dc.html"
+  ],
+  "notes": {
+    "t1": {
+      "x": 0,
+      "y": -260,
+      "text": "Modales de publicación · Grid",
+      "kind": "title1",
+      "maxW": 4000
+    },
+    "t2": {
+      "x": 0,
+      "y": 1600,
+      "text": "Variantes, avisos y estados vacíos",
+      "kind": "title1",
+      "maxW": 3300
+    },
+    "t3": {
+      "x": 0,
+      "y": 3100,
+      "text": "Diálogos y pantalla angosta",
+      "kind": "title1",
+      "maxW": 2260
+    }
+  },
+  "designSystems": []
+}

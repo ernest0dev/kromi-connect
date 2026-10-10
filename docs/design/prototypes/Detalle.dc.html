@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Detalle de publicación</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:13px;color:#3C4663}
+.chip.on{background:#E6F0FB;border-color:#A9C8EE;color:#002F80;font-weight:600}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:36px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.del{color:#B42318;border-color:#F2C4BF}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+.k{font-size:12px;font-weight:600;color:#5E6680}
+.v{font-size:14px;margin-top:3px}
+</style>
+</helmet>
+<div style="width: 760px; height: 861px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="padding: 22px 28px 18px; border-bottom: 1px solid #E7E4DC">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<div class="sec">Detalle de publicación</div>
+<h1 style="margin: 4px 0 0; font-size: 22px; font-weight: 700">Día de la Alimentación</h1>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+<div style="display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap">
+<span class="tag" style="background: #E6ECFC; color: #1F3C9C">En revisión</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Reel · 9:16</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Instagram · @kromimarket</span>
+</div>
+<div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap">
+<button type="button" class="btn pri">Editar</button>
+<button type="button" class="btn">Duplicar</button>
+<button type="button" class="btn">Abrir carpeta de Drive</button>
+<button type="button" class="btn del" style="margin-left: auto">Eliminar</button>
+</div>
+</div>
+
+<div style="flex: 1; padding: 22px 28px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; overflow: hidden; align-content: start">
+
+<div style="display: flex; flex-direction: column; gap: 18px">
+<div style="border: 1px solid #E7E4DC; border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<div class="sec">Caption como se publicará</div>
+<button type="button" class="btn" style="height: 30px; padding: 0 12px">Copiar texto</button>
+</div>
+<div style="font-size: 15px; font-weight: 700; line-height: 1.4">¿Sabías que elegir bien lo que comes es la decisión más importante del día? 💭</div>
+<div style="font-size: 14px; line-height: 1.55; color: #2B3550">Hoy, en el Día Mundial de la Alimentación, recordamos la importancia de comer con conciencia y cuidar lo que llevamos a nuestra mesa. No se trata de complicarse, sino de aprender a elegir mejor para ti y tu familia.<br><br>En Kromi Market te lo hacemos más fácil con productos frescos y de calidad en un solo lugar.</div>
+<div style="font-size: 14px; line-height: 1.55; font-weight: 600">Descarga la App de Kromi Market en Google Play y recibe lo mejor para tu nutrición directo en casa. (Link en la bio)</div>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span class="chip on">#DíaMundialDeLaAlimentación</span>
+<span class="chip on">#KromiMarket</span>
+<span class="chip on">#Alimentacion</span>
+<span class="chip on">#AppKromi</span>
+</div>
+<div style="font-size: 12px; color: #5E6680">398 caracteres</div>
+</div>
+
+<div>
+<div class="sec" style="margin-bottom: 10px">Observaciones de revisión</div>
+<div style="border: 1px dashed #D2CCC0; border-radius: 10px; padding: 14px; font-size: 13px; color: #5E6680">Las solicitudes de corrección y sus observaciones aparecerán aquí con autor y fecha.</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div>
+<div class="k">Fecha de publicación</div>
+<div class="v" style="font-weight: 600">viernes 16 de octubre de 2026</div>
+<div style="font-size: 12px; color: #5E6680">En 6 días</div>
+</div>
+<div>
+<div class="k">Campaña</div>
+<div class="v">Sin campaña</div>
+</div>
+<div>
+<div class="k">Temas</div>
+<div style="display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap">
+<span class="chip" style="border-style: dashed; color: #8A5A00; background: #FFF8E6; border-color: #D9A441">Heredado: Lácteos y víveres</span>
+</div>
+</div>
+<div>
+<div class="k">Cuentas de destino</div>
+<div class="v">Instagram · @kromimarket</div>
+</div>
+
+<div style="border-top: 1px solid #E7E4DC; padding-top: 14px">
+<div class="sec" style="margin-bottom: 12px">Línea de tiempo del SLA</div>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px">
+<li style="display: flex; gap: 10px; align-items: flex-start"><span style="width: 10px; height: 10px; border-radius: 50%; background: #1F7A4D; margin-top: 5px"></span><div><div style="font-size: 13px; font-weight: 600">Límite del brief</div><div style="font-size: 12px; color: #5E6680">dom 11 oct · en tiempo</div></div></li>
+<li style="display: flex; gap: 10px; align-items: flex-start"><span style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #D2CCC0; margin-top: 5px; box-sizing: border-box"></span><div><div style="font-size: 13px; font-weight: 600">Solicitud de diseño</div><div style="font-size: 12px; color: #5E6680">Pendiente</div></div></li>
+<li style="display: flex; gap: 10px; align-items: flex-start"><span style="width: 10px; height: 10px; border-radius: 50%; border: 2px solid #D2CCC0; margin-top: 5px; box-sizing: border-box"></span><div><div style="font-size: 13px; font-weight: 600">Entrega de diseño</div><div style="font-size: 12px; color: #5E6680">Estimada 2 días tras la solicitud</div></div></li>
+<li style="display: flex; gap: 10px; align-items: flex-start"><span style="width: 10px; height: 10px; border-radius: 50%; background: #0066D2; margin-top: 5px"></span><div><div style="font-size: 13px; font-weight: 600">Publicación</div><div style="font-size: 12px; color: #5E6680">vie 16 oct</div></div></li>
+</ol>
+</div>
+
+<div style="border-top: 1px solid #E7E4DC; padding-top: 14px">
+<div class="sec" style="margin-bottom: 10px">Historial de estado</div>
+<div style="font-size: 13px; line-height: 1.5"><strong>5 oct 2026, 12:15 p. m.</strong><br><span style="color: #5E6680">Pasó a En revisión</span></div>
+<a href="#" style="font-size: 13px; font-weight: 600; color: #0066D2; display: inline-block; margin-top: 8px">Ver historial completo</a>
+</div>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4; font-size: 12px; color: #5E6680">
+<span>Creado 1 oct 2026, 1:03 p. m. · Actualizado 5 oct 2026, 12:15 p. m. · Creador: sin registrar</span>
+<span>Hora de Caracas</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":861}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

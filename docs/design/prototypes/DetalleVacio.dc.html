@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Detalle · Vacío y Drive fallido</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:13px;color:#3C4663}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:36px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.del{color:#B42318;border-color:#F2C4BF}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+.k{font-size:12px;font-weight:600;color:#5E6680}
+.v{font-size:14px;margin-top:3px}
+.empty{border:1px dashed #D2CCC0;border-radius:10px;padding:14px;font-size:13px;color:#5E6680;line-height:1.45}
+</style>
+</helmet>
+<div style="width: 760px; height: 699px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="padding: 22px 28px 18px; border-bottom: 1px solid #E7E4DC">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<div class="sec">Detalle de publicación</div>
+<h1 style="margin: 4px 0 0; font-size: 22px; font-weight: 700">Story Día de la Alimentación</h1>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+<div style="display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap">
+<span class="tag" style="background: #ECE8DF; color: #3C4663">Borrador</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Story · 9:16</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Instagram · @kromimarket</span>
+</div>
+<div style="display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap">
+<button type="button" class="btn pri">Editar</button>
+<button type="button" class="btn">Duplicar</button>
+<button type="button" class="btn" disabled style="opacity: 0.55; cursor: not-allowed">Abrir carpeta de Drive</button>
+<button type="button" class="btn del" style="margin-left: auto">Eliminar</button>
+</div>
+</div>
+
+<div style="flex: 1; padding: 22px 28px; display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 24px; overflow: hidden; align-content: start">
+
+<div style="display: flex; flex-direction: column; gap: 18px">
+
+<div role="alert" style="display: flex; gap: 12px; align-items: flex-start; background: #FEF3F2; border: 1px solid #F2C4BF; border-radius: 12px; padding: 14px 16px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg>
+<div style="flex: 1">
+<div style="font-size: 14px; font-weight: 700; color: #7A271A">La carpeta de Drive no se pudo crear</div>
+<div style="font-size: 13px; color: #7A271A; margin-top: 3px; line-height: 1.45">La publicación se guardó, pero faltan sus carpetas de assets. Último intento: 10 oct 2026, 9:42 a. m.</div>
+<div style="font-size: 12px; color: #7A271A; margin-top: 6px">Detalle técnico: permiso denegado en la carpeta raíz de Marketing.</div>
+<div style="display: flex; gap: 8px; margin-top: 12px">
+<button type="button" class="btn pri">Reintentar</button>
+<button type="button" class="btn">Copiar detalle</button>
+</div>
+</div>
+</div>
+
+<div class="empty" style="padding: 22px 20px">
+<div class="sec">Caption como se publicará</div>
+<div style="font-size: 14px; font-weight: 600; color: #10233F; margin-top: 8px">Las Stories no llevan copy</div>
+<div style="margin-top: 4px">Esta publicación solo tiene la pieza visual. Si necesitas texto, crea un Post, Carrusel o Reel.</div>
+</div>
+
+<div>
+<div class="sec" style="margin-bottom: 10px">Observaciones de revisión</div>
+<div class="empty">Las solicitudes de corrección y sus observaciones aparecerán aquí con autor y fecha.</div>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 16px">
+<div>
+<div class="k">Fecha de publicación</div>
+<div class="v" style="font-weight: 600">viernes 16 de octubre de 2026</div>
+<div style="font-size: 12px; color: #5E6680">En 6 días</div>
+</div>
+<div>
+<div class="k">Campaña</div>
+<div class="v" style="color: #5E6680">Sin campaña</div>
+</div>
+<div>
+<div class="k">Temas</div>
+<div class="v" style="color: #5E6680">Sin temas asignados</div>
+</div>
+<div>
+<div class="k">Cuentas de destino</div>
+<div class="v">Instagram · @kromimarket</div>
+</div>
+<div>
+<div class="k">Carpeta de Drive</div>
+<div class="v" style="color: #B42318; font-weight: 600">Pendiente · falló al crear</div>
+</div>
+
+<div style="border-top: 1px solid #E7E4DC; padding-top: 14px">
+<div class="sec" style="margin-bottom: 10px">Historial de estado</div>
+<div class="empty">Aún no hay cambios de estado.</div>
+</div>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4; font-size: 12px; color: #5E6680">
+<span>Creado 10 oct 2026, 9:42 a. m. · Creador: tú</span>
+<span>Hora de Caracas</span>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":699}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

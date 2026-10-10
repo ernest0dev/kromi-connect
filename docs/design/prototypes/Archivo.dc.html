@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Archivo · Publicaciones</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+*{box-sizing:border-box}body{margin:0;background:#FAF8F4;font-family:Inter,Arial,sans-serif;color:#10233F}.screen{width:1000px;min-height:640px;margin:24px auto;background:#fff;border:1px solid #E7E4DC;border-radius:16px;overflow:hidden}.top{padding:22px 26px;border-bottom:1px solid #E7E4DC;display:flex;justify-content:space-between;align-items:center}.eyebrow{font-size:11px;font-weight:700;color:#0066D2;text-transform:uppercase;letter-spacing:.08em}.top h1{margin:4px 0 0;font-size:23px}.top p{margin:5px 0 0;color:#5E6680;font-size:13px}.btn{border:1px solid #D2CCC0;border-radius:8px;padding:9px 13px;background:#fff;color:#10233F;font-size:12px;font-weight:650}.content{padding:20px 26px}.tabs{display:flex;gap:22px;border-bottom:1px solid #E7E4DC;margin-bottom:18px;font-size:13px;font-weight:650;color:#5E6680}.tab{padding:0 0 11px}.tab.active{color:#0066D2;border-bottom:2px solid #0066D2}.note{border:1px solid #E7E4DC;background:#F8FAFC;padding:12px 14px;border-radius:9px;color:#4F5F76;font-size:12px;margin-bottom:16px}.section{font-size:13px;font-weight:700;margin:20px 0 10px}.row{display:grid;grid-template-columns:1.3fr 1fr 1fr 1.2fr;gap:12px;align-items:center;padding:13px 12px;border-top:1px solid #EEEAE4;font-size:12px}.row.head{background:#FAF8F4;color:#5E6680;font-weight:700;border-radius:8px;border:0}.title{font-weight:700}.sub{color:#718096;font-size:11px;margin-top:4px}.badge{display:inline-block;border-radius:99px;padding:5px 9px;background:#FFF1D0;color:#704C00;font-weight:700;font-size:11px}.badge.red{background:#FEF3F2;color:#9E2A20}.actions{display:flex;gap:7px;justify-content:flex-end}.primary{background:#0066D2;color:#fff;border-color:#0066D2}.danger{color:#9E2A20;border-color:#E5B7B2}.foot{display:flex;justify-content:space-between;align-items:center;padding:16px 26px;border-top:1px solid #E7E4DC;color:#5E6680;font-size:11px}
+
+</style>
+</helmet>
+<main class="screen" aria-label="Vista Archivo de publicaciones">
+<header class="top"><div><div class="eyebrow">Social Media · Gestión</div><h1>Archivo</h1><p>Publicaciones eliminadas · restauración disponible durante un mes</p></div><button class="btn">Volver al calendario</button></header>
+<div class="content"><nav class="tabs"><span class="tab active">En periodo de restauración</span><span class="tab">Requieren limpieza de Drive</span></nav>
+<div class="note">Las publicaciones se conservan aquí durante un mes desde su eliminación. Al vencer el plazo, se intentará borrar permanentemente la publicación y su carpeta de Drive.</div>
+<div class="row head"><span>Publicación</span><span>Eliminada el</span><span>Se purga el</span><span style="text-align:right">Acciones</span></div>
+<div class="row"><div><div class="title">Día Mundial de la Alimentación</div><div class="sub">Carrusel · Instagram · @kromimarket</div></div><div>10 oct 2026</div><div>10 nov 2026</div><div class="actions"><button class="btn">Ver</button><button class="btn primary">Restaurar</button></div></div>
+<div class="section">Requieren limpieza de Drive</div>
+<div class="note" style="background:#FFF8E6;border-color:#E7CF91;color:#704C00">No se pudo eliminar la carpeta de Drive al vencer el plazo. No habrá reintentos automáticos; elige cómo resolver cada caso.</div>
+<div class="row head"><span>Publicación</span><span>Error de Drive</span><span>Eliminada el</span><span style="text-align:right">Resolución</span></div>
+<div class="row"><div><div class="title">Precios de oportunidad · Reel</div><div class="sub">TikTok · @kromimarket.oficial</div></div><div><span class="badge red">No se pudo eliminar</span><div class="sub">Permiso insuficiente</div></div><div>8 sep 2026</div><div class="actions"><button class="btn">Conservar Drive y purgar datos</button><button class="btn primary">Reintentar Drive</button></div></div>
+</div><footer class="foot"><span>Solo Social Media puede restaurar o resolver la limpieza definitiva.</span><span>Tras restaurar, vuelve al calendario con sus relaciones e historial.</span></footer>
+</main>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1000,"height":640}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

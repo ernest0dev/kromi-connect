@@ -17,7 +17,8 @@ export default async function SocialMediaLayout({
   const { supabase } = await requirePermission("social-media.grid.read");
   const { data, error } = await supabase
     .from("publicaciones")
-    .select("fecha_limite_brief");
+    .select("fecha_limite_brief")
+    .is("deleted_at", null);
 
   if (error) {
     console.error("Error al obtener resumen de SLA:", error);

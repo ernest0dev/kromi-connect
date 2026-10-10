@@ -16,6 +16,7 @@ export default async function CalendarioPage() {
   const { data: publicaciones, error } = await supabase
     .from("publicaciones")
     .select("*")
+    .is("deleted_at", null)
     .order("fecha_publicacion", { ascending: true });
 
   // Registra el fallo en servidor; la vista continúa con una lista vacía.

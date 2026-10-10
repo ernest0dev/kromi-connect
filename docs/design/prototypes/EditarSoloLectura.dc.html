@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Publicación en solo lectura</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:40px;box-sizing:border-box;border:1px solid #E3DED3;border-radius:8px;background:#F3F0E9;padding:0 12px;font-size:14px;color:#2B3550}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;border:1px solid #E3DED3;background:#F3F0E9;font-size:13px;color:#3C4663}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:40px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+.tab{height:44px;padding:0 4px;margin-right:20px;border:0;border-bottom:2px solid transparent;background:transparent;font-size:14px;font-weight:600;color:#5E6680;cursor:pointer}
+.tab.on{color:#10233F;border-bottom-color:#0066D2}
+</style>
+</helmet>
+<div style="width: 760px; height: 1093px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="padding: 22px 28px 0; border-bottom: 1px solid #E7E4DC">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<div class="sec">Publicación</div>
+<h1 style="margin: 4px 0 0; font-size: 22px; font-weight: 700">Día de la Alimentación</h1>
+<div style="display: flex; gap: 8px; margin-top: 10px; align-items: center; flex-wrap: wrap">
+<span class="tag" style="background: #ECE8DF; color: #3C4663"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#3C4663" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>Solo lectura</span>
+<span class="tag" style="background: #E6ECFC; color: #1F3C9C">En revisión</span>
+<span class="tag" style="background: #F3F0E9; color: #3C4663">Reel · vie 16 oct 2026</span>
+</div>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+<div style="display: flex; margin-top: 14px">
+<button type="button" class="tab on">Contenido</button>
+<button type="button" class="tab">Producción</button>
+<button type="button" class="tab">Flujo y SLA</button>
+<button type="button" class="tab">Historial</button>
+</div>
+</div>
+
+<div style="flex: 1; padding: 22px 28px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+<div role="status" style="display: flex; gap: 12px; align-items: flex-start; background: #FFF1D0; border: 1px solid #E8C877; border-radius: 12px; padding: 14px 16px">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6B4600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+<div>
+<div style="font-size: 14px; font-weight: 700; color: #4F3500">No puedes editar esta publicación</div>
+<div style="font-size: 13px; color: #4F3500; margin-top: 3px; line-height: 1.45">Se publica en 3 cuentas y solo tienes asignada 1. Para editarla necesitas acceso a todas sus cuentas; pídeselo a un administrador.</div>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px">
+<div>
+<label class="lbl" for="t">Título</label>
+<input class="fld" id="t" value="Día de la Alimentación" readonly>
+</div>
+<div>
+<label class="lbl" for="f">Formato</label>
+<input class="fld" id="f" value="Reel · 9:16" readonly>
+</div>
+<div>
+<label class="lbl" for="c">Campaña</label>
+<input class="fld" id="c" value="Sin campaña" readonly>
+</div>
+</div>
+
+<div>
+<span class="lbl">Cuentas de destino</span>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 12px; border: 1px solid #E3DED3; background: #F3F0E9; border-radius: 10px; padding: 10px 14px; font-size: 14px">
+<span style="width: 10px; height: 10px; border-radius: 50%; background: #D6286F"></span>
+<span style="font-weight: 600">Instagram</span><span style="color: #5E6680">@kromimarket</span>
+<span class="tag" style="margin-left: auto; background: #E3F4EA; color: #14573A">Tienes acceso</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px; border: 1px dashed #C9C2B4; border-radius: 10px; padding: 10px 14px; font-size: 14px; color: #5E6680">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5E6680" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+<span>+2 cuentas sin acceso</span>
+<span style="margin-left: auto; font-size: 12px">No se muestran los nombres</span>
+</div>
+</div>
+<div style="font-size: 12px; color: #5E6680; line-height: 1.45; margin-top: 8px">Una publicación puede salir en varias cuentas y cada cuenta tiene sus responsables. Ves la publicación porque tienes al menos una; para editarla necesitas todas.</div>
+</div>
+
+<div>
+<span class="lbl">Temas de contenido</span>
+<div style="display: flex; gap: 8px; flex-wrap: wrap">
+<span class="chip" style="border-style: dashed; color: #8A5A00; background: #FFF8E6; border-color: #D9A441">Heredado: Lácteos y víveres</span>
+</div>
+</div>
+
+<div style="border-top: 1px solid #E7E4DC; padding-top: 18px; display: flex; flex-direction: column; gap: 14px">
+<div class="sec">Brief de copy</div>
+<div>
+<label class="lbl" for="h">Hook</label>
+<input class="fld" id="h" value="¿Sabías que elegir bien lo que comes es la decisión más importante del día? 💭" readonly>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px">
+<div>
+<label class="lbl" for="b">Cuerpo</label>
+<textarea class="fld" id="b" rows="7" readonly>Hoy, en el Día Mundial de la Alimentación, recordamos la importancia de comer con conciencia y cuidar lo que llevamos a nuestra mesa. No se trata de complicarse, sino de aprender a elegir mejor para ti y tu familia.
+
+En Kromi Market te lo hacemos más fácil con productos frescos y de calidad en un solo lugar.</textarea>
+</div>
+<div>
+<label class="lbl" for="cta">CTA</label>
+<textarea class="fld" id="cta" rows="7" readonly>Descarga la App de Kromi Market en Google Play y recibe lo mejor para tu nutrición directo en casa. (Link en la bio)</textarea>
+</div>
+</div>
+<div>
+<span class="lbl">Hashtags</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span class="chip">#DíaMundialDeLaAlimentación</span>
+<span class="chip">#KromiMarket</span>
+<span class="chip">#Alimentacion</span>
+<span class="chip">#AppKromi</span>
+</div>
+</div>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4">
+<div style="font-size: 12px; color: #5E6680">Actualizado 5 oct 2026, 12:15 p. m. · Creado 1 oct 2026, 1:03 p. m.</div>
+<div style="display: flex; gap: 10px">
+<button type="button" class="btn">Duplicar con mis cuentas</button>
+<button type="button" class="btn pri">Cerrar</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":1093}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

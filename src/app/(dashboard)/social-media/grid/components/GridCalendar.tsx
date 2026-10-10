@@ -13,10 +13,12 @@ export function GridCalendar({
   publicaciones,
   efemerides,
   campanas,
+  socialAccounts,
   isPending,
   onTicketClick,
   onEfemerideClick,
   onCampaignClick,
+  onCreateForDate,
   onDragStart,
   onDragOver,
   onDrop,
@@ -91,9 +93,11 @@ export function GridCalendar({
                 publicaciones={itemsDelDia}
                 efemerides={itemsEfemerideDelDia}
                 campanas={itemsCampanaDelDia}
+                socialAccounts={socialAccounts}
                 onTicketClick={onTicketClick}
                 onEfemerideClick={onEfemerideClick}
                 onCampaignClick={onCampaignClick}
+                onCreateForDate={onCreateForDate}
                 onDragStart={onDragStart}
                 onDragOver={onDragOver}
                 onDrop={onDrop}

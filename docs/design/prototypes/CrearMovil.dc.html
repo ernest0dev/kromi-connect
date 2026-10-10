@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nueva publicación · 390 px</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:44px;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:0 12px;font-size:16px;color:#10233F}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:none}
+.chip{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 14px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:14px;color:#3C4663;cursor:pointer}
+.chip.on{background:#E6F0FB;border-color:#0066D2;color:#002F80;font-weight:600}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:44px;padding:0 16px;border-radius:8px;font-size:15px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.acc{display:flex;align-items:center;gap:12px;min-height:48px;border:1px solid #D2CCC0;border-radius:10px;padding:8px 14px;font-size:14px}
+</style>
+</helmet>
+<div style="width: 390px; height: 1711px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid #E7E4DC">
+<h1 style="margin: 0; font-size: 18px; font-weight: 700">Nueva publicación</h1>
+<button type="button" aria-label="Cerrar" style="width: 44px; height: 44px; border-radius: 8px; border: 0; background: transparent; font-size: 24px; color: #5E6680; cursor: pointer">×</button>
+</div>
+
+<div style="flex: 1; padding: 18px 16px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+<div>
+<label class="lbl" for="titulo">Título *</label>
+<input class="fld" id="titulo" value="Día de la Alimentación">
+</div>
+
+<div>
+<span class="lbl">Formato *</span>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+<button type="button" class="chip" style="min-height: 52px; border-radius: 10px">Post · 4:5</button>
+<button type="button" class="chip" style="min-height: 52px; border-radius: 10px">Carrusel · 4:5</button>
+<button type="button" class="chip on" aria-pressed="true" style="min-height: 52px; border-radius: 10px">Reel · 9:16</button>
+<button type="button" class="chip" style="min-height: 52px; border-radius: 10px">Story · 9:16</button>
+</div>
+</div>
+
+<div>
+<label class="lbl" for="camp">Campaña</label>
+<select class="fld" id="camp"><option>Sin campaña</option></select>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 12px">
+<div>
+<label class="lbl" for="fecha">Fecha *</label>
+<input class="fld" id="fecha" value="vie 16 oct 2026">
+</div>
+<div>
+<label class="lbl" for="hora">Hora</label>
+<input class="fld" id="hora" value="9:00 a. m.">
+</div>
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #E3F4EA; border-radius: 10px; padding: 12px 14px">
+<div>
+<div style="font-size: 12px; font-weight: 600; color: #14573A">Límite del brief</div>
+<div style="font-size: 14px; font-weight: 700; color: #14573A">dom 11 oct · mañana</div>
+</div>
+<a href="#" style="font-size: 13px; font-weight: 600; color: #0066D2; min-height: 44px; display: inline-flex; align-items: center">Ver SLA</a>
+</div>
+
+<div>
+<span class="lbl">Temas de contenido</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" class="chip">Ofertas</button>
+<button type="button" class="chip on" aria-pressed="true">General</button>
+<button type="button" class="chip">Fruver</button>
+<button type="button" class="chip">Más…</button>
+</div>
+</div>
+
+<div>
+<span class="lbl">Cuentas de destino *</span>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label class="acc" style="border-color: #0066D2; background: #F0F6FD"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #0066D2"><span style="font-weight: 600">Instagram</span><span style="color: #5E6680; font-size: 13px">@kromimarket</span></label>
+<label class="acc"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #0066D2"><span style="font-weight: 600">TikTok</span><span style="color: #5E6680; font-size: 13px">@kromimarket.oficial</span></label>
+<label class="acc"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #0066D2"><span style="font-weight: 600">YouTube</span><span style="color: #5E6680; font-size: 13px">Se publica como Short</span></label>
+</div>
+</div>
+
+<div style="border: 1px solid #E7E4DC; border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 12px">
+<div class="sec">Producción</div>
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 15px; font-weight: 600"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #0066D2">Requiere rodaje en tienda</label>
+<div>
+<span class="lbl">Tiendas donde se graba</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" class="chip on" aria-pressed="true">Prebo</button>
+<button type="button" class="chip">Mañongo</button>
+<button type="button" class="chip">Trigal Sur</button>
+<button type="button" class="chip">Trigal Norte</button>
+<button type="button" class="chip">Guataparo</button>
+<button type="button" class="chip">Castillito</button>
+<button type="button" class="chip">San Felipe</button>
+</div>
+</div>
+</div>
+
+<div style="border: 1px solid #E7E4DC; border-radius: 12px; padding: 14px">
+<div class="sec">Brief de copy</div>
+<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px">
+<div>
+<label class="lbl" for="hook">Hook</label>
+<input class="fld" id="hook" value="¿Sabías que elegir bien lo que comes importa?">
+</div>
+<div>
+<label class="lbl" for="cuerpo">Cuerpo</label>
+<textarea class="fld" id="cuerpo" rows="4">Hoy, en el Día Mundial de la Alimentación, recordamos comer con conciencia.</textarea>
+</div>
+<div>
+<label class="lbl" for="cta">CTA</label>
+<input class="fld" id="cta" value="Descarga la App de Kromi Market">
+</div>
+</div>
+</div>
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid #E7E4DC; background: #FAF8F4">
+<button type="button" class="btn pri" style="width: 100%">Crear publicación</button>
+<button type="button" class="btn" style="width: 100%; border-color: transparent; background: transparent">Cancelar</button>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1711}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

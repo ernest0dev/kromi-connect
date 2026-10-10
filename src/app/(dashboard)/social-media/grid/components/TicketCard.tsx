@@ -3,9 +3,9 @@
 import { TicketCardProps } from '../types/grid';
 import { ESTATUS_STYLE, FORMATO_LABEL_UPPER } from '../utils/constants';
 
-export function TicketCard({ publicacion, onClick, onDragStart }: TicketCardProps) {
+export function TicketCard({ publicacion, formatoLabel, onClick, onDragStart }: TicketCardProps) {
   const estatusStyle = ESTATUS_STYLE[publicacion.estatus];
-  const formato = FORMATO_LABEL_UPPER[publicacion.formato];
+  const formato = (formatoLabel || FORMATO_LABEL_UPPER[publicacion.formato]).toLocaleUpperCase('es');
   return (
     <div
       key={publicacion.id}

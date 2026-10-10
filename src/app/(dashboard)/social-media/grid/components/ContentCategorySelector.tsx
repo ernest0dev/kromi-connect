@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 export interface ContentCategoryOption {
   id: string;
   nombre: string;
@@ -12,35 +14,22 @@ interface Props {
 }
 
 export function ContentCategorySelector({ categories, selectedIds, onChange }: Props) {
+  const [showAll, setShowAll] = useState(false);
+  const visibleCategories = showAll ? categories : categories.slice(0, 8);
   return (
     <fieldset className="space-y-2 sm:col-span-2">
       <legend className="text-xs font-semibold text-slate-800">Temas de contenido</legend>
-      <details className="group rounded-lg border border-slate-200 bg-white">
-        <summary className="cursor-pointer list-none px-3 py-2.5 text-xs text-slate-700">
-          <span className="flex items-center justify-between gap-2">
-            <span>{selectedIds.length ? categories.filter((item) => selectedIds.includes(item.id)).map((item) => item.nombre).join(', ') : 'Seleccionar temas'}</span>
-            <span className="shrink-0 text-slate-500">{selectedIds.length} seleccionados⌄</span>
-          </span>
-        </summary>
-        <div className="grid grid-cols-2 gap-2 border-t border-slate-200 bg-slate-50 p-3 sm:grid-cols-3">
-          {categories.map((category) => {
-            const checked = selectedIds.includes(category.id);
-            return (
-              <label key={category.id} className="flex items-center gap-2 text-xs text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => onChange(checked
-                    ? selectedIds.filter((id) => id !== category.id)
-                    : [...selectedIds, category.id])}
-                  className="accent-blue-700"
-                />
-                {category.nombre}
-              </label>
-            );
-          })}
-        </div>
-      </details>
+      <div className="flex flex-wrap gap-2">
+        {visibleCategories.map((category) => {
+          const checked = selectedIds.includes(category.id);
+          return <button key={category.id} type="button" aria-pressed={checked} onClick={() => onChange(checked
+            ? selectedIds.filter((id) => id !== category.id)
+            : [...selectedIds, category.id])} className={`rounded-full border px-3 py-1.5 text-xs transition ${checked ? 'border-blue-700 bg-blue-50 font-semibold text-blue-800' : 'border-slate-300 bg-white text-slate-700 hover:border-blue-400'}`}>{category.nombre}</button>;
+        })}
+        {categories.length > 8 && <button type="button" onClick={() => setShowAll((current) => !current)} className="rounded-full border border-dashed border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600">{showAll ? 'Menos' : 'Más…'}</button>}
+        {!categories.length && <span className="text-xs text-slate-500">No hay temas disponibles.</span>}
+      </div>
+      <p className="text-[11px] text-slate-500">Puedes elegir varios temas.</p>
     </fieldset>
   );
 }

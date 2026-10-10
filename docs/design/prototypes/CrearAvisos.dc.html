@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nueva publicación · Errores y avisos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:40px;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:0 12px;font-size:14px;color:#10233F}
+.fld.err{border-color:#B42318;background:#FEF3F2}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:none}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:13px;color:#3C4663;cursor:pointer}
+.chip.on{background:#E6F0FB;border-color:#0066D2;color:#002F80;font-weight:600}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.msg{display:flex;gap:8px;align-items:flex-start;font-size:12px;line-height:1.4;margin-top:6px}
+.msg.e{color:#B42318}
+.msg.w{color:#6B4600}
+.btn{height:40px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+</style>
+</helmet>
+<div style="width: 640px; height: 1131px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 28px 16px; border-bottom: 1px solid #E7E4DC">
+<div>
+<h1 style="margin: 0; font-size: 20px; font-weight: 700">Nueva publicación</h1>
+<div style="font-size: 13px; color: #5E6680; margin-top: 4px">Validaciones y avisos que puede mostrar el formulario.</div>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+
+<div role="alert" style="margin: 16px 28px 0; display: flex; gap: 10px; align-items: flex-start; background: #FEF3F2; border: 1px solid #F2C4BF; border-radius: 10px; padding: 12px 14px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg>
+<div style="font-size: 13px; line-height: 1.45; color: #7A271A"><strong>Revisa 3 campos antes de crear.</strong> El título, la fecha y las cuentas tienen errores.</div>
+</div>
+
+<div style="flex: 1; padding: 20px 28px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+<div>
+<label class="lbl" for="titulo">Título *</label>
+<input class="fld err" id="titulo" value="" placeholder="Ej. Día de la Alimentación" aria-invalid="true">
+<div class="msg e">El título es obligatorio.</div>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.7fr); gap: 12px">
+<div>
+<label class="lbl" for="camp">Campaña</label>
+<select class="fld" id="camp"><option>Semana del Agricultor</option></select>
+</div>
+<div>
+<label class="lbl" for="fecha">Fecha de publicación *</label>
+<input class="fld err" id="fecha" value="lun 5 oct 2026" aria-invalid="true">
+</div>
+<div>
+<label class="lbl" for="hora">Hora</label>
+<input class="fld" id="hora" value="9:00 a. m.">
+</div>
+</div>
+<div style="margin-top: -14px; display: flex; flex-direction: column; gap: 2px">
+<div class="msg e">La fecha ya pasó. Elige hoy o una fecha futura.</div>
+<div class="msg w">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B4600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M12 3 2 21h20L12 3Z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+<span>La campaña “Semana del Agricultor” terminó el 4 oct. Puedes crearla igual, pero quedará fuera de su rango.</span>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="border-radius: 10px; background: #FEF3F2; padding: 10px 12px; border: 1px solid #F2C4BF">
+<div style="font-size: 12px; color: #7A271A; font-weight: 600">Límite del brief</div>
+<div style="font-size: 14px; font-weight: 700; color: #7A271A; margin-top: 2px">vie 2 oct</div>
+<div style="font-size: 12px; color: #7A271A">Vencido hace 8 días</div>
+</div>
+<div style="border-radius: 10px; background: #F3F0E9; padding: 10px 12px">
+<div style="font-size: 12px; color: #3C4663; font-weight: 600">Rodaje sugerido</div>
+<div style="font-size: 14px; font-weight: 700; margin-top: 2px">—</div>
+<div style="font-size: 12px; color: #5E6680">No requerido</div>
+</div>
+<div style="border-radius: 10px; background: #F3F0E9; padding: 10px 12px">
+<div style="font-size: 12px; color: #3C4663; font-weight: 600">Diseño</div>
+<div style="font-size: 14px; font-weight: 700; margin-top: 2px">2 días</div>
+<div style="font-size: 12px; color: #5E6680">desde la solicitud</div>
+</div>
+</div>
+
+<div>
+<span class="lbl">Cuentas de destino *</span>
+<div style="display: flex; flex-direction: column; gap: 8px; border: 1px solid #B42318; border-radius: 12px; padding: 8px; background: #FEF3F2">
+<label style="display: flex; align-items: center; gap: 12px; border: 1px solid #D2CCC0; background: #fff; border-radius: 10px; padding: 10px 14px; font-size: 14px">
+<input type="checkbox" style="width: 18px; height: 18px; accent-color: #0066D2">
+<span style="width: 10px; height: 10px; border-radius: 50%; background: #D6286F"></span>
+<span style="font-weight: 600">Instagram</span><span style="color: #5E6680">@kromimarket</span>
+</label>
+<label style="display: flex; align-items: center; gap: 12px; border: 1px solid #D2CCC0; background: #fff; border-radius: 10px; padding: 10px 14px; font-size: 14px">
+<input type="checkbox" style="width: 18px; height: 18px; accent-color: #0066D2">
+<span style="width: 10px; height: 10px; border-radius: 50%; background: #111"></span>
+<span style="font-weight: 600">TikTok</span><span style="color: #5E6680">@kromimarket.oficial</span>
+</label>
+</div>
+<div class="msg e">Selecciona al menos una cuenta.</div>
+</div>
+
+<div>
+<span class="lbl">Brief de copy</span>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<div>
+<label class="lbl" for="hook">Hook</label>
+<input class="fld" id="hook" value="Probamos el nuevo mercado de frutas frescas del barrio">
+</div>
+<div>
+<label class="lbl" for="cuerpo">Cuerpo</label>
+<textarea class="fld" id="cuerpo" rows="3">Frutas y verduras seleccionadas cada mañana para que llenes la cesta con lo mejor de temporada.</textarea>
+</div>
+<div>
+<span class="lbl">Hashtags</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px">
+<span class="chip on">#KromiMarket</span>
+<span class="chip on">#Fruver</span>
+<span class="chip" style="border-color: #D9A441; background: #FFF8E6; color: #6B4600">#fruver #frescos</span>
+</div>
+<div class="msg w">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B4600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M12 3 2 21h20L12 3Z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+<span>Un hashtag tiene espacios. Al guardar se separará en #fruver y #frescos.</span>
+</div>
+</div>
+<div class="msg w" style="margin-top: 0">
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B4600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="M12 3 2 21h20L12 3Z"></path><path d="M12 10v5M12 18v.01"></path></svg>
+<span>Si eliges TikTok, el caption completo (hook, cuerpo, CTA y hashtags) debe revisarse contra su límite de caracteres.</span>
+</div>
+</div>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4">
+<div style="font-size: 12px; color: #B42318; font-weight: 600">3 errores por corregir</div>
+<div style="display: flex; gap: 10px">
+<button type="button" class="btn" style="border-color: transparent; background: transparent">Cancelar</button>
+<button type="button" class="btn pri" aria-disabled="true" style="opacity: 0.55; cursor: not-allowed">Crear publicación</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":640,"height":1131}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

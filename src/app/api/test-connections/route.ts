@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { driveClient } from '@/lib/googleDrive';
+import { getDriveClient } from '@/lib/googleDrive';
 import { getAuthContext } from '@/lib/auth/dal';
 
 export async function GET() {
@@ -45,7 +45,7 @@ export async function GET() {
       throw new Error('GOOGLE_DRIVE_PARENT_FOLDER_ID no está configurado.');
     }
 
-    const response = await driveClient.files.get({
+    const response = await getDriveClient().files.get({
       fileId: parentFolderId,
       fields: 'id, name',
     });

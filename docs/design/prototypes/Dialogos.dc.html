@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Diálogos pequeños</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+textarea.fld{width:100%;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:10px 12px;font-size:14px;line-height:1.45;resize:none;color:#10233F}
+.btn{white-space:nowrap;height:38px;padding:0 14px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.dng{background:#B42318;border-color:#B42318;color:#fff}
+.dlg{width:296px;height:332px;box-sizing:border-box;border-radius:14px;background:#fff;border:1px solid #E7E4DC;padding:20px;display:flex;flex-direction:column;gap:10px}
+.dlg h2{margin:0;font-size:17px;font-weight:700}
+.dlg p{margin:0;font-size:13px;line-height:1.5;color:#3C4663}
+.foot{margin-top:auto;display:flex;gap:8px;justify-content:flex-end}
+</style>
+</helmet>
+<div style="width: 1320px; height: 400px; box-sizing: border-box; background: #F3F0E9; display: flex; gap: 24px; padding: 34px 32px; color: #10233F">
+
+<div class="dlg" role="alertdialog" aria-label="Cambios sin guardar">
+<h2>¿Descartar los cambios?</h2>
+<p>Modificaste esta publicación y todavía no guardas. Si cierras ahora, perderás esos cambios.</p>
+<ul style="margin: 0; padding-left: 18px; font-size: 13px; color: #3C4663; line-height: 1.5">
+<li>Hook</li>
+<li>Cuerpo</li>
+<li>2 hashtags</li>
+</ul>
+<div class="foot">
+<button type="button" class="btn">Seguir editando</button>
+<button type="button" class="btn dng">Descartar</button>
+</div>
+</div>
+
+<div class="dlg" role="alertdialog" aria-label="Eliminar publicación">
+<h2>Eliminar “Día de la Alimentación”</h2>
+<p>La publicación saldrá del calendario y permanecerá en Archivo durante un mes. Podrás restaurarla dentro de ese plazo.</p>
+<div style="background: #FFF1D0; border-radius: 8px; padding: 8px 10px; font-size: 12px; line-height: 1.4; color: #4F3500">Al vencer el plazo se intentará eliminar también la carpeta de Drive. Si falla, el caso quedará en Archivo para que Social Media lo resuelva manualmente.</div>
+<div style="margin-top: 4px">
+<label class="lbl" for="conf">Escribe el título para confirmar</label>
+<input id="conf" style="width: 100%; height: 38px; box-sizing: border-box; border: 1px solid #D2CCC0; border-radius: 8px; padding: 0 12px; font-size: 14px; font-family: inherit" placeholder="Día de la Alimentación">
+</div>
+<div class="foot">
+<button type="button" class="btn">Cancelar</button>
+<button type="button" class="btn dng" aria-disabled="true" style="opacity: 0.5; cursor: not-allowed">Mover a Archivo</button>
+</div>
+</div>
+
+<div class="dlg" role="dialog" aria-label="Pedir corrección">
+<h2>Pedir corrección</h2>
+<p>La publicación pasará a <strong>En corrección</strong> y el diseñador verá tu motivo.</p>
+<div>
+<label class="lbl" for="mot">Motivo *</label>
+<textarea class="fld" id="mot" rows="4" placeholder="Qué debe cambiar en el diseño o en el copy"></textarea>
+</div>
+<div class="foot">
+<button type="button" class="btn">Cancelar</button>
+<button type="button" class="btn pri" aria-disabled="true" style="opacity: 0.5; cursor: not-allowed">Enviar corrección</button>
+</div>
+</div>
+
+<div class="dlg" role="dialog" aria-label="Cancelar publicación">
+<h2>Cancelar publicación</h2>
+<p>Pasará a <strong>Cancelado</strong> y saldrá del calendario. Podrás verla en el historial, pero no se publicará.</p>
+<div>
+<label class="lbl" for="mot2">Motivo *</label>
+<textarea class="fld" id="mot2" rows="4" placeholder="Por qué se cancela"></textarea>
+</div>
+<div class="foot">
+<button type="button" class="btn">Volver</button>
+<button type="button" class="btn dng" aria-disabled="true" style="opacity: 0.5; cursor: not-allowed">Sí, cancelar</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1320,"height":400}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

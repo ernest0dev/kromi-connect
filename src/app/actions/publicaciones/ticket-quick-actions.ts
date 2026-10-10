@@ -4,72 +4,15 @@ import { revalidatePath } from 'next/cache';
 import { authorizeAction } from '@/lib/auth/dal';
 import { EstatusEnum } from '@/types';
 import { recalculateSlaDates } from './recalculateSla';
-import { calcularMatrizSLA } from '@/utils/sla';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { transitionPublicationAction } from './workflow';
 
 export async function actualizarEstatusTicketAction(input: {
   publicacionId: string;
   nuevoEstatus: EstatusEnum;
 }): Promise<{ success: boolean; error?: string }> {
-  const access = await authorizeAction('social-media.posts.status.update');
-  if (access.error) return { success: false, error: access.error };
-  if (!access.context) return { success: false, error: 'Inicia sesión para continuar.' };
-  try {
-    const { publicacionId, nuevoEstatus } = input;
-
-    if (!publicacionId || !nuevoEstatus) {
-      return { success: false, error: 'Se requieren publicacionId y nuevoEstatus' };
-    }
-
-    const supabase = access.context.supabase;
-
-    const { data: canManageAllAccounts, error: accountScopeError } = await supabase.rpc('user_has_all_publication_accounts', {
-      p_publicacion_id: publicacionId,
-    });
-    if (accountScopeError || !canManageAllAccounts) {
-      return { success: false, error: accountScopeError?.message || 'Para cambiar el estado necesitas tener asignadas todas las cuentas destino.' };
-    }
-
-    const { data: current, error: currentError } = await supabase
-      .from('publicaciones')
-      .select('fecha_publicacion, fecha_solicitud_diseno')
-      .eq('id', publicacionId)
-      .maybeSingle();
-    if (currentError || !current) {
-      return { success: false, error: currentError?.message || 'La publicación ya no existe.' };
-    }
-
-    const update: { estatus: EstatusEnum; fecha_solicitud_diseno?: string; fecha_limite_brief?: string; fecha_entrega_diseno_estimada?: string | null } = {
-      estatus: nuevoEstatus,
-    };
-    if (nuevoEstatus === 'SOLICITADO' && !current.fecha_solicitud_diseno) {
-      const requestedAt = new Date().toISOString();
-      update.fecha_solicitud_diseno = requestedAt;
-      Object.assign(update, calcularMatrizSLA(current.fecha_publicacion, requestedAt));
-    }
-
-    const { error: updateError } = await supabase
-      .from('publicaciones')
-      .update(update)
-      .eq('id', publicacionId);
-
-    if (updateError) {
-      return {
-        success: false,
-        error: `Error al actualizar el estatus en Supabase: ${updateError.message}`,
-      };
-    }
-
-    revalidatePath('/social-media/grid');
-    revalidatePath('/social-media/kanban');
-
-    return { success: true };
-  } catch (err: unknown) {
-    return {
-      success: false,
-      error: `Error interno en actualizarEstatusTicketAction: ${err instanceof Error ? err.message : 'Error desconocido'}`,
-    };
-  }
+  if (!input?.publicacionId || !input.nuevoEstatus) return { success: false, error: 'Se requieren publicación y estado.' };
+  return transitionPublicationAction({ publicationId: input.publicacionId, status: input.nuevoEstatus });
 }
 
 export async function editarCamposRapidosTicketAction(input: {

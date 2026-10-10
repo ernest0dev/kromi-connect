@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nueva publicación</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:40px;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:0 12px;font-size:14px;color:#10233F}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:vertical}
+.chip{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:13px;color:#3C4663;cursor:pointer}
+.chip.on{background:#E6F0FB;border-color:#0066D2;color:#002F80;font-weight:600}
+.hint{font-size:12px;color:#5E6680;margin-top:6px;line-height:1.4}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.btn{height:40px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.tag{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600}
+</style>
+</helmet>
+<div style="width: 640px; height: 1503px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+
+<div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 28px 16px; border-bottom: 1px solid #E7E4DC">
+<div>
+<h1 style="margin: 0; font-size: 20px; font-weight: 700">Nueva publicación</h1>
+<div style="font-size: 13px; color: #5E6680; margin-top: 4px">Se crea con su carpeta de assets en Drive. Si Drive falla, la publicación se guarda y puedes reintentar.</div>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 36px; height: 36px; border-radius: 8px; border: 0; background: transparent; font-size: 22px; color: #5E6680; cursor: pointer">×</button>
+</div>
+
+<div style="flex: 1; padding: 20px 28px; display: flex; flex-direction: column; gap: 20px; overflow: hidden">
+
+<div>
+<label class="lbl" for="titulo">Título *</label>
+<input class="fld" id="titulo" value="Reel ofertas de charcutería Prebo">
+</div>
+
+<div>
+<span class="lbl">Formato *</span>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<button type="button" class="chip" style="height: 64px; border-radius: 10px; flex-direction: column; gap: 2px; justify-content: center"><span style="font-weight: 600">Post</span><span style="font-size: 12px; color: #5E6680">4:5</span></button>
+<button type="button" class="chip" style="height: 64px; border-radius: 10px; flex-direction: column; gap: 2px; justify-content: center"><span style="font-weight: 600">Carrusel</span><span style="font-size: 12px; color: #5E6680">4:5</span></button>
+<button type="button" class="chip on" aria-pressed="true" style="height: 64px; border-radius: 10px; flex-direction: column; gap: 2px; justify-content: center"><span>Reel</span><span style="font-size: 12px; font-weight: 500">9:16</span></button>
+<button type="button" class="chip" style="height: 64px; border-radius: 10px; flex-direction: column; gap: 2px; justify-content: center"><span style="font-weight: 600">Story</span><span style="font-size: 12px; color: #5E6680">9:16</span></button>
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.7fr); gap: 12px">
+<div>
+<label class="lbl" for="camp">Campaña</label>
+<select class="fld" id="camp"><option>Sin campaña</option></select>
+</div>
+<div>
+<label class="lbl" for="fecha">Fecha de publicación *</label>
+<input class="fld" id="fecha" value="vie 16 oct 2026">
+</div>
+<div>
+<label class="lbl" for="hora">Hora</label>
+<input class="fld" id="hora" value="12:00 p. m.">
+</div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+<div style="border-radius: 10px; background: #E3F4EA; padding: 10px 12px">
+<div style="font-size: 12px; color: #14573A; font-weight: 600">Límite del brief</div>
+<div style="font-size: 14px; font-weight: 700; color: #14573A; margin-top: 2px">dom 11 oct</div>
+<div style="font-size: 12px; color: #14573A">mañana</div>
+</div>
+<div style="border-radius: 10px; background: #F3F0E9; padding: 10px 12px">
+<div style="font-size: 12px; color: #3C4663; font-weight: 600">Rodaje sugerido</div>
+<div style="font-size: 14px; font-weight: 700; margin-top: 2px">mar 13 oct</div>
+<div style="font-size: 12px; color: #5E6680">3 días antes</div>
+</div>
+<div style="border-radius: 10px; background: #F3F0E9; padding: 10px 12px">
+<div style="font-size: 12px; color: #3C4663; font-weight: 600">Diseño</div>
+<div style="font-size: 14px; font-weight: 700; margin-top: 2px">2 días</div>
+<div style="font-size: 12px; color: #5E6680">desde la solicitud</div>
+</div>
+</div>
+
+<div>
+<span class="lbl">Temas de contenido</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" class="chip on" aria-pressed="true">Ofertas</button>
+<button type="button" class="chip on" aria-pressed="true">Charcutería</button>
+<button type="button" class="chip">Carnicería</button>
+<button type="button" class="chip">Pescadería</button>
+<button type="button" class="chip">Fruver</button>
+<button type="button" class="chip">Online</button>
+<button type="button" class="chip">Licores</button>
+<button type="button" class="chip">Evento</button>
+<button type="button" class="chip">Más…</button>
+</div>
+</div>
+
+<div>
+<span class="lbl">Cuentas de destino *</span>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<label style="display: flex; align-items: center; gap: 12px; border: 1px solid #D2CCC0; border-radius: 10px; padding: 10px 14px; font-size: 14px">
+<input type="checkbox" style="width: 18px; height: 18px; accent-color: #0066D2">
+<span style="width: 10px; height: 10px; border-radius: 50%; background: #D92D20"></span>
+<span style="font-weight: 600">YouTube</span><span style="color: #5E6680">@kromichannel-kromimarket2265</span>
+<span class="tag" style="margin-left: auto; background: #F3F0E9; color: #3C4663">Se publica como Short</span>
+</label>
+<label style="display: flex; align-items: center; gap: 12px; border: 1px solid #0066D2; background: #F0F6FD; border-radius: 10px; padding: 10px 14px; font-size: 14px">
+<input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #0066D2">
+<span style="width: 10px; height: 10px; border-radius: 50%; background: #D6286F"></span>
+<span style="font-weight: 600">Instagram</span><span style="color: #5E6680">@kromimarket</span>
+</label>
+<label style="display: flex; align-items: center; gap: 12px; border: 1px solid #0066D2; background: #F0F6FD; border-radius: 10px; padding: 10px 14px; font-size: 14px">
+<input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #0066D2">
+<span style="width: 10px; height: 10px; border-radius: 50%; background: #111"></span>
+<span style="font-weight: 600">TikTok</span><span style="color: #5E6680">@kromimarket.oficial</span>
+</label>
+</div>
+<div class="hint">Solo aparecen las cuentas que tienes asignadas. Las Stories no se ofrecen en YouTube.</div>
+</div>
+
+<div style="border: 1px solid #E7E4DC; border-radius: 12px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+<div class="sec">Producción</div>
+<label style="display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600"><input type="checkbox" checked style="width: 18px; height: 18px; accent-color: #0066D2">Requiere rodaje en tienda</label>
+<div>
+<span class="lbl">Tiendas donde se graba</span>
+<div style="display: flex; flex-wrap: wrap; gap: 8px">
+<button type="button" class="chip on" aria-pressed="true">Prebo</button>
+<button type="button" class="chip">Mañongo</button>
+<button type="button" class="chip">Trigal Sur</button>
+<button type="button" class="chip">Trigal Norte</button>
+<button type="button" class="chip">Guataparo</button>
+<button type="button" class="chip">Castillito</button>
+<button type="button" class="chip">San Felipe</button>
+</div>
+<div class="hint">Puedes elegir más de una tienda.</div>
+</div>
+</div>
+
+<div style="border-top: 1px solid #E7E4DC; padding-top: 18px; display: flex; flex-direction: column; gap: 14px">
+<div class="sec">Brief de copy</div>
+<div>
+<label class="lbl" for="hook">Hook</label>
+<input class="fld" id="hook" value="3 cortes de charcutería que estás comprando mal">
+</div>
+<div>
+<label class="lbl" for="body">Cuerpo del mensaje</label>
+<textarea class="fld" id="body" rows="4">Detalle de las ofertas de charcutería de la semana en Prebo.</textarea>
+</div>
+<div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px">
+<div>
+<label class="lbl" for="cta">CTA</label>
+<input class="fld" id="cta" value="Visítanos en Prebo">
+</div>
+<div>
+<span class="lbl">Hashtags</span>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; min-height: 40px">
+<span class="chip on" style="height: 28px">#KromiMarket <span aria-label="Quitar" style="font-weight: 400">×</span></span>
+<span class="chip on" style="height: 28px">#Prebo <span aria-label="Quitar" style="font-weight: 400">×</span></span>
+<span style="font-size: 13px; color: #5E6680">Agregar…</span>
+</div>
+</div>
+</div>
+<div class="hint" style="margin-top: 0">Se agrega el # y se quitan duplicados al escribir. Revisa el largo del caption: TikTok está seleccionado.</div>
+</div>
+
+</div>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 28px; border-top: 1px solid #E7E4DC; background: #FAF8F4">
+<div style="display: flex; gap: 10px; margin-left: auto">
+<button type="button" class="btn" style="border-color: transparent; background: transparent">Cancelar</button>
+<button type="button" class="btn" style="white-space: nowrap">Crear y duplicar como Story</button>
+<button type="button" class="btn pri" style="white-space: nowrap">Crear publicación</button>
+</div>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":640,"height":1503}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

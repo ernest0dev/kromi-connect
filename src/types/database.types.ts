@@ -134,6 +134,11 @@ export interface Database {
           formato: FormatoEnum;
           linea_contenido: string | null;
           fecha_publicacion: string;
+          hora_publicacion: string | null;
+          requiere_rodaje: boolean;
+          fecha_rodaje: string | null;
+          sedes: SedeEnum[];
+          prioridad: number;
           fecha_limite_brief: string | null;
           fecha_solicitud_diseno: string | null;
           fecha_entrega_diseno_estimada: string | null;
@@ -151,6 +156,12 @@ export interface Database {
           disenador_id: string | null;
           created_at: string;
           updated_at: string;
+          deleted_at: string | null;
+          drive_cleanup_status: string;
+          drive_cleanup_error: string | null;
+          drive_cleanup_attempted_at: string | null;
+          drive_deleted_at: string | null;
+          drive_preserved_at: string | null;
         };
         Insert: {
           id?: string;
@@ -159,6 +170,11 @@ export interface Database {
           formato: FormatoEnum;
           linea_contenido?: string | null;
           fecha_publicacion: string;
+          hora_publicacion?: string | null;
+          requiere_rodaje?: boolean;
+          fecha_rodaje?: string | null;
+          sedes?: SedeEnum[];
+          prioridad?: number;
           fecha_limite_brief?: string | null;
           fecha_solicitud_diseno?: string | null;
           fecha_entrega_diseno_estimada?: string | null;
@@ -176,6 +192,12 @@ export interface Database {
           disenador_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          deleted_at?: string | null;
+          drive_cleanup_status?: string;
+          drive_cleanup_error?: string | null;
+          drive_cleanup_attempted_at?: string | null;
+          drive_deleted_at?: string | null;
+          drive_preserved_at?: string | null;
         };
         Update: {
           id?: string;
@@ -184,6 +206,11 @@ export interface Database {
           formato?: FormatoEnum;
           linea_contenido?: string | null;
           fecha_publicacion?: string;
+          hora_publicacion?: string | null;
+          requiere_rodaje?: boolean;
+          fecha_rodaje?: string | null;
+          sedes?: SedeEnum[];
+          prioridad?: number;
           fecha_limite_brief?: string | null;
           fecha_solicitud_diseno?: string | null;
           fecha_entrega_diseno_estimada?: string | null;
@@ -201,6 +228,12 @@ export interface Database {
           disenador_id?: string | null;
           created_at?: string;
           updated_at?: string;
+          deleted_at?: string | null;
+          drive_cleanup_status?: string;
+          drive_cleanup_error?: string | null;
+          drive_cleanup_attempted_at?: string | null;
+          drive_deleted_at?: string | null;
+          drive_preserved_at?: string | null;
         };
         Relationships: [
           {
@@ -210,6 +243,18 @@ export interface Database {
             referencedColumns: ['id'];
           }
         ];
+      };
+      publicacion_estatus_historial: {
+        Row: { id: string; publicacion_id: string; estatus_anterior: EstatusEnum | null; estatus_nuevo: EstatusEnum; motivo: string | null; cambiado_por: string | null; cambiado_en: string };
+        Insert: { id?: string; publicacion_id: string; estatus_anterior?: EstatusEnum | null; estatus_nuevo: EstatusEnum; motivo?: string | null; cambiado_por?: string | null; cambiado_en?: string };
+        Update: { id?: string; publicacion_id?: string; estatus_anterior?: EstatusEnum | null; estatus_nuevo?: EstatusEnum; motivo?: string | null; cambiado_por?: string | null; cambiado_en?: string };
+        Relationships: [];
+      };
+      publicacion_comentarios: {
+        Row: { id: string; publicacion_id: string; autor_id: string | null; texto: string; tipo: string; creado_en: string };
+        Insert: { id?: string; publicacion_id: string; autor_id?: string | null; texto: string; tipo?: string; creado_en?: string };
+        Update: { id?: string; publicacion_id?: string; autor_id?: string | null; texto?: string; tipo?: string; creado_en?: string };
+        Relationships: [];
       };
       publicacion_canales: {
         Row: {
@@ -581,6 +626,34 @@ export interface Database {
           p_categoria_ids: string[];
         };
         Returns: Json;
+      };
+      transition_publicacion_status: {
+        Args: { p_publicacion_id: string; p_estatus_nuevo: EstatusEnum; p_motivo?: string | null };
+        Returns: Json;
+      };
+      get_design_publication_queue: {
+        Args: Record<PropertyKey, never>;
+        Returns: Database['public']['Tables']['publicaciones']['Row'][];
+      };
+      claim_expired_publication_purges: {
+        Args: Record<PropertyKey, never>;
+        Returns: { id: string; drive_folder_id: string | null; drive_folder_url: string | null }[];
+      };
+      restore_archived_publication: {
+        Args: { p_publicacion_id: string };
+        Returns: boolean;
+      };
+      set_publication_hour: {
+        Args: { p_publicacion_id: string; p_hora_publicacion: string | null };
+        Returns: boolean;
+      };
+      set_publication_production: {
+        Args: { p_publicacion_id: string; p_requiere_rodaje: boolean; p_fecha_rodaje: string | null; p_sedes: SedeEnum[]; p_prioridad: number };
+        Returns: boolean;
+      };
+      archive_publication: {
+        Args: { p_publicacion_id: string };
+        Returns: boolean;
       };
       user_has_all_publication_accounts: {
         Args: { p_publicacion_id: string };

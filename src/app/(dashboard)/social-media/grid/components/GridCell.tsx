@@ -4,6 +4,7 @@ import { GridCellProps } from '../types/grid';
 import type { Efemeride } from '@/app/actions/efemerides/efemerides';
 import type { CampanaGrid } from '@/app/actions/campanas/campaigns';
 import { TicketCard } from './TicketCard';
+import { getFormatoDisplayLabel } from '../utils/constants';
 
 export function GridCell({
   day,
@@ -12,9 +13,11 @@ export function GridCell({
   publicaciones,
   efemerides,
   campanas,
+  socialAccounts,
   onTicketClick,
   onEfemerideClick,
   onCampaignClick,
+  onCreateForDate,
   onDragStart,
   onDragOver,
   onDrop,
@@ -34,7 +37,7 @@ export function GridCell({
         className="mb-1 flex h-[21px] items-center justify-between"
         aria-current={isToday ? 'date' : undefined}
       >
-        <span
+        <button type="button" onClick={() => onCreateForDate(dateStr)} aria-label={`Crear publicación para ${dateStr}`} title="Crear publicación para este día"
           className={`text-[11px] font-semibold ${isToday ? 'grid h-[22px] w-[22px] place-items-center rounded-full' : ''}`}
           style={{
             color: isToday ? '#fff' : 'var(--texto-calendario)',
@@ -42,7 +45,7 @@ export function GridCell({
           }}
         >
           {day}
-        </span>
+        </button>
         {isToday && <span className="text-[9px] font-bold" style={{ color: 'var(--azul)' }}>HOY</span>}
       </div>
 
@@ -51,6 +54,7 @@ export function GridCell({
           <TicketCard
             key={pub.id}
             publicacion={pub}
+            formatoLabel={getFormatoDisplayLabel(pub.formato, pub.social_account_ids.map((id) => socialAccounts.find((account) => account.id === id)?.platform))}
             onClick={() => onTicketClick(pub.id)}
             onDragStart={(e) => onDragStart(e, pub.id)}
           />

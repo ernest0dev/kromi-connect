@@ -32,8 +32,6 @@ export function getDriveClient() {
 /**
  * Instancia del cliente exportada para pruebas de conexión
  */
-export const driveClient = getDriveClient();
-
 /**
  * Crea una carpeta para la publicación dentro de la carpeta raíz de Kromi Connect
  * y le asigna permisos de lectura para visualización de assets.
@@ -87,6 +85,23 @@ export async function deletePublicacionDriveFolder(folderId: string): Promise<{ 
     if (status === 404) return { success: true, alreadyDeleted: true };
     console.error('Error al eliminar carpeta de Google Drive:', error);
     return { success: false, error: error instanceof Error ? error.message : 'No se pudo eliminar la carpeta de Google Drive.' };
+  }
+}
+
+/** Checks that a designer placed at least one non-folder deliverable in the publication folder. */
+export async function hasPublicacionDeliverable(folderId: string): Promise<{ hasFile: boolean; error?: string }> {
+  if (!/^[a-zA-Z0-9_-]+$/.test(folderId)) return { hasFile: false, error: 'La carpeta de Drive no tiene un identificador válido.' };
+  try {
+    const response = await getDriveClient().files.list({
+      q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+      pageSize: 1,
+      fields: 'files(id)',
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    });
+    return { hasFile: (response.data.files || []).length > 0 };
+  } catch (error) {
+    return { hasFile: false, error: error instanceof Error ? error.message : 'No se pudo comprobar el contenido de Drive.' };
   }
 }
 
