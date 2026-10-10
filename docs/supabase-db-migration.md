@@ -248,6 +248,8 @@ EXECUTE FUNCTION update_updated_at_column();
 
 ## 5. Políticas de Seguridad a Nivel de Fila (RLS)
 
+> **Nota de vigencia:** esta sección describe el diseño de una etapa anterior, con acceso autenticado unificado. No usarla como especificación del modelo actual de perfiles ni permisos. Para perfiles funcionales, consultar [`perfiles-de-usuario.md`](perfiles-de-usuario.md); para roles, permisos y políticas actuales del repositorio, consultar §7 del [SRS](kromi-connect-srs.md) y las migraciones versionadas en `supabase/migrations/`.
+
 - `ROW LEVEL SECURITY` habilitado explícitamente (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`) en la totalidad de las 8 tablas del esquema `public`.
 - Política única de acceso unificado por tabla, con nombre estándar `"Permitir todo a usuarios autenticados"`, aplicada al perfil actualmente en operación (`role = 'social_media'`):
 

@@ -8,7 +8,9 @@
 
 ## 1. Perfil de Usuario: Responsable de Redes Sociales
 
-**Rol unificado (fase inicial):** Estrategia/Especialista en Redes Sociales + Creador de Contenido/Producción, bajo un único `role` y set de permisos (RLS policy única en esta fase; sin distinción de sub-permisos todavía).
+La ficha funcional mantenible de este perfil, junto con el inventario de perfiles futuros, está en [`perfiles-de-usuario.md`](perfiles-de-usuario.md). Esta sección conserva el alcance del SRS y su contraste con la implementación; los roles y permisos técnicos se especifican por separado en §7.
+
+**Perfil funcional unificado (fase inicial):** Estrategia/Especialista en Redes Sociales + Creador de Contenido/Producción. Esta descripción funcional no implica un único permiso técnico ni reemplaza el modelo de roles y permisos de §7.
 
 **Alcance operativo:**
 - Planificación de calendario de contenido mensual.
@@ -323,6 +325,8 @@ La auditoría describe revisión de código, no validación del despliegue ni de
 ---
 
 ## 7. Autenticación, roles y permisos (base implementada; despliegue pendiente)
+
+Esta sección define roles de acceso y permisos técnicos. No es un catálogo completo de perfiles funcionales; para responsabilidades, tareas y necesidades de producto, consultar [`perfiles-de-usuario.md`](perfiles-de-usuario.md).
 
 ### 7.1 Estado y alcance
 
