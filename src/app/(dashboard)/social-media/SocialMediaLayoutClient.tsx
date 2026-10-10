@@ -8,7 +8,6 @@ import {
   Plus,
   CalendarHeart,
   Target,
-  Archive,
 } from "lucide-react";
 import NewTicketModal from "./components/NewTicketModal";
 import { useRegisterShellSlots } from "../components/ShellSlot";
@@ -24,12 +23,11 @@ const navGroupsSocialMedia: NavGroup[] = [
     items: [
       { href: "/social-media/efemerides", label: "Efemérides", icon: CalendarHeart },
       { href: "/social-media/campaigns", label: "Campañas", icon: Target },
-        {
-          href: "/social-media/grid",
-          label: "Calendario de contenido",
-          icon: CalendarRange,
-        },
-      { href: "/social-media/grid/archive", label: "Archivo", icon: Archive },
+      {
+        href: "/social-media/grid",
+        label: "Calendario de contenido",
+        icon: CalendarRange,
+      },
     ],
   },
 ];
