@@ -10,7 +10,20 @@
 
 ---
 
-## 1. Resumen ejecutivo
+> **Actualización posterior (2026-10-10):** la fecha de corte del análisis detallado de abajo es **2026-09-17**. Sus conclusiones son una instantánea histórica, no el estado actual. Para evitar usarlas como diagnóstico vigente, este anexo supersede sus conclusiones sobre Grid, editor de publicaciones, flujo Design, permisos y esquema de publicaciones. El usuario confirma que ejecutó `202610100001_publication_workflow_archive.sql`; no se verificó la instancia viva en esta actualización.
+
+## Estado actual de los cambios de publicaciones
+
+- Grid ahora tiene modales Crear, Editar y Detalle; editar copy, cuentas/temas, programacion y flujo/SLA sustituye la descripcion historica de edicion limitada a titulo/fecha. Las pestanas Produccion e Historial de Editar siguen inactivas segun el alcance de diseno.
+- Social Media y Design usan transiciones autorizadas por estado. Design tiene `/design/publications`, una cola compartida de `SOLICITADO`, `EN_DISENO`, `EN_CORRECCION` y acciones de iniciar/entregar; la entrega exige archivo en Drive. No hay asignacion por disenador ni carga/versionado dentro de la app.
+- Se agregaron `publicacion_estatus_historial` y `publicacion_comentarios`; motivos de correccion/cancelacion se guardan con autor y fecha. `CANCELADO` es terminal y requiere motivo.
+- Archivo implementa borrado logico por un mes calendario. Restauracion y resolucion manual de fallos de Drive se restringen a Social Media. La purga requiere endpoint/cron de servidor ademas de la RPC SQL.
+- Para detalle de columnas, permisos, RPC y limites, consultar `supabase-db-migration.md` seccion 10, `design/modales-publicacion.md` y `perfiles-de-usuario.md`.
+- El SRS vigente se actualizo para incluir estas capacidades y estados. Los modulos restantes de Fases 2-5 siguen sujetos a la auditoria historica; esta actualizacion no los declara terminados.
+
+---
+
+## 1. Resumen ejecutivo (corte historico: 2026-09-17)
 
 El proyecto **no cumple todavía con el SRS de forma integral**. Existe una base operativa parcial para planificación, Kanban, creación de tickets, Drive, solicitudes, rodaje básico y campañas, pero varias funciones están incompletas, algunas acciones son incompatibles con el esquema documentado y faltan módulos completos de las fases 2 a 5.
 
@@ -123,7 +136,7 @@ Faltantes o desviaciones:
 - No hay una capa visual de efemérides.
 - No hay persistencia o sincronización de vistas tipo tabla.
 
-### 4.3 Editor de ticket / briefing
+### 4.3 Editor de ticket / briefing (hallazgo historico; sustituido por la actualizacion 2026-10-10)
 
 **Estado: parcial.**
 

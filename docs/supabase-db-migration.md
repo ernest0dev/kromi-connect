@@ -7,6 +7,10 @@
 
 ---
 
+> **Vigencia:** los capítulos 1–9 documentan la arquitectura base y migraciones anteriores; no son un volcado completo del esquema desplegado actual. La imagen [`supabase-schema-public.png`](supabase-schema-public.png) fue actualizada por el usuario. La migración de flujo/Archivo `202610100001_publication_workflow_archive.sql` fue reportada como ejecutada. El anexo 10 registra esa extensión. Este repositorio no verificó el estado vivo; reconciliar con `supabase db pull` antes de generar nuevas migraciones.
+
+---
+
 ## 1. Resumen de la Refactorización DDL
 
 El esquema `public` partía de un estado rudimentario compuesto por 3 tablas (`campanas`, `publicaciones`, `checklist_rodaje`) con las siguientes deficiencias estructurales:
@@ -34,7 +38,7 @@ Se definieron 6 tipos enumerados en el esquema `public` para sustituir los campo
 | Enum | Valores | Tabla(s) de uso |
 |---|---|---|
 | `formato_enum` | `CARRUSEL`, `POST`, `REEL`, `STORY` | `publicaciones` |
-| `estatus_enum` | `PENDIENTE_BRIEF`, `EN_RODAJE`, `EN_DISENO`, `EN_REVISION_CM`, `RECHAZADO_DISENO`, `PENDIENTE_APROBACION_GERENCIA`, `APROBADO`, `PROGRAMADO`, `PUBLICADO` | `publicaciones` |
+| `estatus_enum` | `PENDIENTE_BRIEF`, `EN_RODAJE`, `SOLICITADO`, `EN_DISENO`, `EN_REVISION_CM`, `EN_CORRECCION`, `RECHAZADO_DISENO`, `PENDIENTE_APROBACION_GERENCIA`, `APROBADO`, `PROGRAMADO`, `PUBLICADO`, `CANCELADO`, `INCOMPLETO` | `publicaciones` |
 | `tipo_campana_enum` | `TEMPORADA`, `EVENTO`, `EFEMERIDE`, `LANZAMIENTO`, `OFERTA_PUNTUAL` | `campanas` |
 | `departamento_enum` | `COMPRAS`, `SELECCION`, `PROVEEDOR`, `GERENCIA`, `EVENTOS` | `solicitudes_terceros` |
 | `canal_enum` | `INSTAGRAM`, `TIKTOK`, `YOUTUBE`, `FACEBOOK` | `publicacion_canales`, `reporte_atencion_cliente` |
@@ -88,16 +92,17 @@ Ticket de contenido con trazabilidad completa de matriz SLA (brief → rodaje �
 | `created_at` / `updated_at` | `TIMESTAMPTZ DEFAULT now()` | `updated_at` gestionado por trigger (ver §4) |
 
 ### 3.3 `publicacion_canales`
-Relación 1:N — canales de distribución por publicación.
+Relación de destinos concretos por publicación. `social_account_id` identifica una cuenta, no solo una plataforma.
 
 | Columna | Tipo | Notas |
 |---|---|---|
 | `id` | `UUID PK` | |
-| `publicacion_id` | `UUID FK → publicaciones(id) ON DELETE CASCADE` | |
-| `canal` | `canal_enum NOT NULL` | |
+| `publicacion_id` | `UUID FK references publicaciones(id) ON DELETE CASCADE` | |
+| `canal` | `canal_enum NOT NULL` | Plataforma de destino |
+| `social_account_id` | `UUID FK references social_accounts(id)` | Cuenta concreta; nullable solo para relaciones históricas sin clasificar |
 | `estado_publicacion` | `TEXT DEFAULT 'PENDIENTE'` | |
 | `url_publicacion` | `TEXT` | |
-| — | `UNIQUE (publicacion_id, canal)` | Restricción compuesta: evita duplicidad de canal por publicación |
+| -- | `UNIQUE (publicacion_id, social_account_id)` | Una relación por cuenta destino |
 
 ### 3.4 `checklist_rodaje`
 Checklist de tomas requeridas para producción en piso de tienda (consumo vía PWA móvil).
@@ -191,7 +196,7 @@ Tabla de unión muchos a muchos. Solo acepta campañas de tipo `EFEMERIDE`; el a
 
 `save_campaign_with_efemerides(...)` guarda los datos de la campaña y reemplaza sus vínculos dentro de una única transacción. Los triggers protegen las reglas también ante cambios directos en las tablas.
 
-### 3.11 Mapa de relaciones (FK)
+### 3.11 Mapa de relaciones (FK) (modelo base; ver tambien anexo 10 para las tablas recientes)
 
 ```
 campanas ──┬──< publicaciones
@@ -284,7 +289,7 @@ Se ejecutó un bloque anónimo PL/pgSQL (`DO $$ ... $$`) para poblar el esquema 
 
 **Verificaciones de integridad realizadas:**
 - Confirmación de resolución correcta de las FKs `publicaciones.campana_id`, `checklist_rodaje.publicacion_id` y `solicitudes_terceros.publicacion_id` contra los registros semilla insertados.
-- Validación de la restricción `UNIQUE (publicacion_id, canal)` en `publicacion_canales` sin conflictos durante la carga.
+- Validación de la restricción `UNIQUE (publicacion_id, social_account_id)` en `publicacion_canales` sin conflictos durante la carga.
 - Confirmación de que los enums (`sede_enum`, `estatus_enum`, `canal_enum`, `departamento_enum`) aceptaron únicamente valores dentro de su dominio declarado, rechazando cualquier valor fuera de rango.
 - Verificación de disparo correcto del trigger `trg_publicaciones_updated_at` ante actualizaciones de `estatus` sobre las filas semilla.
 
@@ -382,3 +387,34 @@ La acción de guardar campaña llama esa función para guardar datos y vínculos
 Grid consume `public.efemerides` por año; esta capa no necesita otra tabla ni una migración adicional. Las efemérides puntuales aparecen en su fecha. Los periodos aparecen como un solo indicador en su primer día de cada mes que abarcan (o como “En curso” al inicio del mes si comenzaron antes); al abrirlo se muestran las fechas completas y la descripción. El filtro de formato solo afecta publicaciones.
 
 Grid también consulta campañas `EFEMERIDE` con al menos un vínculo y cuyo periodo se solape con el mes visible. Cada campaña se muestra una sola vez por mes en la fecha de inicio o al inicio del mes si ya estaba en curso. La ficha detalla por separado el periodo propio de la campaña y las fechas de sus efemérides vinculadas. Las campañas `FINALIZADA` permanecen visibles con estilo atenuado; `ARCHIVADA` queda excluida. No hay cambios DDL adicionales para esta capa; sí se requiere aplicar la migración de asociaciones descrita en §8.
+
+
+## 10. Extensión de publicaciones: flujo, Design y Archivo (2026-10-10)
+
+La migración `supabase/migrations/202610100001_publication_workflow_archive.sql` extiende el esquema base descrito arriba. Según confirmación del usuario, fue ejecutada en el proyecto Supabase; no se consultó remotamente para validar el estado actual.
+
+### Cambios estructurales
+
+El modelo de cuentas vigente usa `social_accounts`, `user_social_accounts` y `publicacion_canales.social_account_id`; los permisos por usuario dependen de las cuentas destino asignadas. `publicacion_categorias` enlaza publicaciones con `categorias_contenido`. Esta capa antecede al cambio de flujo y queda reflejada en `docs/publicaciones-por-cuenta-social.md`.
+
+- `publicaciones`: `deleted_at`, `hora_publicacion`, `requiere_rodaje`, `fecha_rodaje`, `sedes sede_enum[]`, `prioridad`; marcas de limpieza Drive (`drive_cleanup_status`, `drive_cleanup_error`, `drive_cleanup_attempted_at`, `drive_deleted_at`, `drive_preserved_at`). Incluye checks de prioridad/limpieza e indice parcial de expiracion de Archivo.
+- `publicacion_estatus_historial`: transiciones, estado anterior/nuevo, motivo, actor y fecha; un trigger registra la creacion inicial.
+- `publicacion_comentarios`: comentarios inmutables tipados `COMENTARIO`, `CORRECCION` o `MOTIVO_CANCELACION`, con autor y fecha. Correccion y cancelacion desde el flujo actual crean una observacion.
+- Policies de lectura por permiso y alcance de publicacion; Design queda limitado a la cola, sin lectura global de publicaciones.
+
+### Permisos y funciones
+
+- `design.posts.read`, `design.posts.start`, `design.posts.deliver`: lectura de cola, inicio y entrega.
+- `social-media.posts.archive`, `social-media.posts.restore`, `social-media.posts.purge.resolve`; permisos de rodaje sembrados en la misma migracion.
+- `get_design_publication_queue()`: publicaciones activas en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`. No asigna por `disenador_id`.
+- `transition_publicacion_status(...)`: valida rol, permiso, origen/destino y motivo; fija fechas reales e inserta historial en la transicion.
+- `archive_publication(...)` y `restore_archived_publication(...)`: borrado logico/restauracion por Social Media, con plazo de un mes calendario.
+- `set_publication_hour(...)` y `set_publication_production(...)`: guardan hora, rodaje, sedes disponibles y prioridad con validacion de permisos.
+- `claim_expired_publication_purges()`: RPC reservada a `service_role` para reclamar purgas vencidas.
+- Un trigger protege estado, fechas reales, archivo y marcas Drive; se revoca el borrado directo por API para `authenticated`.
+
+### Operación de purga
+
+La llamada a Drive ocurre en `src/app/api/cron/purge-publicaciones/route.ts`, programado desde `vercel.json`; SQL no llama a Drive. El cron diario requiere `CRON_SECRET` y credenciales de servidor. Los fallos quedan en Archivo para resolucion manual. El esquema auth no cambia con esta migracion; `supabase-schema-auth.png` no necesita actualizarse por este cambio.
+
+La migración no crea `YOUTUBE_SHORTS`, no normaliza categorías históricas, no crea versiones de copy ni asigna solicitudes a diseñadores.

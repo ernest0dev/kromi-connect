@@ -15,7 +15,7 @@ Este documento describe quién usa Kromi Connect, qué necesita resolver y cómo
 |---|---|---|---|
 | Social Media / Responsable de Redes Sociales | Descrito; es el perfil que guía el desarrollo actual | `social-media` | Perfil funcional más desarrollado; alcance y estado por módulo en el SRS. |
 | Eventos | Por definir | `events` | El rol está enumerado; tareas, flujos y necesidades de interfaz no están especificados. |
-| Diseño | Por definir | `design` | El rol está enumerado y se menciona colaboración con Social Media; falta una ficha funcional propia. |
+| Diseño / Diseñador | Base operativa implementada; perfil funcional por validar con usuarios | `design` | Cuenta con cola compartida de solicitudes y acciones de inicio/entrega; asignación y gestión avanzada de assets siguen pendientes. |
 | Interno | Por definir | `internal` | El rol está enumerado; falta precisar a quién representa y qué tareas realiza. |
 | Atención al cliente | Por definir | `customer-support` | El rol está enumerado; falta definir alcance, relación con escucha social y flujos de `/support`. |
 | Gerencia | Por definir | `management` | El rol está enumerado; falta especificar decisiones, indicadores y vistas requeridas. |
@@ -61,6 +61,43 @@ El rol `social-media` cuenta con permisos aprobados para Grid, publicaciones, ca
 - Definir el flujo completo de briefing, revisiones, SLA y entrega de assets.
 - Confirmar el alcance de escucha social y su relación con Atención al cliente.
 - Validar qué módulos deben ser centrales en la navegación de este perfil y cuáles son tareas ocasionales.
+
+## Perfil: Design / Diseñador de publicaciones
+
+**Estado:** hay un flujo inicial de cliente y servidor para colaborar con Social Media. Esta ficha registra el comportamiento existente y preguntas para una futura etapa; no es alcance de desarrollo de esta sesión ni una especificación completa del perfil.
+
+### Propósito actual
+
+Recibir solicitudes de diseño, trabajar la pieza y devolverla a Social Media para revisión, incluyendo la atención de correcciones.
+
+### Puede hacer hoy
+
+- Entrar a `/design/publications` si tiene el permiso `design.posts.read`.
+- Ver la cola compartida de publicaciones activas en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`, con brief, formato, fecha, hashtags, observaciones de corrección y enlace a Drive disponible.
+- Abrir una solicitud: el estado pasa a `EN_DISENO`.
+- Cargar manualmente el archivo en la carpeta de Drive y entregar la pieza. El servidor verifica que la carpeta tenga al menos un archivo antes de moverla a `EN_REVISION_CM`.
+- Volver a abrir una corrección: `EN_CORRECCION` pasa a `EN_DISENO`.
+
+Las operaciones requieren `design.posts.start` o `design.posts.deliver` según corresponda. La RPC valida actor y transición; la cola SQL no amplía la lectura general de `publicaciones`. La vista actual es una cola por estado, no una bandeja filtrada por `disenador_id`: no asigna ni reclama solicitudes por persona.
+
+### Límites actuales
+
+- No crea ni edita briefs, cuentas destino, campaña, programación ni copy de la publicación.
+- No tiene carga de archivos dentro de Kromi Connect; usa Drive externo/manual.
+- No administra versiones, múltiples entregables, comentarios de respuesta ni estados de aprobación/publicación.
+- No puede cancelar, archivar ni restaurar publicaciones.
+- En el historial visible se registra actor/fecha en base de datos, pero la interfaz actual no expone el nombre del perfil del autor.
+
+### Preguntas para diseñar el perfil futuro
+
+- ¿La cola será compartida o se asignará a una persona? Si hay asignación, ¿quién la crea y puede Design reasignarla?
+- ¿Qué archivos y criterios debe cumplir una entrega (formatos, cantidad, nombre, ubicación, revisiones)?
+- ¿Basta Drive como repositorio o se requiere carga, previsualización y versionado dentro de la app?
+- ¿Design puede responder a una corrección o marcarla resuelta? ¿Qué historial debe conservarse?
+- ¿Qué datos personales de creador/diseñador se mostrarán entre roles y mediante qué acceso seguro a `profiles`?
+- ¿Qué ocurre si la solicitud cambia o se cancela mientras Design trabaja?
+
+Estas decisiones podrían requerir nuevas columnas/tablas de asignación, permisos, policies/RPC y acceso seguro a perfiles. Resolverlas antes de ampliar la interfaz.
 
 ## Fichas futuras
 

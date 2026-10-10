@@ -32,4 +32,4 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 
 ## Alcance actual
 
-Quedan fuera por ahora las pestañas **Producción** e **Historial** de edición. Aparecen en los prototipos solo como pestañas inactivas porque el modo rodaje no está terminado. **Archivo** es una vista independiente para restaurar publicaciones y resolver manualmente fallos de limpieza de Drive.
+En el modal Editar quedan inactivas las pestañas **Producción** e **Historial**. El flujo inicial del rol Design sí tiene una cola separada en `/design/publications` para abrir solicitudes, atender correcciones y entregar piezas; no incluye asignación por persona ni carga/versionado de archivos en la app. **Archivo** es una vista independiente para restaurar publicaciones y resolver manualmente fallos de limpieza de Drive. El estado detallado se mantiene en `modales-publicacion.md`.

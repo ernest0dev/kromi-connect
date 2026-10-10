@@ -2,9 +2,15 @@
 
 > Documento interno de seguimiento operativo de desarrollo. No apto para distribución externa ni comercial.
 > Stack objetivo: Next.js (App Router) + Supabase/PostgreSQL + Server Actions.
-> **Estado del documento:** las secciones 1–5 expresan el alcance y diseño funcional; la sección 6 contrasta ese diseño con el código inspeccionado. La sección 7 documenta la base de autenticación/autorización añadida en la sesión del 5 de octubre de 2026. El código y las migraciones aún requieren validación en el proyecto Supabase desplegado.
+> **Estado del documento:** actualizado al 2026-10-10. Secciones 1-5: alcance funcional; secciones 6-7: estado auditado del repositorio. El usuario confirma que `202610100001_publication_workflow_archive.sql` se ejecutó en Supabase; esta actualización no consultó la instancia remota.
 
 ---
+
+## Estado de implementación actualizado (2026-10-10)
+
+La vista `/social-media/grid` cuenta con modales de Crear, Editar y Detalle rediseñados, y una vista separada de Archivo. Social Media administra el contenido y sus transiciones editoriales; Design tiene una cola inicial en `/design/publications` para tomar solicitudes y entregar piezas. La migración `202610100001_publication_workflow_archive.sql` agrega las tablas, columnas, permisos, políticas y RPC descritas en la sección 4; su ejecución fue confirmada por el usuario, pero este documento no afirma haber verificado la instancia remota.
+
+La funcionalidad de Design es una primera cola compartida y no un sistema de asignación, carga de archivos o versiones. No hay interfaz de Gerencia. Los detalles de alcance y pendientes están en [`design/modales-publicacion.md`](design/modales-publicacion.md) y el perfil futuro en [`perfiles-de-usuario.md`](perfiles-de-usuario.md).
 
 ## 1. Perfil de Usuario: Responsable de Redes Sociales
 
@@ -37,8 +43,8 @@ Estados usados: **Implementado**, **Parcial**, **Pendiente**, **No verificado**.
 ### 2.1 Generación y Gestión de Contenido
 - Planificación de calendario de contenido mensual y cálculo automatizado de fechas. **Parcial:** `/social-media/grid` muestra calendario mensual y permite reprogramar; el SLA implementado calcula `fecha_limite_brief = fecha_publicacion - 5 días`. La fecha límite de rodaje (`fecha_publicacion - 3 días`) no está implementada.
 - Generación de cronograma de producción y guiones de rodaje para piso de tienda. **Parcial:** existe `/social-media/shooting`, pero muestra publicaciones e idea principal; no usa `checklist_rodaje` ni ofrece guion estructurado por tomas/zonas.
-- Creación de solicitudes de diseño (brief técnico: dimensiones, copy versionado, badges). **Parcial:** Kanban muestra hook, body, CTA y hashtags; Grid solo permite editar título y fecha. No se verificó un editor técnico completo de brief.
-- Flujo de revisión/corrección/aprobación con estados de retorno explícitos. **Parcial:** hay cambio de estatus, pero Grid permite cualquier transición y el Kanban no tiene interacción de arrastre de estado confirmada.
+- Creación y edición de solicitudes de diseño. **Implementado en Grid:** modales de Crear, Editar y Detalle para formato, cuentas, temas, copy/hashtags, programación, estado y SLA. El versionado de copy y la asignación individual de diseñador no están implementados.
+- Flujo de revisión/corrección/aprobación externa. **Implementado para el flujo acordado:** la RPC valida actor y transición; Design inicia/entrega y Social Media devuelve, cancela y registra los estados posteriores. No existe aprobación dentro de la app por Gerencia.
 - Trazabilidad de tiempos: `fecha_solicitud_diseno` vs `fecha_entrega_diseno_real` y SLA cumplido/incumplido. **Parcial:** existen campos de fechas y cálculo condicional de entrega estimada; no se verificó un reporte de cumplimiento real.
 - Programación, publicación y **reprogramación inversa**. **Parcial:** Quick Reschedule actualiza fecha de publicación, límite de brief y, si hay fecha de solicitud de diseño, entrega estimada. No recalcula una fecha de rodaje, que no existe en el esquema actual.
 - Tabla tipo spreadsheet para operación de publicaciones. **Pendiente:** no se encontró en las rutas auditadas.
@@ -68,7 +74,7 @@ Las rutas siguientes son las identificadas en el código auditado. Las fases con
 - `/social-media/grid` — calendario mensual con filtro por formato, drag-and-drop de fechas, edición rápida de título/fecha e indicadores SLA.
 - `/social-media/kanban` — tablero de publicaciones con detalle de copy y reprogramación. Grid y Kanban son rutas independientes sobre `publicaciones`, con capacidades de edición distintas; no existe la tercera vista spreadsheet.
 - `/dashboard` — resumen operativo y alertas SLA. **No verificado:** la ruta no se encontró en el árbol explorado.
-- Editor completo de ticket — **Pendiente/parcial:** el formulario de Grid solo edita título y fecha; Kanban expone la ficha de copy, pero no se confirmó edición completa.
+- Modales de publicación: **implementados parcialmente**. Crear, Editar y Detalle siguen `docs/design/modales-publicacion.md`; las pestañas Producción e Historial de Editar permanecen inactivas.
 
 ### Fase 2 — Producción & Asset Management — parcial / pendiente
 - `/social-media/shooting` — lista de publicaciones en preparación/rodaje y acción de envío a Diseño. No usa `checklist_rodaje`; PWA no verificada.
@@ -99,15 +105,10 @@ Las rutas siguientes son las identificadas en el código auditado. Las fases con
 CREATE TYPE formato_enum AS ENUM ('CARRUSEL', 'POST', 'REEL', 'STORY');
 
 CREATE TYPE estatus_enum AS ENUM (
-  'PENDIENTE_BRIEF',
-  'EN_RODAJE',
-  'EN_DISENO',
-  'EN_REVISION_CM',
-  'RECHAZADO_DISENO',
-  'PENDIENTE_APROBACION_GERENCIA',
-  'APROBADO',
-  'PROGRAMADO',
-  'PUBLICADO'
+  'PENDIENTE_BRIEF', 'EN_RODAJE', 'SOLICITADO', 'EN_DISENO',
+  'EN_REVISION_CM', 'EN_CORRECCION', 'RECHAZADO_DISENO',
+  'PENDIENTE_APROBACION_GERENCIA', 'APROBADO', 'PROGRAMADO',
+  'PUBLICADO', 'CANCELADO', 'INCOMPLETO'
 );
 
 CREATE TYPE tipo_campana_enum AS ENUM (
@@ -168,9 +169,10 @@ CREATE TABLE publicacion_canales (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   publicacion_id UUID NOT NULL REFERENCES publicaciones(id) ON DELETE CASCADE,
   canal canal_enum NOT NULL,
+  social_account_id UUID REFERENCES social_accounts(id),
   estado_publicacion TEXT DEFAULT 'PENDIENTE',
   url_publicacion TEXT,
-  UNIQUE (publicacion_id, canal)
+  UNIQUE (publicacion_id, social_account_id)
 );
 
 -- Checklist de rodaje (1:N)
@@ -233,11 +235,17 @@ CREATE TABLE campana_evaluaciones (
 );
 ```
 
-### 4.3 Notas de implementación (Server Actions / lógica)
+### 4.3 Extensión actual del esquema de publicaciones
+
+El modelo de destinos usa `social_accounts` y `user_social_accounts`; `publicacion_canales.social_account_id` identifica la cuenta concreta y la unicidad es por publicación/cuenta. `publicacion_categorias` relaciona publicaciones con `categorias_contenido`. El acceso respeta las cuentas asignadas; para editar o archivar se exige alcance sobre todas las cuentas destino.
+
+La migración `202610100001_publication_workflow_archive.sql` agrega columnas de hora, rodaje, sedes (`sede_enum[]`), prioridad, archivo y limpieza de Drive; crea `publicacion_estatus_historial` y `publicacion_comentarios`; y añade las RPC, permisos y policies del flujo. El detalle está en [`supabase-db-migration.md`](supabase-db-migration.md). No se implementa asignación individual a Design.
+
+### 4.4 Notas de implementación (Server Actions / lógica)
 
 - **Cálculo de fechas SLA:** debe vivir como lógica de aplicación (Server Action `recalcularFechasSLA(publicacionId, nuevaFechaPublicacion)`), no como trigger de DB en esta fase — facilita ajustar la regla 3+2 sin migraciones.
 - **Quick Reschedule:** una sola Server Action que actualiza `fecha_publicacion` y dispara el recálculo en cascada de `fecha_limite_brief` y `fecha_entrega_diseno_estimada`.
-- **Autorización/RLS:** se abandona el diseño de una policy única con acceso total. La base implementada usa perfiles vinculados a `auth.users`, roles y permisos explícitos; las policies se expresan mediante `has_permission(...)`. Ver §7. Las migraciones aún deben aplicarse y verificarse en Supabase.
+- **Autorización/RLS:** roles, permisos y policies se definen por migraciones versionadas. El usuario confirma que ejecutó `202610100001_publication_workflow_archive.sql`; comprobar el estado remoto y hacer `supabase db pull` antes de ampliar el esquema.
 - **Conversión de solicitud a ticket:** Server Action que crea row en `publicaciones` copiando `descripcion` → `body_texto` y `materiales_adjuntos_url[]` → referencia inicial de Drive, y actualiza `solicitudes_terceros.publicacion_id` + `estatus_solicitud = 'CONVERTIDA'`.
 - **Trazabilidad de premios:** `inventario_premios.solicitud_id` es opcional — se llena solo cuando el premio proviene de un acuerdo/oferta canalizado vía `solicitudes_terceros` (ej. Compras o Proveedor); premios gestionados directamente por Mercadeo pueden dejarlo en `NULL`.
 - **Checklist de rodaje:** `area_tienda` pasó a `TEXT` libre para admitir zonas específicas no enumerables de antemano; `sucursal` (enum) queda como el filtro estructurado por sede para reportes y vistas.
@@ -252,7 +260,7 @@ CREATE TABLE campana_evaluaciones (
 - Panel de **Diseño Gráfico** (Kanban centrado en `disenador_id` y estados de renderizado/assets).
 - Panel de **Gerencia de Mercadeo** (dashboard ejecutivo de aprobación 1-clic + ROI de campañas, consumiendo `campana_evaluaciones` y `publicaciones.fecha_aprobacion_gerencia`).
 
-**Lectura del estado actual:** Grid, Kanban, Rodaje, Solicitudes y Campañas tienen rutas identificadas con cobertura desigual. La conversión de solicitudes está implementada; varias tablas del esquema siguen sin consumidor. Las brechas funcionales prioritarias que refleja esta especificación son el editor completo, la fecha límite de rodaje y checklist estructurado, la cobertura de estados en Kanban, QA/aprobación, inventario y analítica. La auditoría es parcial (ver §6.6).
+**Lectura del estado actual:** Grid, Kanban, Rodaje, Solicitudes y Campanas tienen rutas con cobertura desigual. El editor de publicaciones y el flujo inicial de Design se actualizaron en octubre de 2026; las brechas que siguen vigentes incluyen checklist estructurado, asignacion individual de diseno, QA de Gerencia dentro de la app, inventario y analitica. Ver la actualizacion y limites en las secciones 6 y 7.
 
 ---
 
@@ -272,9 +280,13 @@ Son proyecciones de `publicaciones`, pero no interfaces equivalentes: Grid permi
 
 ### 6.1 Grid (`/social-media/grid`)
 
-**Implementado y confirmado:** calendario mensual con navegación de meses; filtro solo por formato; reprogramación por arrastrar y soltar; cambio de estatus desde selector sin restricciones de transición; edición rápida de título y fecha; señal visual de SLA derivada solo de `fecha_limite_brief`; enlace a Drive si hay URL; actualización optimista con rollback ante error.
+**Implementado en el cliente:** calendario mensual, filtros, reprogramación, tarjetas y modales Crear/Editar/Detalle. Crear admite prefill de fecha, formato, campaña, cuenta(s), temas, copy y hashtags normalizados, hora opcional y datos de producción disponibles en el esquema; muestra SLA de brief y puede crear/reintentar la carpeta de Drive. Editar separa Contenido y Flujo y SLA; los controles de Producción e Historial están inactivos. Detalle incluye destinos, copy copiable, temas, producción, SLA, historial y observaciones.
 
-**No implementado en Grid:** tabla spreadsheet; editor completo de brief/guion/historial; capa de alianzas con proveedores; fecha límite de rodaje. Las efemérides anuales y las campañas `EFEMERIDE` vinculadas se muestran desde el catálogo de `/social-media/efemerides` y sus relaciones de campaña. Los campos `hook_texto`, `body_texto`, `cta_texto` y `hashtags` no tienen inputs en Grid.
+**Transiciones del flujo:** Social Media envía a `SOLICITADO` desde las etapas previas permitidas; desde `EN_REVISION_CM` puede solicitar `EN_CORRECCION` (motivo obligatorio), dejar `PENDIENTE_APROBACION_GERENCIA`, pasar a `PROGRAMADO` o `PUBLICADO`; registra `APROBADO` cuando recibe aprobación externa y confirma `PUBLICADO` desde `PROGRAMADO`. Puede cancelar desde cualquier estado no terminal con motivo obligatorio. Las transiciones se validan en `transition_publicacion_status`, con historial y fechas reales registradas por el sistema.
+
+**Archivo:** acción separada de borrado lógico, restauración durante un mes calendario y resolución manual de fallos de Drive. La purga automática diaria de publicaciones vencidas se ejecuta desde un endpoint programado de servidor; SQL por sí solo no elimina carpetas de Drive.
+
+**Fuera de alcance:** duplicar/repetir, versionado del copy, edición de datos de Producción desde la pestaña de Editar, vista spreadsheet y aprobación propia de Gerencia.
 
 ### 6.2 Kanban (`/social-media/kanban`)
 
@@ -324,7 +336,13 @@ La auditoría describe revisión de código, no validación del despliegue ni de
 
 ---
 
-## 7. Autenticación, roles y permisos (base implementada; despliegue pendiente)
+## 6.7 Cola del rol Design
+
+Existe `/design/publications`, implementado en `src/app/(dashboard)/design/publications/`. Presenta una cola compartida de publicaciones activas en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`; no filtra ni asigna por `disenador_id`. Design puede abrir una solicitud (`EN_DISENO`) y entregar una pieza (`EN_REVISION_CM`); antes de entregar, el servidor requiere una carpeta de Drive con al menos un archivo. Al abrir una devolución, `EN_CORRECCION` vuelve a `EN_DISENO`. La cola muestra el brief y las observaciones de corrección. No incluye carga de archivos en la app, versionado ni aprobación/publicación.
+
+La acción `src/app/actions/publicaciones/workflow.ts` y las RPC `get_design_publication_queue()` y `transition_publicacion_status(...)` validan los permisos y el estado de las operaciones.
+
+## 7. Autenticación, roles y permisos (implementados en repositorio; despliegue sujeto a verificación)
 
 Esta sección define roles de acceso y permisos técnicos. No es un catálogo completo de perfiles funcionales; para responsabilidades, tareas y necesidades de producto, consultar [`perfiles-de-usuario.md`](perfiles-de-usuario.md).
 
@@ -341,7 +359,7 @@ Los códigos persistidos son estables y usan inglés; los nombres visibles está
 | `pending` | Acceso pendiente | Sin vistas de negocio |
 | `social-media` | Social Media | Grid, campañas y efemérides según permisos concedidos |
 | `events` | Eventos | Sin permisos de negocio asignados |
-| `design` | Diseño | Sin permisos de negocio asignados |
+| `design` | Diseño | Cola de publicaciones y transiciones de inicio/entrega |
 | `internal` | Interno | Sin permisos de negocio asignados |
 | `customer-support` | Atención al cliente | Sin permisos de negocio asignados |
 | `management` | Gerencia | Sin permisos de negocio asignados |
@@ -352,11 +370,15 @@ El rol `admin` se limita al control de acceso (`can_manage_access()`); no equiva
 ### 7.3 Catálogo de permisos actualmente aprobado
 
 - `social-media.grid.read` para abrir Grid.
-- `social-media.posts.{read,create,edit,reschedule,status.update,delete}` para las operaciones existentes de publicaciones desde Grid. El rol puede eliminar publicaciones.
+- `social-media.posts.{read,create,edit,reschedule,status.update}` para publicaciones. El borrado es lógico mediante `archive`/`restore`; la purga definitiva queda en acciones protegidas del servidor.
+- `social-media.posts.{archive,restore,purge.resolve}` y permisos de consulta/actualización de rodaje se agregan en `202610100001_publication_workflow_archive.sql`.
+- `design.posts.{read,start,deliver}` para la cola acotada y los eventos de inicio y entrega.
 - `social-media.campaigns.{read,create,update,status.update,archive,evaluation.create}` para campañas.
 - `social-media.efemerides.{read,create,update,delete}` para efemérides.
 
-`customer-support` no recibe permisos. Las rutas existentes de Kanban, solicitudes, rodaje, soporte y terceros tienen comprobaciones de permiso, pero sus códigos no se conceden actualmente; por tanto, quedan denegadas. Los roles `events`, `design`, `internal` y `management` tampoco reciben concesiones hasta que se definan vistas y operaciones. Esta lista es la asignación actual, no un catálogo cerrado: se puede ampliar con migraciones posteriores.
+`customer-support`, `events` e `internal` no reciben concesiones de negocio en esta implementación. `design` sí tiene los permisos enumerados arriba; `management` no interviene en aprobaciones dentro de la app. La interfaz puede ocultar navegación sin permiso, pero servidor y RPC vuelven a validar el acceso.
+
+El catálogo puede conservar el código histórico `social-media.posts.delete` de migraciones previas, pero el flujo actual usa Archivo: se revocó el borrado directo para `authenticated`; las acciones de purga se ejecutan en servidor con comprobaciones de permiso.
 
 ### 7.4 Componentes del repositorio
 
@@ -376,10 +398,10 @@ El rol `admin` se limita al control de acceso (`can_manage_access()`); no equiva
 
 Las páginas y Server Actions existentes se guardan según sus permisos. Algunas operaciones aún acceden a datos mediante el cliente administrativo Service Role, que omite RLS: en esos flujos la autorización depende de la comprobación explícita en la Server Action. No se debe exponer ese cliente ni su secreto al navegador.
 
-### 7.5 Aplicación pendiente en Supabase
+### 7.5 Despliegue y verificación de Supabase
 
-Ejecutar el contenido de las migraciones en Supabase SQL Editor, en orden: primero `202610050001_auth_roles_permissions.sql`, luego revisar y ejecutar `202610060001_role_permission_policies.sql`. La segunda migración activa RLS, revoca privilegios API y elimina policies preexistentes de las tablas enumeradas para reemplazarlas; `atencion_cliente` queda sin privilegios API para `anon`/`authenticated` ni policies de acceso hasta que se aprueben permisos. Antes de ejecutarla se deben revisar las policies existentes y confirmar que no protejan flujos ajenos al sistema. Luego hay que validar login/logout, perfiles, asignaciones, lecturas y mutaciones con usuarios de cada rol en el proyecto.
+El usuario confirma que ejecutó `supabase/migrations/202610100001_publication_workflow_archive.sql` en Supabase. Esta documentación no se conectó a la instancia para verificarlo. Antes de futuras modificaciones, comparar la línea base desplegada con `supabase db pull` y auditar objetos, grants, RLS, triggers y funciones.
 
-Para mantener la documentación del modelo, guardar ambas capturas en `docs/`: `supabase-schema-public.png` para tablas, relaciones, funciones y policies del esquema `public`; `supabase-schema-auth.png` para `auth.users` y objetos del esquema `auth` relevantes a la identidad. Son vistas complementarias: el perfil de aplicación se enlaza a `auth.users.id` mediante `profiles.user_id`.
+La migración incorpora tablas de historial/comentarios, columnas de Archivo/Drive/producción, permisos de Social Media y Design, policies y RPC. El detalle se registra en [`supabase-db-migration.md`](supabase-db-migration.md) y en `docs/design/modales-publicacion.md`. La captura `docs/supabase-schema-public.png` fue actualizada por el usuario; la migración no altera el esquema `auth`, por lo que `supabase-schema-auth.png` no requiere cambio por este flujo.
 
-No se ejecutaron pruebas automatizadas ni build durante esta sesión. La instalación del paquete está reflejada en `package.json` y lockfiles, pero la integración aún necesita esa validación.
+La ejecución de una migración no sustituye pruebas con usuarios reales por rol ni verifica la configuración de `CRON_SECRET`, credenciales de Drive y cron del despliegue. La purga programada vive en `/api/cron/purge-publicaciones` y requiere `CRON_SECRET`.
