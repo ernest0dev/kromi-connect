@@ -1,6 +1,6 @@
 # Plan de implementación: brief con Drive y retorno reversible
 
-**Estado:** propuesta revisada el 2026-10-11 con las decisiones del equipo (sección 10). La cuenta de almacenamiento se resolvió con OAuth (sección 10, decisión 4); falta verificarla con una subida real. No modifica código ni base de datos.
+**Estado:** propuesta revisada el 2026-10-11 con las decisiones del equipo (sección 10). La cuenta de almacenamiento se resolvió con OAuth y se verificó con una subida real (sección 10, decisión 4). No modifica código ni base de datos.
 **Alcance:** publicaciones de `/social-media/grid`, acciones de servidor, Google Drive y transición al flujo de Design.
 **Base revisada:** el repositorio actual y `202610100001_publication_workflow_archive.sql`.
 
@@ -64,7 +64,7 @@ El resto de transiciones editoriales existentes no cambia. La ida a `PENDIENTE_B
 
 ### Fase 0 — Privacidad, inventario y contrato de archivos
 
-- **Verificar la cuenta de almacenamiento.** Decidido: OAuth (sección 10, decisión 4). Ejecutar `/api/test-connections` en local y en Vercel; la prueba de subida de 1 KB debe dar OK con `authMode: oauth`.
+- **Cuenta de almacenamiento: resuelta y verificada** con OAuth (sección 10, decisión 4). Queda por probar en la implementación la subida resumible desde el navegador y el borrado de carpetas antiguas creadas por la cuenta de servicio.
 - Privacidad: decidido mantener el permiso `anyone: reader`. Documentar que cualquiera con el enlace puede leer briefs y entregables.
 - Inventariar carpetas existentes y archivos en raíz. Definir cómo clasificar/mover archivos actuales a `Brief` o `Entregables`; no asumir que el contenido existente es uno u otro.
 - Límites iniciales ya acordados (sección 4). Confirmar que el despliegue permite las peticiones de subida resumible desde el navegador (CORS).
@@ -164,7 +164,7 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 1. **Subida:** directa del navegador a Drive mediante sesión resumible iniciada por el servidor.
 2. **Privacidad:** se mantiene el permiso `anyone: reader` de las carpetas.
 3. **Límites:** JPG, PNG, WebP, PDF y MP4; 100 MB por archivo y 10 archivos por solicitud.
-4. **Cuenta de almacenamiento:** OAuth con la cuenta personal de Drive del equipo (100 GB). Variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REFRESH_TOKEN`; `getDriveClient` las usa primero y conserva la cuenta de servicio como respaldo. La app de OAuth debe estar **En producción** (en modo Pruebas el refresh token caduca a los 7 días). Pendiente de verificar con `/api/test-connections` (incluye subida de prueba de 1 KB).
+4. **Cuenta de almacenamiento:** OAuth con la cuenta personal de Drive del equipo (100 GB). Variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REFRESH_TOKEN`; `getDriveClient` las usa primero y conserva la cuenta de servicio como respaldo. La app de OAuth debe estar **En producción** (en modo Pruebas el refresh token caduca a los 7 días). **Verificado el 2026-10-11** con `/api/test-connections`: `authMode: oauth` y subida de prueba de 1 KB correcta.
 
 **Pendientes antes de implementar:**
 
