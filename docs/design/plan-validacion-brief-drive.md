@@ -28,7 +28,7 @@ El sistema debe conservar la auditoría de cada ciclo. Los campos de fechas del 
 1. **Separar contenidos en Drive:** cada carpeta de publicación tendrá subcarpetas `Brief` y `Entregables`. Social Media sube/lista archivos en `Brief`; Design entrega y valida archivos en `Entregables`. No contar archivos de una carpeta como contenido de la otra.
 2. **No enviar archivos por Server Actions ni por el servidor de Vercel.** Decisión confirmada: carga **directa del navegador a Drive** mediante una sesión resumible que el servidor autoriza e inicia (sección 4). El servidor nunca recibe el contenido del archivo.
 3. **La comprobación autoritativa ocurre en servidor.** Antes de transicionar a `SOLICITADO`, una acción autenticada comprueba el contenido real de `Brief` en Drive. El control de cliente solo mejora la UX y no es una medida de seguridad.
-4. **La RPC debe tener una condición verificable en base de datos.** Como PostgreSQL no consulta Google Drive, almacenar un estado de brief sincronizado por las operaciones de servidor (por ejemplo `drive_brief_file_count` y `drive_brief_checked_at`) y hacer que la RPC rechace la solicitud si no hay archivos. La acción refresca primero ese estado desde Drive. Las columnas no deben poder escribirse directamente por `authenticated`: se actualizan mediante una función ejecutable solo por `service_role`, que la acción llama con el cliente de administración (como ya hace `archive.ts`), y el trigger `guard_publicacion_workflow_columns` debe ampliarse para cubrirlas. Para acotar la obsolescencia, la RPC exige además que `drive_brief_checked_at` sea reciente (propuesta: 10 minutos), no solo `drive_brief_file_count > 0`. Si archivos se borran fuera de Kromi, el estado puede quedar obsoleto: la comprobación previa a solicitar y la reconciliación manual/operativa reducen ese riesgo.
+4. **La RPC debe tener una condición verificable en base de datos.** Como PostgreSQL no consulta Google Drive, almacenar un estado de brief sincronizado por las operaciones de servidor (por ejemplo `drive_brief_file_count` y `drive_brief_checked_at`) y hacer que la RPC rechace la solicitud si no hay archivos. La acción refresca primero ese estado desde Drive. Las columnas no deben poder escribirse directamente por `authenticated`: se actualizan mediante una función ejecutable solo por `service_role`, que la acción llama con el cliente de administración (como ya hace `archive.ts`), y el trigger `guard_publicacion_workflow_columns` debe ampliarse para cubrirlas. Para acotar la obsolescencia, la RPC exige además que `drive_brief_checked_at` sea reciente (decidido: 5 minutos, constante única en la función de base de datos para ajustarla si hace falta), no solo `drive_brief_file_count > 0`. Si archivos se borran fuera de Kromi, el estado puede quedar obsoleto: la comprobación previa a solicitar y la reconciliación manual/operativa reducen ese riesgo.
 5. **Permitir retorno solo desde `SOLICITADO` inicialmente.** No permitir retorno desde `EN_DISENO`: al abrir la solicitud, Design ya empezó a trabajar y el estado debe reflejarlo. La RPC actual no tiene `PENDIENTE_BRIEF` como destino desde ningún estado, así que `SOLICITADO → PENDIENTE_BRIEF` se añade como transición nueva. `EN_RODAJE → PENDIENTE_BRIEF` queda fuera salvo decisión contraria.
 6. **Fechas de ciclo:** la RPC actual solo fija `fecha_solicitud_diseno` y la estimación cuando están vacías (`... is null`); esa condición debe cambiar para que cada paso a `SOLICITADO` renueve ambas. Al volver a solicitar, `fecha_solicitud_diseno`, `fecha_limite_brief` y `fecha_entrega_diseno_estimada` se actualizan para el nuevo ciclo. Las fechas/actores de solicitudes anteriores permanecen en `publicacion_estatus_historial`. Si el negocio requiere reconstruir también la fecha límite y estimación histórica, se deberá añadir una instantánea SLA al historial; la tabla actual no conserva esos valores por cada transición.
 7. **Permisos y contenido:** carga/listado con permisos `social-media.posts.edit` / `social-media.posts.read`, además de verificación de alcance de todas las cuentas destino. Borrado de archivos fuera del MVP para no eliminar por accidente una pieza entregada; puede añadirse con confirmación y auditoría en una fase posterior.
@@ -136,7 +136,7 @@ Las acciones servidor deben validar el ID y no confiar en `folderId`, conteos ni
 9. Ninguna operación de fallo parcial duplica una publicación o crea subcarpetas duplicadas.
 10. Una subida de prueba de un archivo de varios MB y de un video grande termina correctamente con la cuenta de almacenamiento elegida, sin pasar por el servidor de Vercel.
 11. Un archivo de tipo no permitido, o que supere el tamaño máximo, es rechazado y no cuenta para el brief.
-12. Una confirmación de brief con más de 10 minutos de antigüedad no basta para solicitar: la acción vuelve a consultar Drive primero.
+12. Una confirmación de brief con más de 5 minutos de antigüedad no basta para solicitar: la acción vuelve a consultar Drive primero.
 
 ## 8. Migraciones de Supabase previstas
 
@@ -159,7 +159,7 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 
 ## 10. Decisiones
 
-**Confirmadas (2026-10-11):**
+**Confirmadas (2026-10-11), sin decisiones abiertas:**
 
 1. **Subida:** directa del navegador a Drive mediante sesión resumible iniciada por el servidor.
 2. **Privacidad:** se mantiene el permiso `anyone: reader` de las carpetas.
@@ -168,9 +168,7 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 5. **Retorno de estado (confirmado):** solo `SOLICITADO → PENDIENTE_BRIEF`; sin retorno desde `EN_DISENO` ni desde `EN_RODAJE`. El motivo es **opcional**. Al volver se limpia `fecha_solicitud_diseno` para que el SLA de diseño se recalcule en la nueva solicitud, y el cambio queda en `publicacion_estatus_historial`.
 6. **Archivos ya existentes en carpetas raíz (confirmado):** las carpetas actuales mezclan pruebas y uso real, no tienen subcarpetas y todos sus archivos están sueltos en la raíz. Se **ignoran**: solo cuentan los archivos dentro de `Brief` y `Entregables`. No se migra ni se mueve nada. Las subcarpetas se crean de forma idempotente la primera vez que se necesiten.
 6b. **Publicaciones antiguas ya en curso (confirmado):** se acepta el cambio; el equipo mueve a mano a una subcarpeta `Entregables` las piezas sueltas de publicaciones en `EN_DISENO` o `EN_CORRECCION`. No se añade respaldo en el código.
+7. **Frescura del conteo (confirmado):** 5 minutos. Se podrá ajustar según la práctica; debe vivir como una única constante en la función de base de datos.
 
-**Pendientes antes de implementar:**
 
-7. **Frescura del conteo.** Confirmar la ventana de 10 minutos propuesta en 3.4.
-
-El resto del alcance puede implementarse con los acuerdos y recomendaciones anteriores.
+**Pendientes:** ninguna decisión abierta. El resto del alcance puede implementarse con los acuerdos y recomendaciones anteriores.
