@@ -1,6 +1,6 @@
 # Plan de implementación: brief con Drive y retorno reversible
 
-**Estado:** propuesta revisada el 2026-10-11 con las decisiones del equipo (sección 10). Aún bloqueada por la cuenta de almacenamiento de Drive (sección 10, decisión 5). No modifica código ni base de datos.
+**Estado:** propuesta revisada el 2026-10-11 con las decisiones del equipo (sección 10). La cuenta de almacenamiento se resolvió con OAuth (sección 10, decisión 4); falta verificarla con una subida real. No modifica código ni base de datos.
 **Alcance:** publicaciones de `/social-media/grid`, acciones de servidor, Google Drive y transición al flujo de Design.
 **Base revisada:** el repositorio actual y `202610100001_publication_workflow_archive.sql`.
 
@@ -19,7 +19,7 @@ El sistema debe conservar la auditoría de cada ciclo. Los campos de fechas del 
 - La creación genera una carpeta principal de Drive. No hay acciones para subir o listar archivos.
 - Los archivos de brief y la pieza entregada compartirían la misma carpeta con el planteamiento inicial. Esto no es seguro funcionalmente: una referencia del brief contaría como pieza final para la validación actual de Design.
 - `transition_publicacion_status` **no tiene `PENDIENTE_BRIEF` como destino desde ningún estado**: solo permite `PENDIENTE_BRIEF → EN_RODAJE`. El retorno `SOLICITADO → PENDIENTE_BRIEF` es una transición nueva, y `EN_RODAJE → PENDIENTE_BRIEF` tampoco existe hoy.
-- La carpeta padre (`GOOGLE_DRIVE_PARENT_FOLDER_ID`) está en **Mi unidad**, no en una unidad compartida (confirmado por el equipo). Crear carpetas funciona, pero según la documentación de Google las cuentas de servicio no tienen cuota de almacenamiento: subir archivos a una carpeta de Mi unidad suele fallar con `storageQuotaExceeded`. Hay que resolverlo antes de implementar subidas (sección 10, decisión 5).
+- La carpeta padre (`GOOGLE_DRIVE_PARENT_FOLDER_ID`) está en **Mi unidad**, no en una unidad compartida (confirmado por el equipo). Crear carpetas funciona, pero según la documentación de Google las cuentas de servicio no tienen cuota de almacenamiento: subir archivos a una carpeta de Mi unidad suele fallar con `storageQuotaExceeded`. Se resuelve con OAuth (sección 10, decisión 4).
 - Vercel limita el cuerpo de una petición a una función a unos 4.5 MB. Un Route Handler con `multipart/form-data` no sirve para briefs con imágenes o video; se debe subir directo a Drive (sección 4).
 - Las carpetas se crean con permiso `reader` para `anyone`. Los archivos que se suban serán accesibles mediante ese permiso; el alcance de las carpetas debe tratarse como una decisión de privacidad.
 
@@ -64,7 +64,7 @@ El resto de transiciones editoriales existentes no cambia. La ida a `PENDIENTE_B
 
 ### Fase 0 — Privacidad, inventario y contrato de archivos
 
-- **Resolver la cuenta de almacenamiento (bloqueante).** La carpeta padre está en Mi unidad y la cuenta de servicio no tiene cuota. Probar con un archivo real antes de seguir. Opciones: unidad compartida (requiere Google Workspace), delegación de todo el dominio para actuar en nombre de un usuario, o credenciales OAuth de una cuenta propietaria. Elegir una (sección 10, decisión 5).
+- **Verificar la cuenta de almacenamiento.** Decidido: OAuth (sección 10, decisión 4). Ejecutar `/api/test-connections` en local y en Vercel; la prueba de subida de 1 KB debe dar OK con `authMode: oauth`.
 - Privacidad: decidido mantener el permiso `anyone: reader`. Documentar que cualquiera con el enlace puede leer briefs y entregables.
 - Inventariar carpetas existentes y archivos en raíz. Definir cómo clasificar/mover archivos actuales a `Brief` o `Entregables`; no asumir que el contenido existente es uno u otro.
 - Límites iniciales ya acordados (sección 4). Confirmar que el despliegue permite las peticiones de subida resumible desde el navegador (CORS).
@@ -164,10 +164,10 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 1. **Subida:** directa del navegador a Drive mediante sesión resumible iniciada por el servidor.
 2. **Privacidad:** se mantiene el permiso `anyone: reader` de las carpetas.
 3. **Límites:** JPG, PNG, WebP, PDF y MP4; 100 MB por archivo y 10 archivos por solicitud.
+4. **Cuenta de almacenamiento:** OAuth con la cuenta personal de Drive del equipo (100 GB). Variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REFRESH_TOKEN`; `getDriveClient` las usa primero y conserva la cuenta de servicio como respaldo. La app de OAuth debe estar **En producción** (en modo Pruebas el refresh token caduca a los 7 días). Pendiente de verificar con `/api/test-connections` (incluye subida de prueba de 1 KB).
 
 **Pendientes antes de implementar:**
 
-4. **Cuenta de almacenamiento (bloqueante).** La carpeta padre está en Mi unidad y las cuentas de servicio no tienen cuota propia. Elegir: (a) unidad compartida de Google Workspace, (b) delegación de todo el dominio, o (c) credenciales OAuth de una cuenta propietaria. Probar la opción elegida con un archivo real.
 5. **Retorno de estado.** Recomendado: solo `SOLICITADO → PENDIENTE_BRIEF`; sin retorno desde `EN_DISENO` ni desde `EN_RODAJE`. Pendiente de confirmación.
 6. **Archivos ya existentes en carpetas raíz.** Inventariarlos y decidir si se mueven a `Brief` o `Entregables` antes de activar la validación. No asumir que son de uno u otro tipo.
 7. **Frescura del conteo.** Confirmar la ventana de 10 minutos propuesta en 3.4.

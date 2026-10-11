@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getDriveClient } from '@/lib/googleDrive';
+import { getDriveClient, getDriveAuthMode, testDriveUpload } from '@/lib/googleDrive';
 import { getAuthContext } from '@/lib/auth/dal';
 
 export async function GET() {
@@ -10,7 +10,8 @@ export async function GET() {
 
   const results = {
     supabase: { status: 'PENDING', message: '' },
-    googleDrive: { status: 'PENDING', message: '', parentFolderFound: false },
+    googleDrive: { status: 'PENDING', message: '', parentFolderFound: false, authMode: getDriveAuthMode() as string },
+    googleDriveUpload: { status: 'PENDING', message: '' },
   };
 
   // 1. Validar Supabase con el cliente de sesión; la consulta también respeta RLS.
@@ -54,17 +55,32 @@ export async function GET() {
       status: 'OK',
       message: `Conexión exitosa. Carpeta raíz detectada: "${response.data.name}"`,
       parentFolderFound: true,
+      authMode: getDriveAuthMode(),
     };
   } catch (err: any) {
     results.googleDrive = {
       status: 'ERROR',
       message: err.message || 'Error desconocido al conectar con Google Drive API.',
       parentFolderFound: false,
+      authMode: getDriveAuthMode(),
     };
   }
 
+  // 3. Probar que las credenciales activas pueden guardar archivos (cuota de almacenamiento)
+  if (results.googleDrive.status === 'OK') {
+    const upload = await testDriveUpload();
+    results.googleDriveUpload = {
+      status: upload.ok ? 'OK' : 'ERROR',
+      message: `[${upload.authMode}] ${upload.message}`,
+    };
+  } else {
+    results.googleDriveUpload = { status: 'SKIPPED', message: 'Se omitió porque la conexión a Drive falló.' };
+  }
+
   const hasError =
-    results.supabase.status === 'ERROR' || results.googleDrive.status === 'ERROR';
+    results.supabase.status === 'ERROR' ||
+    results.googleDrive.status === 'ERROR' ||
+    results.googleDriveUpload.status === 'ERROR';
 
   return NextResponse.json(results, { status: hasError ? 500 : 200 });
 }

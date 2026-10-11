@@ -1,8 +1,34 @@
+import { Readable } from 'node:stream';
 import { google } from 'googleapis';
 
 const SCOPES = ['https://www.googleapis.com/auth/drive'];
 
+export type DriveAuthMode = 'oauth' | 'service_account';
+
+/** Indica qué credenciales usará getDriveClient según las variables de entorno. */
+export function getDriveAuthMode(): DriveAuthMode {
+  return process.env.GOOGLE_CLIENT_ID &&
+    process.env.GOOGLE_CLIENT_SECRET &&
+    process.env.GOOGLE_REFRESH_TOKEN
+    ? 'oauth'
+    : 'service_account';
+}
+
+/**
+ * Cliente de Drive. Prioriza OAuth (refresh token de la cuenta propietaria, cuyos archivos
+ * usan su cuota de almacenamiento). Si faltan las variables OAuth, usa la cuenta de servicio
+ * como respaldo; esta no tiene cuota propia y no puede subir archivos a Mi unidad.
+ */
 export function getDriveClient() {
+  if (getDriveAuthMode() === 'oauth') {
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+    oauth2Client.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+    return google.drive({ version: 'v3', auth: oauth2Client });
+  }
+
   // Mantiene compatibilidad con la variable configurada en Vercel/.env.local
   const clientEmail =
     process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || process.env.GOOGLE_CLIENT_EMAIL;
@@ -14,7 +40,7 @@ export function getDriveClient() {
 
   if (!clientEmail || !privateKey) {
     throw new Error(
-      'Credenciales de Google Service Account no están definidas en las variables de entorno.'
+      'Credenciales de Google Drive no definidas: configura GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET y GOOGLE_REFRESH_TOKEN (OAuth) o las de la cuenta de servicio.'
     );
   }
 
@@ -48,6 +74,7 @@ export async function createPublicacionDriveFolder(folderName: string): Promise<
         parents: parentFolderId ? [parentFolderId] : [],
       },
       fields: 'id, webViewLink',
+      supportsAllDrives: true,
     });
 
     const folderId = response.data.id;
@@ -60,6 +87,7 @@ export async function createPublicacionDriveFolder(folderName: string): Promise<
     // Otorgar permisos de lectura pública para previsualización de assets en la UI
     await drive.permissions.create({
       fileId: folderId,
+      supportsAllDrives: true,
       requestBody: {
         role: 'reader',
         type: 'anyone',
@@ -102,6 +130,44 @@ export async function hasPublicacionDeliverable(folderId: string): Promise<{ has
     return { hasFile: (response.data.files || []).length > 0 };
   } catch (error) {
     return { hasFile: false, error: error instanceof Error ? error.message : 'No se pudo comprobar el contenido de Drive.' };
+  }
+}
+
+/**
+ * Prueba de escritura: crea una carpeta temporal, sube un archivo de texto de 1 KB y lo borra todo.
+ * Sirve para comprobar que las credenciales activas tienen cuota para guardar archivos.
+ */
+export async function testDriveUpload(): Promise<{ ok: boolean; authMode: DriveAuthMode; message: string }> {
+  const authMode = getDriveAuthMode();
+  const drive = getDriveClient();
+  const parentFolderId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
+  let folderId: string | null | undefined;
+  try {
+    const folder = await drive.files.create({
+      requestBody: {
+        name: `__kromi-connect-test-${Date.now()}`,
+        mimeType: 'application/vnd.google-apps.folder',
+        parents: parentFolderId ? [parentFolderId] : [],
+      },
+      fields: 'id',
+      supportsAllDrives: true,
+    });
+    folderId = folder.data.id;
+    if (!folderId) throw new Error('No se obtuvo el ID de la carpeta de prueba.');
+
+    await drive.files.create({
+      requestBody: { name: 'prueba.txt', parents: [folderId] },
+      media: { mimeType: 'text/plain', body: Readable.from(['k'.repeat(1024)]) },
+      fields: 'id',
+      supportsAllDrives: true,
+    });
+    return { ok: true, authMode, message: 'Se creó una carpeta y se subió un archivo de 1 KB correctamente.' };
+  } catch (error) {
+    return { ok: false, authMode, message: error instanceof Error ? error.message : 'Error desconocido en la subida de prueba.' };
+  } finally {
+    if (folderId) {
+      await drive.files.delete({ fileId: folderId, supportsAllDrives: true }).catch(() => undefined);
+    }
   }
 }
 
