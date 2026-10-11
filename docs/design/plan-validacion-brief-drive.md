@@ -167,10 +167,10 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 4. **Cuenta de almacenamiento:** OAuth con la cuenta personal de Drive del equipo (100 GB). Variables `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` y `GOOGLE_REFRESH_TOKEN`; `getDriveClient` las usa primero y conserva la cuenta de servicio como respaldo. La app de OAuth debe estar **En producción** (en modo Pruebas el refresh token caduca a los 7 días). **Verificado el 2026-10-11** con `/api/test-connections`: `authMode: oauth` y subida de prueba de 1 KB correcta.
 5. **Retorno de estado (confirmado):** solo `SOLICITADO → PENDIENTE_BRIEF`; sin retorno desde `EN_DISENO` ni desde `EN_RODAJE`. El motivo es **opcional**. Al volver se limpia `fecha_solicitud_diseno` para que el SLA de diseño se recalcule en la nueva solicitud, y el cambio queda en `publicacion_estatus_historial`.
 6. **Archivos ya existentes en carpetas raíz (confirmado):** las carpetas actuales mezclan pruebas y uso real, no tienen subcarpetas y todos sus archivos están sueltos en la raíz. Se **ignoran**: solo cuentan los archivos dentro de `Brief` y `Entregables`. No se migra ni se mueve nada. Las subcarpetas se crean de forma idempotente la primera vez que se necesiten.
+6b. **Publicaciones antiguas ya en curso (confirmado):** se acepta el cambio; el equipo mueve a mano a una subcarpeta `Entregables` las piezas sueltas de publicaciones en `EN_DISENO` o `EN_CORRECCION`. No se añade respaldo en el código.
 
 **Pendientes antes de implementar:**
 
-6b. **Publicaciones antiguas ya en curso (pendiente).** Al ignorar los archivos sueltos, `hasPublicacionDeliverable` dejaría de ver las piezas que Design ya dejó en la raíz de publicaciones en `EN_DISENO` o `EN_CORRECCION`, y no podrían pasar a `EN_REVISION_CM` hasta que alguien suba o mueva la pieza a `Entregables`. Opciones: (i) aceptar y mover a mano esos pocos casos, o (ii) para carpetas sin subcarpeta `Entregables`, seguir contando los archivos de la raíz solo para ese paso.
 7. **Frescura del conteo.** Confirmar la ventana de 10 minutos propuesta en 3.4.
 
 El resto del alcance puede implementarse con los acuerdos y recomendaciones anteriores.
