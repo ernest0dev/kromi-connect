@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Design: ficha de trabajo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif}
+button{font-family:inherit}
+a{color:#0066D2}a:hover{color:#002F80}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 1480px; background: #FAF8F4; color: #10233F; font-family: 'Inter', system-ui, sans-serif">
+
+<aside style="flex: 1 1 232px; max-width: 232px; box-sizing: border-box; background: #fff; border-right: 1px solid #E7E4DC; padding: 24px 16px; display: flex; flex-direction: column; gap: 24px">
+<div style="font-size: 18px; font-weight: 700; color: #0066D2; padding: 0 8px">Kromi Connect</div>
+<nav aria-label="Diseño" style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680; padding: 0 12px 8px">DISEÑO</div>
+<a href="Main.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 8px; background: #E6F0FB; color: #002F80; font-size: 14px; font-weight: 600; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>Solicitudes</a>
+<a href="Historial.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 8px; color: #3C4663; font-size: 14px; font-weight: 500; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>Historial</a>
+</nav>
+<div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 8px; border-top: 1px solid #E7E4DC">
+<div style="width: 36px; height: 36px; border-radius: 999px; background: #002F80; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">DA</div>
+<div><div style="font-size: 14px; font-weight: 600">Diseñador A</div><div style="font-size: 12px; color: #5E6680">Diseño</div></div>
+</div>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 40px 48px">
+<div style="max-width: 1100px; display: flex; flex-direction: column; gap: 28px">
+
+<header style="display: flex; flex-direction: column; gap: 14px">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; text-decoration: none; width: fit-content"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Solicitudes</a>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between">
+<div style="min-width: 0">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">Ofertas de la semana</h1>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #E0F4FD; color: #05526F">En diseño</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Post · 4:5</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Instagram</span>
+<span style="font-size: 13px; color: #5E6680">Tomada por <span style="color: #10233F; font-weight: 600">Diseñador A (tú)</span></span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end">
+<button type="button" disabled style="height: 44px; padding: 0 20px; border-radius: 8px; border: 1px solid #E7E4DC; background: #E7E4DC; color: #5E6680; font-size: 14px; font-weight: 600; cursor: not-allowed">Entregar a revisión</button>
+<span style="font-size: 12px; color: #5E6680">Disponible cuando termine la carga.</span>
+</div>
+</div>
+</header>
+
+<section aria-label="Instrucciones y archivos" style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<div style="flex: 1 1 380px; min-width: 0; box-sizing: border-box; background: #fff; border: 1px solid #E7E4DC; border-top: 4px solid #0066D2; border-radius: 12px; padding: 24px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Instrucciones</h2>
+<span style="font-size: 12px; color: #5E6680">Escritas por Social Media</span>
+</div>
+<p style="margin: 16px 0 0; font-size: 16px; line-height: 1.6; white-space: pre-line">Pieza de ofertas semanales para el feed.
+Usa la paleta corporativa y coloca el logo en la esquina inferior derecha.
+Destaca los productos de la carpeta Brief con el precio bien visible.
+El texto legal va al pie, tal como indica el PDF adjunto.
+Formato 4:5 (1080 × 1350 px).</p>
+<div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid #E7E4DC; font-size: 13px; color: #5E6680; line-height: 1.5">Si algo no queda claro, responde a Social Media por el canal habitual antes de entregar. Las instrucciones no cambian después de la solicitud: cualquier ajuste llega como corrección.</div>
+</div>
+
+<div style="flex: 1.4 1 420px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px">
+
+<div style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Brief <span style="font-weight: 500; color: #5E6680">· 3 archivos de referencia</span></h2>
+<a href="Ficha.dc.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600">Abrir carpeta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+</div>
+<ul style="list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column">
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #F0EDE6"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E6680" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">referencia-ofertas.jpg</span><span style="font-size: 12px; color: #5E6680">2,4 MB</span><a href="Ficha.dc.html" aria-label="Abrir referencia-ofertas.jpg en Drive" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -8px -8px -8px 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a></li>
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #F0EDE6"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E6680" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">productos-semana.png</span><span style="font-size: 12px; color: #5E6680">1,1 MB</span><a href="Ficha.dc.html" aria-label="Abrir productos-semana.png en Drive" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -8px -8px -8px 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a></li>
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid #F0EDE6"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E6680" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">legal-pie.pdf</span><span style="font-size: 12px; color: #5E6680">180 KB</span><a href="Ficha.dc.html" aria-label="Abrir legal-pie.pdf en Drive" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -8px -8px -8px 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a></li>
+</ul>
+</div>
+
+<div style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Entregables <span style="font-weight: 500; color: #5E6680">· 2 de 20</span></h2>
+<a href="Ficha.dc.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600">Abrir carpeta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+</div>
+
+<label style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; margin-top: 14px; padding: 22px 16px; box-sizing: border-box; border: 2px dashed #9DBDE6; border-radius: 10px; background: #F4F8FD; cursor: pointer; text-align: center">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0066D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg>
+<span style="font-size: 14px; font-weight: 600; color: #002F80">Arrastra los archivos aquí o elígelos desde tu equipo</span>
+<span style="font-size: 12px; color: #3C4663; line-height: 1.5">Imagen, video, audio, PPTX o PDF · hasta 500 MB por archivo · quedan 18 cupos</span>
+<span style="font-size: 12px; color: #5E6680">Se valida la extensión y el tamaño, no el contenido.</span>
+<input type="file" multiple style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none" aria-label="Elegir archivos entregables">
+</label>
+
+<ul style="list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+<li style="padding: 12px 14px; border-radius: 10px; background: #F7F5F0; display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; align-items: center; gap: 12px"><span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">ofertas-v2-final.png</span><span style="font-size: 12px; color: #5E6680">64 % · 2,1 de 3,3 MB</span><button type="button" style="height: 44px; padding: 0 12px; margin: -8px -6px -8px 0; border: 0; background: transparent; color: #A5281B; font-size: 13px; font-weight: 600; cursor: pointer">Cancelar</button></div>
+<div role="progressbar" aria-label="Progreso de ofertas-v2-final.png" aria-valuemin="0" aria-valuemax="100" aria-valuenow="64" style="height: 6px; border-radius: 999px; background: #DCE6F3; overflow: hidden"><div style="width: 64%; height: 100%; background: #0066D2"></div></div>
+</li>
+<li style="padding: 12px 14px; border-radius: 10px; background: #F7F5F0; display: flex; align-items: center; gap: 12px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B6B3F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto"><path d="M20 6 9 17l-5-5"/></svg><span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">ofertas-v1-borrador.jpg</span><span style="font-size: 12px; color: #0B6B3F; font-weight: 600">Cargado</span><span style="font-size: 12px; color: #5E6680">3,2 MB</span><a href="Ficha.dc.html" aria-label="Abrir ofertas-v1-borrador.jpg en Drive" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -8px -8px -8px 0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a></li>
+</ul>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="fechas" style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<h2 id="fechas" style="margin: 0 0 14px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680">FECHAS Y PLAZO</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 16px 32px">
+<div style="flex: 1 1 140px"><div style="font-size: 12px; color: #5E6680">Creada</div><div style="margin-top: 4px; font-size: 15px; font-weight: 600">jue 8 oct</div></div>
+<div style="flex: 1 1 140px"><div style="font-size: 12px; color: #5E6680">Solicitada a Diseño</div><div style="margin-top: 4px; font-size: 15px; font-weight: 600">lun 12 oct · 9:40</div></div>
+<div style="flex: 1 1 160px"><div style="font-size: 12px; color: #5E6680">Entrega estimada</div><div style="margin-top: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap"><span style="font-size: 15px; font-weight: 600">mar 13 oct</span><span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #FDEBD0; color: #7A3E00">Vence mañana</span></div></div>
+<div style="flex: 1 1 140px"><div style="font-size: 12px; color: #5E6680">Entrega real</div><div style="margin-top: 4px; font-size: 15px; font-weight: 600; color: #5E6680">Pendiente</div></div>
+<div style="flex: 1 1 140px"><div style="font-size: 12px; color: #5E6680">Publicación</div><div style="margin-top: 4px; font-size: 15px; font-weight: 600">vie 16 oct</div></div>
+</div>
+</section>
+
+<section aria-labelledby="contenido" style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+<div style="flex: 1.3 1 420px; min-width: 0; box-sizing: border-box; background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<h2 id="contenido" style="margin: 0 0 14px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680">CONTENIDO DE LA PUBLICACIÓN</h2>
+<div style="display: flex; flex-direction: column; gap: 14px">
+<div><div style="font-size: 12px; color: #5E6680">Hook</div><div style="margin-top: 3px; font-size: 14px; font-weight: 600; line-height: 1.5">Las ofertas de esta semana ya están aquí</div></div>
+<div><div style="font-size: 12px; color: #5E6680">Cuerpo</div><div style="margin-top: 3px; font-size: 14px; line-height: 1.6; color: #3C4663">Pasa por tu Kromi Market y aprovecha los precios de la semana en frescos, despensa y más.</div></div>
+<div><div style="font-size: 12px; color: #5E6680">CTA</div><div style="margin-top: 3px; font-size: 14px; line-height: 1.5">Ven a Kromi Market</div></div>
+<div><div style="font-size: 12px; color: #5E6680">Hashtags</div><div style="margin-top: 3px; font-size: 13px; color: #0B57B0">#KromiMarket #OfertasDeLaSemana</div></div>
+</div>
+</div>
+<div style="flex: 1 1 280px; min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+<div style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<h2 style="margin: 0 0 14px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680">DATOS</h2>
+<div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+<div><span style="color: #5E6680; font-size: 12px; display: block">Campaña</span>Sin campaña</div>
+<div><span style="color: #5E6680; font-size: 12px; display: block">Temas</span>Ofertas</div>
+<div><span style="color: #5E6680; font-size: 12px; display: block">Prioridad</span>Normal</div>
+</div>
+</div>
+<div style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<h2 style="margin: 0 0 14px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680">HISTORIAL DE LA SOLICITUD</h2>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 13px; line-height: 1.5">
+<li><span style="font-weight: 600">Abierta por Diseñador A</span><span style="display: block; color: #5E6680">lun 12 oct · 10:05</span></li>
+<li><span style="font-weight: 600">Solicitada a Diseño</span><span style="display: block; color: #5E6680">lun 12 oct · 9:40</span></li>
+</ol>
+</div>
+</div>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1480}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

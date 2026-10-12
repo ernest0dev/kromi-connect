@@ -251,6 +251,28 @@ Esta validación es operativa (extensión y tamaño); no inspecciona el contenid
 12. Si Drive no responde al listar `Entregables`, el modal muestra el error con un botón de reintento y **no bloquea** las acciones del punto 11 (Drive es una vista, no una condición de avance). Si la lista está vacía de forma inesperada, muestra un aviso claro y las acciones siguen disponibles.
 13. Una corrección pedida muestra a Design el comentario en su ficha; al reabrir, la regla P5 exige un archivo posterior a la reapertura (§2.3).
 
+## 8.1 Maquetas de referencia
+
+Las ocho pantallas están en [`prototypes/design-role/`](./prototypes/design-role) (archivos `.dc.html` y su `canvas.json`). Publicadas en el lienzo: https://claude.ai/artifact/9qZ7XWmohVp5EzSnNTnNAz
+
+| Maqueta | Pantalla | Fase | Ruta o componente |
+|---|---|---|---|
+| `Main.dc.html` | Cola: por tomar y en curso, filtro Todas/Mías, "Tomar y abrir" | 5 | `/design/publications` |
+| `Historial.dc.html` | Historial de entregadas y canceladas, con motivo | 5 | `/design/publications/history` |
+| `Ficha.dc.html` | Ficha de trabajo en `EN_DISENO`: instrucciones, Brief, cargador de Entregables, fechas, contenido, historial | 5 | `/design/publications/[id]` |
+| `FichaCorreccion.dc.html` | Ficha devuelta con correcciones: comentario, "Reabrir para corregir", carga en pausa | 5 | `/design/publications/[id]` |
+| `FichaMovil.dc.html` | Ficha de trabajo en 390 px | 5 | `/design/publications/[id]` |
+| `InstruccionesSM.dc.html` | Modal de Social Media: campo obligatorio "Instrucciones para Diseño" y lista de requisitos de "Solicitar a Diseño" | 4 | `TicketEditModal` |
+| `RevisionSM.dc.html` | Modal de Social Media en `EN_REVISION_CM`: Entregables y "Pedir corrección" | 4 | `TicketEditModal` |
+| `RevisionEstados.dc.html` | Lista de Entregables: cargando, error de Drive con reintento, vacía | 4 | `PublicationDriveFiles` generalizado |
+
+Cómo usarlas:
+
+- **Son referencia de estructura, jerarquía y estados**, no de colores de layout. El marco de las maquetas (barra lateral blanca, acentos azules) es ilustrativo y difiere de la app implementada (barra lateral azul oscuro y CTA naranja en la barra superior). La implementación debe reutilizar `SocialMediaShell` y el shell de Design con sus tokens actuales; no se debe copiar el marco de la maqueta. Las maquetas no se recolorearon a propósito.
+- Los datos son de ejemplo y "Diseñador A/B" son marcadores de posición.
+- Los textos en pantalla reflejan los valores por defecto P1–P5 aún sin confirmar (§2.2); si cambia alguno, las maquetas quedan desactualizadas en ese punto.
+- Los archivos referencian `./support.js`, que no se incluye en el repositorio: solo se renderizan dentro del lienzo de diseño. Para verlas, usar el enlace publicado.
+
 ## 9. Fuera de alcance
 
 Asignación por Social Media, reasignación entre diseñadores, versionado de entregables, vista previa embebida o descarga por proxy, eliminación de archivos desde Kromi, comentarios de respuesta de Design, métricas de carga de trabajo y notificaciones.

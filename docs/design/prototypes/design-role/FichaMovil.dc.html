@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Design: ficha de trabajo en móvil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif}
+button{font-family:inherit}
+a{color:#0066D2}a:hover{color:#002F80}
+</style>
+</helmet>
+<div style="width: 390px; height: 1300px; box-sizing: border-box; background: #FAF8F4; color: #10233F; font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; overflow: hidden">
+
+<div style="display: flex; align-items: center; gap: 4px; height: 56px; padding: 0 8px; background: #fff; border-bottom: 1px solid #E7E4DC; flex: 0 0 auto">
+<a href="Main.dc.html" aria-label="Volver a solicitudes" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #10233F"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg></a>
+<div style="font-size: 15px; font-weight: 700; color: #0066D2">Kromi Connect</div>
+<div style="margin-left: auto; width: 32px; height: 32px; margin-right: 8px; border-radius: 999px; background: #002F80; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700">DA</div>
+</div>
+
+<div style="flex: 1 1 auto; min-height: 0; overflow: hidden; padding: 20px 16px 24px; display: flex; flex-direction: column; gap: 16px">
+
+<div>
+<h1 style="margin: 0; font-size: 22px; font-weight: 700; line-height: 1.25">Ofertas de la semana</h1>
+<div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px">
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #E0F4FD; color: #05526F">En diseño</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Post · Instagram</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #FDEBD0; color: #7A3E00">Vence mañana</span>
+</div>
+<div style="margin-top: 8px; font-size: 13px; color: #5E6680">Tomada por <span style="color: #10233F; font-weight: 600">Diseñador A (tú)</span></div>
+</div>
+
+<section aria-labelledby="m-instr" style="background: #fff; border: 1px solid #E7E4DC; border-top: 4px solid #0066D2; border-radius: 12px; padding: 16px">
+<h2 id="m-instr" style="margin: 0; font-size: 16px; font-weight: 700">Instrucciones</h2>
+<p style="margin: 10px 0 0; font-size: 15px; line-height: 1.6; white-space: pre-line">Pieza de ofertas semanales para el feed.
+Usa la paleta corporativa y coloca el logo en la esquina inferior derecha.
+Destaca los productos del Brief con el precio visible.
+Formato 4:5 (1080 × 1350 px).</p>
+</section>
+
+<section aria-labelledby="m-brief" style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 16px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+<h2 id="m-brief" style="margin: 0; font-size: 15px; font-weight: 700">Brief <span style="font-weight: 500; color: #5E6680">· 3</span></h2>
+<a href="FichaMovil.dc.html" style="font-size: 13px; font-weight: 600">Abrir carpeta</a>
+</div>
+<ul style="list-style: none; margin: 8px 0 0; padding: 0">
+<li style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid #F0EDE6"><span style="flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">referencia-ofertas.jpg</span><span style="font-size: 12px; color: #5E6680">2,4 MB</span></li>
+<li style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid #F0EDE6"><span style="flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">productos-semana.png</span><span style="font-size: 12px; color: #5E6680">1,1 MB</span></li>
+<li style="display: flex; align-items: center; gap: 10px; min-height: 44px; border-top: 1px solid #F0EDE6"><span style="flex: 1; min-width: 0; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">legal-pie.pdf</span><span style="font-size: 12px; color: #5E6680">180 KB</span></li>
+</ul>
+</section>
+
+<section aria-labelledby="m-ent" style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 16px">
+<h2 id="m-ent" style="margin: 0; font-size: 15px; font-weight: 700">Entregables <span style="font-weight: 500; color: #5E6680">· 1 de 20</span></h2>
+<label style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 12px; min-height: 56px; border: 2px dashed #9DBDE6; border-radius: 10px; background: #F4F8FD; color: #002F80; font-size: 14px; font-weight: 600; cursor: pointer; text-align: center; padding: 8px 12px; box-sizing: border-box">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8 12 3 7 8"/><path d="M12 3v12"/></svg>Elegir archivos
+<input type="file" multiple style="position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none" aria-label="Elegir archivos entregables">
+</label>
+<p style="margin: 8px 0 0; font-size: 12px; color: #5E6680; line-height: 1.5">Imagen, video, audio, PPTX o PDF · hasta 500 MB por archivo · se valida extensión y tamaño.</p>
+<div style="margin-top: 12px; padding: 12px; border-radius: 10px; background: #F7F5F0; display: flex; align-items: center; gap: 10px">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B6B3F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto"><path d="M20 6 9 17l-5-5"/></svg>
+<span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">ofertas-v1-borrador.jpg</span>
+<span style="font-size: 12px; color: #5E6680">3,2 MB</span>
+</div>
+</section>
+
+<section aria-labelledby="m-fechas" style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 16px">
+<h2 id="m-fechas" style="margin: 0 0 12px; font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680">FECHAS Y PLAZO</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px">
+<div><div style="font-size: 12px; color: #5E6680">Solicitada</div><div style="margin-top: 3px; font-size: 14px; font-weight: 600">lun 12 oct</div></div>
+<div><div style="font-size: 12px; color: #5E6680">Entrega estimada</div><div style="margin-top: 3px; font-size: 14px; font-weight: 600">mar 13 oct</div></div>
+<div><div style="font-size: 12px; color: #5E6680">Publicación</div><div style="margin-top: 3px; font-size: 14px; font-weight: 600">vie 16 oct</div></div>
+<div><div style="font-size: 12px; color: #5E6680">Entrega real</div><div style="margin-top: 3px; font-size: 14px; font-weight: 600; color: #5E6680">Pendiente</div></div>
+</div>
+</section>
+
+<section style="background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 4px 16px">
+<div style="display: flex; align-items: center; justify-content: space-between; min-height: 52px; font-size: 14px; font-weight: 600"><span>Contenido de la publicación</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5E6680" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></div>
+</section>
+
+<button type="button" style="height: 52px; border-radius: 10px; border: 1px solid #0066D2; background: #0066D2; color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; flex: 0 0 auto">Entregar a revisión</button>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1300}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

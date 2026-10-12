@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Social Media: estados de la lista de entregables</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif}
+button{font-family:inherit}
+a{color:#0066D2}a:hover{color:#002F80}
+</style>
+</helmet>
+<div style="width: 760px; height: 720px; box-sizing: border-box; background: #FAF8F4; padding: 28px; display: flex; flex-direction: column; gap: 20px; color: #10233F; font-family: 'Inter', system-ui, sans-serif">
+
+<div>
+<div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: #5E6680">Revisión de la entrega</div>
+<h1 style="margin: 4px 0 0; font-size: 20px; font-weight: 700">Estados de «Entrega de Diseño»</h1>
+<p style="margin: 6px 0 0; font-size: 13px; color: #5E6680; line-height: 1.5">En los tres casos las acciones de revisión siguen disponibles: Drive es una vista de apoyo, no una condición para avanzar.</p>
+</div>
+
+<section aria-label="Cargando" style="padding: 16px 20px; background: #fff; border: 1px solid #E7E4DC; border-radius: 12px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><h2 style="margin: 0; font-size: 14px; font-weight: 700">Entrega de Diseño</h2><span style="font-size: 12px; color: #5E6680">Cargando</span></div>
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 12px" role="status" aria-label="Consultando archivos en Drive">
+<div style="height: 56px; border-radius: 10px; background: #EFEDE8"></div>
+<div style="height: 56px; border-radius: 10px; background: #EFEDE8"></div>
+</div>
+<p style="margin: 10px 0 0; font-size: 12px; color: #5E6680">Consultando Drive…</p>
+</section>
+
+<section aria-label="Error de Drive" style="padding: 16px 20px; background: #fff; border: 1px solid #F2C4BF; border-radius: 12px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><h2 style="margin: 0; font-size: 14px; font-weight: 700">Entrega de Diseño</h2><span style="font-size: 12px; color: #A5281B; font-weight: 600">No se pudo cargar</span></div>
+<div role="alert" style="display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: #FDE8E6; color: #7C1D13; font-size: 14px; line-height: 1.5">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+<span>Drive no respondió, así que no podemos mostrar los archivos. Puedes abrir la carpeta directamente o volver a intentarlo.</span>
+</div>
+<div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #0066D2; background: #0066D2; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer">Reintentar</button>
+<a href="RevisionEstados.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; box-sizing: border-box; border-radius: 8px; border: 1px solid #C9C3B6; background: #fff; color: #10233F; font-size: 14px; font-weight: 600; text-decoration: none">Abrir carpeta en Drive</a>
+</div>
+</section>
+
+<section aria-label="Lista vacía" style="padding: 16px 20px; background: #fff; border: 1px solid #F0C98A; border-radius: 12px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px"><h2 style="margin: 0; font-size: 14px; font-weight: 700">Entrega de Diseño <span style="font-weight: 500; color: #5E6680">· 0 archivos</span></h2></div>
+<div style="display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 10px; background: #FFF6E8; color: #4A2A00; font-size: 14px; line-height: 1.5">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto; margin-top: 1px"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+<span>No hay archivos en la carpeta de entregables, aunque Diseño marcó la pieza como entregada. Revisa la carpeta en Drive antes de continuar.</span>
+</div>
+<div style="margin-top: 12px"><a href="RevisionEstados.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 18px; box-sizing: border-box; border-radius: 8px; border: 1px solid #C9C3B6; background: #fff; color: #10233F; font-size: 14px; font-weight: 600; text-decoration: none">Abrir carpeta en Drive</a></div>
+</section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":720}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

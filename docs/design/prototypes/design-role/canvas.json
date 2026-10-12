@@ -1,0 +1,31 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-12T23:06:00Z" },
+  "title": "Vistas del rol Design",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 1060, "title": "Cola de solicitudes · /design/publications", "expand": "fill" },
+    "Historial.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 900, "title": "Historial · /design/publications/history", "expand": "fill" },
+    "Ficha.dc.html": { "x": 0, "y": 1180, "w": 1280, "h": 1480, "title": "Ficha de trabajo · en diseño", "expand": "fill" },
+    "FichaCorreccion.dc.html": { "x": 1360, "y": 1180, "w": 1280, "h": 800, "title": "Ficha · devuelta con correcciones (parte superior)", "expand": "fill" },
+    "FichaMovil.dc.html": { "x": 2720, "y": 1180, "w": 390, "h": 1300, "title": "Ficha · móvil" },
+    "InstruccionesSM.dc.html": { "x": 0, "y": 2780, "w": 760, "h": 860, "title": "Social Media · instrucciones para Diseño" },
+    "RevisionSM.dc.html": { "x": 840, "y": 2780, "w": 760, "h": 1000, "title": "Social Media · revisión de la entrega" },
+    "RevisionEstados.dc.html": { "x": 1680, "y": 2780, "w": 760, "h": 720, "title": "Social Media · estados de la lista de entregables" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Historial.dc.html",
+    "Ficha.dc.html",
+    "FichaCorreccion.dc.html",
+    "FichaMovil.dc.html",
+    "InstruccionesSM.dc.html",
+    "RevisionSM.dc.html",
+    "RevisionEstados.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "Rol Design: cola, ficha de trabajo, historial y revisión", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}

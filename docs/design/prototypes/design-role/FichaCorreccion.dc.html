@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Design: ficha devuelta con correcciones</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif}
+button{font-family:inherit}
+a{color:#0066D2}a:hover{color:#002F80}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 800px; background: #FAF8F4; color: #10233F; font-family: 'Inter', system-ui, sans-serif">
+
+<aside style="flex: 1 1 232px; max-width: 232px; box-sizing: border-box; background: #fff; border-right: 1px solid #E7E4DC; padding: 24px 16px; display: flex; flex-direction: column; gap: 24px">
+<div style="font-size: 18px; font-weight: 700; color: #0066D2; padding: 0 8px">Kromi Connect</div>
+<nav aria-label="Diseño" style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 11px; letter-spacing: .08em; font-weight: 700; color: #5E6680; padding: 0 12px 8px">DISEÑO</div>
+<a href="Main.dc.html" aria-current="page" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 8px; background: #E6F0FB; color: #002F80; font-size: 14px; font-weight: 600; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M12 11h4"/><path d="M12 16h4"/><path d="M8 11h.01"/><path d="M8 16h.01"/></svg>Solicitudes</a>
+<a href="Historial.dc.html" style="display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border-radius: 8px; color: #3C4663; font-size: 14px; font-weight: 500; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg>Historial</a>
+</nav>
+<div style="margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 12px 8px; border-top: 1px solid #E7E4DC">
+<div style="width: 36px; height: 36px; border-radius: 999px; background: #002F80; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700">DA</div>
+<div><div style="font-size: 14px; font-weight: 600">Diseñador A</div><div style="font-size: 12px; color: #5E6680">Diseño</div></div>
+</div>
+</aside>
+
+<main style="flex: 999 1 560px; min-width: 0; box-sizing: border-box; padding: 28px 40px 48px">
+<div style="max-width: 1100px; display: flex; flex-direction: column; gap: 24px">
+
+<header style="display: flex; flex-direction: column; gap: 14px">
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; text-decoration: none; width: fit-content"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>Solicitudes</a>
+<div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: space-between">
+<div style="min-width: 0">
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">Aniversario Mañongo: sorteo</h1>
+<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; align-items: center">
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #FDEBD0; color: #7A3E00">Devuelta con correcciones</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Story · 9:16</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Instagram</span>
+<span style="font-size: 13px; color: #5E6680">Tomada por <span style="color: #10233F; font-weight: 600">Diseñador A (tú)</span></span>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 6px; align-items: flex-end">
+<button type="button" style="height: 44px; padding: 0 20px; border-radius: 8px; border: 1px solid #0066D2; background: #0066D2; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer">Reabrir para corregir</button>
+<span style="font-size: 12px; color: #5E6680">Al reabrir podrás cargar archivos nuevos.</span>
+</div>
+</div>
+</header>
+
+<section aria-labelledby="correccion" style="background: #FFF6E8; border: 1px solid #F0C98A; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; align-items: center; gap: 8px; color: #7A3E00">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>
+<h2 id="correccion" style="margin: 0; font-size: 16px; font-weight: 700">Social Media pidió correcciones</h2>
+<span style="margin-left: auto; font-size: 12px">lun 12 oct · 8:15</span>
+</div>
+<p style="margin: 12px 0 0; font-size: 15px; line-height: 1.6; color: #4A2A00; white-space: pre-line">El logo quedó muy pequeño en la Story y tapa parte del texto del sorteo.
+Súbelo un poco y deja más margen inferior para la zona de la barra de respuesta.</p>
+</section>
+
+<section aria-label="Instrucciones y archivos" style="display: flex; flex-wrap: wrap; gap: 24px; align-items: flex-start">
+
+<div style="flex: 1 1 380px; min-width: 0; box-sizing: border-box; background: #fff; border: 1px solid #E7E4DC; border-top: 4px solid #0066D2; border-radius: 12px; padding: 24px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+<h2 style="margin: 0; font-size: 18px; font-weight: 700">Instrucciones</h2>
+<span style="font-size: 12px; color: #5E6680">Escritas por Social Media</span>
+</div>
+<p style="margin: 16px 0 0; font-size: 16px; line-height: 1.6; white-space: pre-line">Story vertical (1080 × 1920 px) para el sorteo del aniversario.
+Fondo con los colores del aniversario y el premio al centro.
+Deja libre la zona superior e inferior para la interfaz de Instagram.</p>
+</div>
+
+<div style="flex: 1.4 1 420px; min-width: 0; box-sizing: border-box; background: #fff; border: 1px solid #E7E4DC; border-radius: 12px; padding: 20px 24px">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap">
+<h2 style="margin: 0; font-size: 16px; font-weight: 700">Entregables <span style="font-weight: 500; color: #5E6680">· 1 de 20</span></h2>
+<a href="FichaCorreccion.dc.html" style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600">Abrir carpeta<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 14px; padding: 20px 16px; border: 2px dashed #D2CCC0; border-radius: 10px; background: #F7F5F0; text-align: center">
+<span style="font-size: 14px; font-weight: 600; color: #5E6680">La carga está pausada</span>
+<span style="font-size: 12px; color: #5E6680; line-height: 1.5">Reabre la solicitud para subir los archivos corregidos.</span>
+</div>
+<ul style="list-style: none; margin: 14px 0 0; padding: 0">
+<li style="padding: 12px 14px; border-radius: 10px; background: #F7F5F0; display: flex; align-items: center; gap: 12px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5E6680" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: 0 0 auto"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span style="flex: 1; min-width: 0; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">sorteo-story-v1.png</span><span style="font-size: 12px; color: #5E6680">Entrega anterior · 1,8 MB</span></li>
+</ul>
+<p style="margin: 12px 0 0; font-size: 12px; color: #5E6680; line-height: 1.5">Para entregar de nuevo necesitas al menos un archivo nuevo. La entrega anterior no cuenta.</p>
+</div>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

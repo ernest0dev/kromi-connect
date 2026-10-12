@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Social Media: instrucciones para Diseño</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif}
+button,input,select,textarea{font-family:inherit}
+a{color:#0066D2}a:hover{color:#002F80}
+</style>
+</helmet>
+<div style="width: 760px; height: 860px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F; font-family: 'Inter', system-ui, sans-serif">
+
+<div style="padding: 22px 28px 18px; border-bottom: 1px solid #E7E4DC">
+<div style="display: flex; align-items: flex-start; justify-content: space-between">
+<div>
+<div style="font-size: 11px; letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: #5E6680">Editar publicación</div>
+<h1 style="margin: 4px 0 0; font-size: 22px; font-weight: 700">Ofertas de la semana</h1>
+</div>
+<button type="button" aria-label="Cerrar" style="width: 44px; height: 44px; margin: -8px -8px 0 0; border-radius: 8px; border: 0; background: transparent; font-size: 24px; color: #5E6680; cursor: pointer">×</button>
+</div>
+<div style="display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap">
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Pendiente · completar brief</span>
+<span style="display: inline-flex; align-items: center; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #F3F0E9; color: #3C4663">Post · 4:5</span>
+</div>
+</div>
+
+<div style="flex: 1; min-height: 0; overflow: hidden; padding: 24px 28px; display: flex; flex-direction: column; gap: 22px">
+
+<section aria-labelledby="sm-instr">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+<label for="instrucciones" id="sm-instr" style="font-size: 14px; font-weight: 700">Instrucciones para Diseño <span style="color: #A5281B" aria-hidden="true">*</span></label>
+<span style="font-size: 12px; color: #5E6680">0 de 4000</span>
+</div>
+<p style="margin: 4px 0 8px; font-size: 13px; color: #5E6680; line-height: 1.5">Obligatorias para solicitar la pieza. Indica formato y medidas, tono, qué destacar y qué evitar. Diseño las verá arriba de todo en su ficha.</p>
+<textarea id="instrucciones" rows="6" aria-required="true" aria-invalid="true" aria-describedby="instr-error" placeholder="Ej.: Post 4:5 de ofertas. Usa la paleta corporativa, logo abajo a la derecha y los productos de la carpeta Brief con su precio." style="width: 100%; box-sizing: border-box; padding: 12px 14px; border-radius: 8px; border: 1.5px solid #A5281B; background: #fff; font-size: 14px; line-height: 1.5; color: #10233F; resize: vertical"></textarea>
+<p id="instr-error" style="margin: 6px 0 0; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #A5281B"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Escribe las instrucciones antes de solicitar a Diseño.</p>
+<p style="margin: 10px 0 0; font-size: 12px; color: #5E6680; line-height: 1.5">Puedes editarlas mientras la publicación esté en «Pendiente · completar brief» o «En rodaje». Después de solicitar, los cambios van como corrección.</p>
+</section>
+
+<section aria-labelledby="sm-brief" style="padding: 16px; border: 1px solid #E7E4DC; border-radius: 12px; background: #FAF8F4">
+<div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+<h2 id="sm-brief" style="margin: 0; font-size: 14px; font-weight: 700">Archivos del brief</h2>
+<span style="font-size: 12px; color: #5E6680">3/10 archivos · JPG, PNG, WebP, PDF, MP4</span>
+</div>
+<ul style="list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 13px">
+<li style="display: flex; justify-content: space-between; gap: 12px"><span>referencia-ofertas.jpg</span><span style="color: #5E6680">2,4 MB</span></li>
+<li style="display: flex; justify-content: space-between; gap: 12px"><span>productos-semana.png</span><span style="color: #5E6680">1,1 MB</span></li>
+<li style="display: flex; justify-content: space-between; gap: 12px"><span>legal-pie.pdf</span><span style="color: #5E6680">180 KB</span></li>
+</ul>
+</section>
+
+<section aria-labelledby="sm-solicitar" style="padding: 18px 20px; border: 1px solid #E7E4DC; border-radius: 12px">
+<h2 id="sm-solicitar" style="margin: 0; font-size: 14px; font-weight: 700">Solicitar a Diseño</h2>
+<ul style="list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 14px">
+<li style="display: flex; align-items: center; gap: 8px; color: #0B6B3F"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span style="color: #10233F">Al menos un archivo en Brief</span></li>
+<li style="display: flex; align-items: center; gap: 8px; color: #A5281B"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg><span style="color: #10233F">Instrucciones para Diseño <span style="color: #A5281B; font-weight: 600">· falta</span></span></li>
+</ul>
+<div style="display: flex; align-items: center; gap: 14px; margin-top: 16px; flex-wrap: wrap">
+<button type="button" disabled style="height: 44px; padding: 0 20px; border-radius: 8px; border: 1px solid #E7E4DC; background: #E7E4DC; color: #5E6680; font-size: 14px; font-weight: 600; cursor: not-allowed">Solicitar a Diseño</button>
+<span style="font-size: 13px; color: #5E6680">Falta: instrucciones para Diseño.</span>
+</div>
+</section>
+
+</div>
+
+<div style="display: flex; justify-content: flex-end; gap: 10px; padding: 14px 28px; border-top: 1px solid #E7E4DC">
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #C9C3B6; background: #fff; color: #10233F; font-size: 14px; font-weight: 600; cursor: pointer">Cancelar</button>
+<button type="button" style="height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid #0066D2; background: #0066D2; color: #fff; font-size: 14px; font-weight: 600; cursor: pointer">Guardar cambios</button>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":760,"height":860}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
