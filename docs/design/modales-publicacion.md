@@ -178,7 +178,6 @@ Antes de futuras modificaciones: `supabase db pull` para comparar con la línea 
 - Reglas de “Duplicar” y “Repetir” (qué se copia, qué cuentas).
 - Límite de caracteres de caption por plataforma (Instagram sin verificar).
 - SLA: 5/3/2 días viven en `src/utils/sla.ts`; `fecha_limite_brief` es el valor actual y se recalcula al reprogramar.
-
 - Design no tiene hoy una vista de los archivos de `Brief` dentro de la app: usa la carpeta de Drive (enlace público). Decidir si la cola de Design muestra la lista de Brief.
 - Eliminar o reemplazar archivos del Brief desde Kromi Connect y reanudar subidas después de cerrar el modal.
 
