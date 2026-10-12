@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { authorizeAction } from '@/lib/auth/dal';
 import { EstatusEnum } from '@/types';
 import { hasPublicacionDeliverable } from '@/lib/googleDrive';
+import { requestPublicationToDesignAction } from '@/app/actions/publicaciones/drive';
 
 const ESTADOS_DE_FLUJO: EstatusEnum[] = [
   'PENDIENTE_BRIEF', 'EN_RODAJE', 'EN_DISENO', 'EN_REVISION_CM', 'RECHAZADO_DISENO',
@@ -22,6 +23,7 @@ export async function transitionPublicationAction(input: {
   if ((input.status === 'CANCELADO' || input.status === 'EN_CORRECCION') && !input.reason?.trim()) {
     return { success: false as const, error: input.status === 'CANCELADO' ? 'Indica el motivo de cancelación.' : 'Indica las correcciones solicitadas.' };
   }
+  if (input.status === 'SOLICITADO') return requestPublicationToDesignAction(input.publicationId);
 
   let access: Awaited<ReturnType<typeof authorizeAction>>;
   if (input.status === 'CANCELADO') access = await authorizeAction('social-media.posts.status.update');

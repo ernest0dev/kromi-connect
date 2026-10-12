@@ -17,12 +17,16 @@ Estado de cada fila: **Existe** (en código o esquema confirmado), **Migración 
 - Eliminar es lógico. Solo Social Media puede eliminar/restaurar, además de cumplir el alcance de todas las cuentas destino. La publicación queda restaurable durante un mes calendario desde `deleted_at`; al vencer, comienza la purga definitiva de sus registros y carpeta de Drive.
 - Si falla la eliminación de Drive, no hay reintento automático. La publicación permanece en **Archivo**, ya vencida y no restaurable, hasta que Social Media elija reintentar la eliminación de Drive o conservar Drive y eliminar definitivamente los registros.
 - **Brief con archivos en Drive** (decidido el 2026-10-11, detalle en el plan): cada publicación tiene subcarpetas `Brief` (Social Media) y `Entregables` (Design). Social Media sube a `Brief` desde la app, con carga directa del navegador a Drive; JPG, PNG, WebP, PDF y MP4, hasta 100 MB por archivo y 10 archivos. Solicitar a Design exige al menos un archivo en `Brief`, comprobado en Drive (el conteo sirve 5 minutos). Desde `SOLICITADO` se puede volver a `PENDIENTE_BRIEF` (motivo opcional) mientras Design no abra la solicitud. Los archivos sueltos de carpetas antiguas se ignoran.
+- **Sin trabajo de Design:** `requiere_diseno` es verdadero por defecto. Social Media puede desactivarlo mientras el estado sea `PENDIENTE_BRIEF` o `EN_RODAJE`. Si no hay rodaje pendiente, puede pasar directamente a `PENDIENTE_APROBACION_GERENCIA`; con rodaje, pasa primero por `EN_RODAJE`. Brief, solicitud y entrega de Design se muestran como `No aplica`; los archivos de Drive son opcionales. Las publicaciones sin Design no aparecen en su cola.
 - La revisión y el backfill de categorías quedan fuera de esta implementación. El tema heredado `linea_contenido` se conserva como dato legado sin crear categorías nuevas ni transformarlo.
 
 ### Matriz de transiciones acordada
 
 | Estado actual | Actor y evento | Nuevo estado | Requisito |
 |---|---|---|---|
+| `PENDIENTE_BRIEF` | Social Media continúa sin Design y no requiere rodaje | `PENDIENTE_APROBACION_GERENCIA` | `requiere_diseno = false` |
+| `PENDIENTE_BRIEF` | Social Media inicia rodaje para publicación sin Design | `EN_RODAJE` | `requiere_diseno = false` y `requiere_rodaje = true` |
+| `EN_RODAJE` | Social Media termina rodaje para publicación sin Design | `PENDIENTE_APROBACION_GERENCIA` | `requiere_diseno = false` |
 | `PENDIENTE_BRIEF` / `EN_RODAJE` | Social Media envía la solicitud | `SOLICITADO` | Permiso de Social Media y al menos un archivo en `Brief` (comprobado en Drive); fija las fechas del ciclo |
 | `SOLICITADO` | Social Media retira la solicitud antes de que Design la abra | `PENDIENTE_BRIEF` | Permiso de Social Media; motivo opcional; limpia solicitud y entrega estimada, conserva el límite del brief. No existe desde `EN_DISENO` ni `EN_RODAJE` |
 | `SOLICITADO` | Design abre/toma la solicitud | `EN_DISENO` | Permiso de Design; cambio registrado por el sistema |
@@ -166,7 +170,7 @@ Antes de futuras modificaciones: `supabase db pull` para comparar con la línea 
 
 ## 5. Hallazgos que conviene resolver
 
-1. Resuelto: el guardado de contenido no modifica estado ni fechas reales; `transition_publicacion_status` valida actor, destino, motivo y registra historial. `CANCELADO` puede aplicarse desde cualquier estado activo.
+1. Resuelto: el guardado de contenido no modifica estado ni fechas reales; `transition_publicacion_status` valida actor, destino, motivo y registra historial. `CANCELADO` puede aplicarse desde cualquier estado activo. La nueva solicitud a Design se valida por una acción de servidor que consulta Brief en Drive.
 2. Resuelto: los permisos de Rodaje y de la cola de Design se siembran en la migración.
 3. `checklist_rodaje`, `solicitudes_terceros`, `inventario_premios` y `reporte_atencion_cliente` están revocadas para `authenticated` y no tienen políticas; no se habilitan como parte de este alcance.
 4. `profiles` solo es legible por su dueño o administradores, por lo que mostrar el nombre del diseñador a otros roles requiere una vista o función.
@@ -178,8 +182,8 @@ Antes de futuras modificaciones: `supabase db pull` para comparar con la línea 
 - Reglas de “Duplicar” y “Repetir” (qué se copia, qué cuentas).
 - Límite de caracteres de caption por plataforma (Instagram sin verificar).
 - SLA: 5/3/2 días viven en `src/utils/sla.ts`; `fecha_limite_brief` es el valor actual y se recalcula al reprogramar.
-- Design no tiene hoy una vista de los archivos de `Brief` dentro de la app: usa la carpeta de Drive (enlace público). Decidir si la cola de Design muestra la lista de Brief.
-- Eliminar o reemplazar archivos del Brief desde Kromi Connect y reanudar subidas después de cerrar el modal.
+- La cola existente de Design lista los archivos de `Brief` y `Entregables`; la carga final abre la carpeta `Entregables` en Drive.
+- Eliminar o reemplazar archivos del Brief desde Kromi Connect. Una carga interrumpida puede reanudarse volviendo a seleccionar el mismo archivo mientras la sesión Drive siga vigente.
 
 ## 7. Fuera de alcance por ahora
 

@@ -60,6 +60,9 @@ export interface StatusSelectProps {
   currentStatus: EstatusEnum;
   onChange: (nuevoEstatus: EstatusEnum, reason?: string) => Promise<void>;
   disabled?: boolean;
+  canRequestDesign?: boolean;
+  requiresDesign?: boolean;
+  requiresShooting?: boolean;
 }
 
 export interface GridHeaderProps {

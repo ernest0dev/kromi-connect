@@ -31,6 +31,7 @@ export interface EditPublicacionInput {
   campana_id: string | null;
   categoria_ids: string[];
   social_account_ids: string[];
+  requiere_diseno: boolean;
 }
 
 export async function editPublicacionAction(input: EditPublicacionInput): Promise<
@@ -38,6 +39,9 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
 > {
   if (!input || typeof input !== "object") {
     return { success: false, error: "No se recibieron datos de edición válidos." };
+  }
+  if (typeof input.requiere_diseno !== 'boolean') {
+    return { success: false, error: 'Indica si la publicación requiere Design.' };
   }
   if (!input.publicacionId || !UUID_PATTERN.test(input.publicacionId)) {
     return { success: false, error: "El identificador de la publicación no es válido." };
@@ -97,7 +101,7 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
     }
     const { data: current, error: readError } = await supabase
       .from("publicaciones")
-      .select("fecha_publicacion, fecha_solicitud_diseno, fecha_entrega_diseno_real, fecha_aprobacion_gerencia, estatus")
+      .select("fecha_publicacion, fecha_solicitud_diseno, fecha_entrega_diseno_real, fecha_aprobacion_gerencia, estatus, requiere_diseno")
       .eq("id", input.publicacionId)
       .maybeSingle();
     if (readError) return { success: false, error: `No se pudo consultar la publicación: ${readError.message}` };
@@ -108,6 +112,9 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       if (rescheduleAccess.error) return { success: false, error: rescheduleAccess.error };
     }
     if (current.estatus !== input.estatus) return { success: false, error: "El estado solo cambia mediante las acciones del flujo." };
+    if (current.requiere_diseno !== input.requiere_diseno && !['PENDIENTE_BRIEF', 'EN_RODAJE'].includes(current.estatus)) {
+      return { success: false, error: 'La decisión de requerir Design solo puede cambiarse antes de solicitar la pieza. Si la solicitud sigue en espera, devuélvela primero a Brief.' };
+    }
 
     const fechaSolicitudDiseno = current.fecha_solicitud_diseno;
     const slaChanged = current.fecha_publicacion !== input.fecha_publicacion
@@ -136,6 +143,13 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       p_categoria_ids: input.categoria_ids,
     });
     if (error) return { success: false, error: `No se pudieron guardar los cambios: ${error.message}` };
+    if (current.requiere_diseno !== input.requiere_diseno) {
+      const { error: designRequirementError } = await supabase.rpc('set_publication_design_requirement', {
+        p_publicacion_id: input.publicacionId,
+        p_requiere_diseno: input.requiere_diseno,
+      });
+      if (designRequirementError) return { success: false, error: `El contenido se guardó, pero no se pudo actualizar la opción de Design: ${designRequirementError.message}` };
+    }
     const { data: hourSaved, error: hourError } = await supabase.rpc('set_publication_hour', {
       p_publicacion_id: input.publicacionId,
       p_hora_publicacion: input.hora_publicacion,
@@ -149,7 +163,7 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
 
     revalidatePath("/social-media/grid");
     revalidatePath("/social-media/kanban");
-    return { success: true, data: { ...data, hora_publicacion: input.hora_publicacion, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
+    return { success: true, data: { ...data, hora_publicacion: input.hora_publicacion, requiere_diseno: input.requiere_diseno, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Ocurrió un error inesperado al guardar la publicación." };
   }

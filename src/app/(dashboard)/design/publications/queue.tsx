@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ExternalLink, Loader2, PackageCheck, Play } from 'lucide-react';
 import type { Publicacion } from '@/types';
 import { transitionPublicationAction } from '@/app/actions/publicaciones/workflow';
+import { DeliverablesList } from './DeliverablesList';
+import { listDesignPublicationDriveFilesAction } from '@/app/actions/publicaciones/drive';
+import type { DriveBriefFile } from '@/lib/googleDrive';
 
 type PublicationQueueItem = Publicacion & { comments: { id: string; texto: string; tipo: string; creado_en: string }[] };
 
@@ -13,12 +16,16 @@ export function DesignPublicationsQueue({ publications }: { publications: Public
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [driveFiles,setDriveFiles]=useState<Record<string,{briefFiles:DriveBriefFile[];deliverableFiles:DriveBriefFile[];briefUrl:string|null;deliverablesUrl:string|null;error:string|null}>>({});
+  const [loadingDrive,setLoadingDrive]=useState(true);
+  const publicationIds=publications.map((item)=>item.id).join(',');
+  useEffect(()=>{let active=true;const ids=publicationIds.split(',').filter(Boolean);if(!ids.length){setDriveFiles({});setLoadingDrive(false);return()=>{active=false;};}setLoadingDrive(true);void listDesignPublicationDriveFilesAction(ids).then((result)=>{if(!active)return;if(result.success)setDriveFiles(result.data);else setDriveFiles(Object.fromEntries(ids.map((id)=>[id,{briefFiles:[],deliverableFiles:[],briefUrl:null,deliverablesUrl:null,error:result.error||'No se pudo cargar Drive.'}])));setLoadingDrive(false);});return()=>{active=false;};},[publicationIds]);
   const move = (publication: Publicacion, status: 'EN_DISENO' | 'EN_REVISION_CM') => {
     setPendingId(publication.id);
     setError('');
     startTransition(async () => {
       const result = await transitionPublicationAction({ publicationId: publication.id, status });
-      if (!result.success) setError(result.error);
+      if (!result.success) setError(result.error || 'No se pudo cambiar el estado.');
       else router.refresh();
       setPendingId(null);
     });
@@ -40,6 +47,7 @@ export function DesignPublicationsQueue({ publications }: { publications: Public
             {publication.body_texto && <p className="whitespace-pre-wrap text-sm text-slate-600">{publication.body_texto}</p>}
             {publication.cta_texto && <p className="text-sm text-slate-600">CTA: {publication.cta_texto}</p>}
             {publication.hashtags?.length ? <p className="text-xs text-blue-700">{publication.hashtags.map((tag) => tag.startsWith('#') ? tag : `#${tag}`).join(' ')}</p> : null}
+            <DeliverablesList data={driveFiles[publication.id]} loading={loadingDrive} />
             {publication.comments.filter((comment) => comment.tipo === 'CORRECCION').map((comment) => <div key={comment.id} className="rounded-lg border border-amber-200 bg-amber-50 p-3"><p className="text-[10px] font-bold uppercase text-amber-900">Correcciones solicitadas</p><p className="mt-1 whitespace-pre-wrap text-sm text-amber-950">{comment.texto}</p></div>)}
             {publication.drive_folder_url && <a href={publication.drive_folder_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 underline">Abrir carpeta para cargar la pieza <ExternalLink size={12} /></a>}
             {publication.estatus === 'EN_DISENO' && <p className="text-[11px] text-slate-500">Carga el archivo final en Drive. La entrega se habilita cuando la carpeta contiene un archivo.</p>}

@@ -4,11 +4,12 @@ import { EstatusEnum } from '@/types';
 import { ESTATUS_STYLE } from '../utils/constants';
 import { StatusSelectProps } from '../types/grid';
 
-export function StatusSelect({ currentStatus, onChange, disabled }: StatusSelectProps) {
+export function StatusSelect({ currentStatus, onChange, disabled, canRequestDesign = false, requiresDesign = true, requiresShooting = false }: StatusSelectProps) {
   const estatusStyle = ESTATUS_STYLE[currentStatus];
   const nextStatuses: Partial<Record<EstatusEnum, EstatusEnum[]>> = {
-    PENDIENTE_BRIEF: ['SOLICITADO'],
-    EN_RODAJE: ['SOLICITADO'],
+    PENDIENTE_BRIEF: requiresDesign ? ['SOLICITADO'] : requiresShooting ? ['EN_RODAJE'] : ['PENDIENTE_APROBACION_GERENCIA'],
+    EN_RODAJE: requiresDesign ? ['SOLICITADO'] : ['PENDIENTE_APROBACION_GERENCIA'],
+    SOLICITADO: ['PENDIENTE_BRIEF'],
     EN_REVISION_CM: ['EN_CORRECCION', 'PENDIENTE_APROBACION_GERENCIA', 'PROGRAMADO', 'PUBLICADO'],
     PENDIENTE_APROBACION_GERENCIA: ['APROBADO'],
     APROBADO: ['PROGRAMADO', 'PUBLICADO'],
@@ -30,7 +31,9 @@ export function StatusSelect({ currentStatus, onChange, disabled }: StatusSelect
       style={{ background: estatusStyle.bgVar, color: estatusStyle.textVar }}
     >
       <option value="">{ESTATUS_STYLE[currentStatus].label}</option>
-      {choices.map((est) => <option key={est} value={est}>{ESTATUS_STYLE[est].label}</option>)}
+      {choices.map((est) => est === 'SOLICITADO' && !canRequestDesign
+        ? <option key={est} value={est} disabled title="Abre el detalle y sube al menos un archivo al brief">Solicitado · falta completar Brief</option>
+        : <option key={est} value={est}>{ESTATUS_STYLE[est].label}</option>)}
     </select>
   );
 }

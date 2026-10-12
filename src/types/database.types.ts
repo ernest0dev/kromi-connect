@@ -136,6 +136,7 @@ export interface Database {
           fecha_publicacion: string;
           hora_publicacion: string | null;
           requiere_rodaje: boolean;
+          requiere_diseno: boolean;
           fecha_rodaje: string | null;
           sedes: SedeEnum[];
           prioridad: number;
@@ -152,6 +153,10 @@ export interface Database {
           version_copy: number;
           drive_folder_id: string | null;
           drive_folder_url: string | null;
+          drive_brief_folder_id: string | null;
+          drive_deliverables_folder_id: string | null;
+          drive_brief_file_count: number;
+          drive_brief_checked_at: string | null;
           creador_id: string | null;
           disenador_id: string | null;
           created_at: string;
@@ -172,6 +177,7 @@ export interface Database {
           fecha_publicacion: string;
           hora_publicacion?: string | null;
           requiere_rodaje?: boolean;
+          requiere_diseno?: boolean;
           fecha_rodaje?: string | null;
           sedes?: SedeEnum[];
           prioridad?: number;
@@ -188,6 +194,10 @@ export interface Database {
           version_copy?: number;
           drive_folder_id?: string | null;
           drive_folder_url?: string | null;
+          drive_brief_folder_id?: string | null;
+          drive_deliverables_folder_id?: string | null;
+          drive_brief_file_count?: number;
+          drive_brief_checked_at?: string | null;
           creador_id?: string | null;
           disenador_id?: string | null;
           created_at?: string;
@@ -208,6 +218,7 @@ export interface Database {
           fecha_publicacion?: string;
           hora_publicacion?: string | null;
           requiere_rodaje?: boolean;
+          requiere_diseno?: boolean;
           fecha_rodaje?: string | null;
           sedes?: SedeEnum[];
           prioridad?: number;
@@ -224,6 +235,10 @@ export interface Database {
           version_copy?: number;
           drive_folder_id?: string | null;
           drive_folder_url?: string | null;
+          drive_brief_folder_id?: string | null;
+          drive_deliverables_folder_id?: string | null;
+          drive_brief_file_count?: number;
+          drive_brief_checked_at?: string | null;
           creador_id?: string | null;
           disenador_id?: string | null;
           created_at?: string;
@@ -650,6 +665,10 @@ export interface Database {
       set_publication_production: {
         Args: { p_publicacion_id: string; p_requiere_rodaje: boolean; p_fecha_rodaje: string | null; p_sedes: SedeEnum[]; p_prioridad: number };
         Returns: boolean;
+      };
+      set_publication_design_requirement: {
+        Args: { p_publicacion_id: string; p_requiere_diseno: boolean };
+        Returns: Database['public']['Tables']['publicaciones']['Row'];
       };
       archive_publication: {
         Args: { p_publicacion_id: string };

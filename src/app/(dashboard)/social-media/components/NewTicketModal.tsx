@@ -12,6 +12,7 @@ import { parseHashtags } from '@/utils/hashtags';
 import { calcularMatrizSLA } from '@/utils/sla';
 import { getFormatoDisplayLabel } from '../grid/utils/constants';
 import { retryPublicacionDriveFolderAction } from '@/app/actions/publicaciones/drive';
+import { PublicationDriveFiles } from '../grid/components/PublicationDriveFiles';
 
 interface Props {
   isOpen: boolean;
@@ -65,18 +66,22 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [campanaId, setCampanaId] = useState('');
   const [socialAccountIds, setSocialAccountIds] = useState<string[]>([]);
+  const [requiereDiseno, setRequiereDiseno] = useState(true);
   const [requiereRodaje, setRequiereRodaje] = useState(false);
   const [sedes, setSedes] = useState<SedeEnum[]>([]);
   const [prioridad, setPrioridad] = useState(2);
   const [drivePendingPost, setDrivePendingPost] = useState<PublicacionConCuentas | null>(null);
+  const [createdBriefPost, setCreatedBriefPost] = useState<PublicacionConCuentas | null>(null);
   const fechaLimiteBrief = fechaPublicacion ? calcularMatrizSLA(fechaPublicacion).fecha_limite_brief : null;
-  const briefVencido = !!fechaLimiteBrief && fechaLimiteBrief < todayInCaracas();
+  const briefVencido = requiereDiseno && !!fechaLimiteBrief && fechaLimiteBrief < todayInCaracas();
 
   useEffect(() => {
     if (isOpen) setFechaPublicacion(initialDate || '');
   }, [initialDate, isOpen]);
 
   if (!isOpen) return null;
+
+  if (createdBriefPost) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-labelledby={`${formId}-brief-title`} className="w-full max-w-2xl space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"><header><h2 id={`${formId}-brief-title`} className="text-lg font-bold text-slate-900">Publicación creada</h2><p className="mt-1 text-sm text-slate-600">{createdBriefPost.titulo} · agrega los archivos del brief ahora o continúa después desde el detalle.</p></header><PublicationDriveFiles publicationId={createdBriefPost.id} onBriefState={(count,checkedAt)=>{const updated={...createdBriefPost,drive_brief_file_count:Math.min(count,10),drive_brief_checked_at:checkedAt};setCreatedBriefPost(updated);onCreated?.(updated);}}/><div className="flex justify-end"><button type="button" onClick={()=>{setCreatedBriefPost(null);onClose();}} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white">Listo</button></div></section></div>;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +107,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         campana_id: campanaId || null,
         fecha_publicacion: fechaPublicacion,
         hora_publicacion: horaPublicacion || null,
+        requiere_diseno: requiereDiseno,
         requiere_rodaje: requiereRodaje,
         sedes,
         prioridad,
@@ -122,11 +128,13 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         setCategoryIds([]);
         setCampanaId('');
         setSocialAccountIds([]);
+        setRequiereDiseno(true);
         setRequiereRodaje(false);
         setSedes([]);
         setPrioridad(2);
         if (res.data) onCreated?.(res.data);
         if (res.data && !res.data.drive_folder_id) setDrivePendingPost(res.data);
+        else if (res.data) setCreatedBriefPost(res.data);
         else onClose();
       } else {
         setErrorMessage(res.error || 'Ocurrió un error al crear la publicación.');
@@ -141,7 +149,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
       if (!result.success) { setErrorMessage(result.error); return; }
       onCreated?.({ ...drivePendingPost, drive_folder_id: result.data.drive_folder_id, drive_folder_url: result.data.drive_folder_url });
       setDrivePendingPost(null);
-      onClose();
+      setCreatedBriefPost({ ...drivePendingPost, drive_folder_id: result.data.drive_folder_id, drive_folder_url: result.data.drive_folder_url });
     });
   };
 
@@ -235,9 +243,9 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
               </div>
             </div>
             {fechaPublicacion && <div className="grid grid-cols-1 gap-2 sm:grid-cols-3 md:col-span-2">
-              <div className={`rounded-lg border p-3 ${briefVencido ? 'border-amber-300 bg-amber-50 text-amber-950' : 'border-emerald-200 bg-emerald-50 text-emerald-950'}`}><p className="text-xs font-semibold">Límite del brief</p><p className="mt-1 text-sm font-bold">{formatDate(fechaLimiteBrief)}</p><p className="text-[11px]">{briefVencido ? 'Vencido · puedes continuar' : '5 días antes de publicar'}</p></div>
+              <div className={`rounded-lg border p-3 ${briefVencido ? 'border-amber-300 bg-amber-50 text-amber-950' : 'border-emerald-200 bg-emerald-50 text-emerald-950'}`}><p className="text-xs font-semibold">Límite del brief</p><p className="mt-1 text-sm font-bold">{requiereDiseno ? formatDate(fechaLimiteBrief) : 'No aplica'}</p><p className="text-[11px]">{!requiereDiseno ? 'Material opcional · sin SLA de Design' : briefVencido ? 'Vencido · puedes continuar' : '5 días antes de publicar'}</p></div>
               <div className="rounded-lg bg-slate-100 p-3 text-slate-800"><p className="text-xs font-semibold">Rodaje sugerido</p><p className="mt-1 text-sm font-bold">{requiereRodaje ? formatDate(new Date(new Date(`${fechaPublicacion}T12:00:00Z`).getTime() - 3 * 86400000).toISOString().slice(0, 10)) : 'No requerido'}</p><p className="text-[11px] text-slate-600">{requiereRodaje ? '3 días antes' : 'Actívalo en Producción'}</p></div>
-              <div className="rounded-lg bg-slate-100 p-3 text-slate-800"><p className="text-xs font-semibold">Diseño</p><p className="mt-1 text-sm font-bold">2 días</p><p className="text-[11px] text-slate-600">desde la solicitud</p></div>
+              <div className="rounded-lg bg-slate-100 p-3 text-slate-800"><p className="text-xs font-semibold">Diseño</p><p className="mt-1 text-sm font-bold">{requiereDiseno ? '2 días' : 'No aplica'}</p><p className="text-[11px] text-slate-600">{requiereDiseno ? 'desde la solicitud' : 'flujo directo a aprobación'}</p></div>
             </div>}
             {briefVencido && fechaLimiteBrief && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 md:col-span-2">El brief debía estar listo el {formatDate(fechaLimiteBrief)}. Puedes continuar y guardar igualmente.</p>}
             <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
@@ -245,6 +253,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
           </div>
 
           <details className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-bold text-slate-800">Producción <span className="ml-1 text-xs font-normal text-slate-500">Opcional</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
+            <label className="flex items-start gap-2 text-sm font-medium text-slate-700 sm:col-span-2"><input type="checkbox" checked={requiereDiseno} onChange={(event) => setRequiereDiseno(event.target.checked)} /><span><span className="block">Requiere diseño de Design</span><span className="mt-0.5 block text-xs font-normal text-slate-500">Desactívalo si Social Media ya tiene el material. La publicación podrá avanzar directamente a aprobación; los archivos de Drive son opcionales.</span></span></label>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={requiereRodaje} onChange={(event) => setRequiereRodaje(event.target.checked)} />Requiere rodaje</label>
             {requiereRodaje && <div className="text-xs text-slate-600">Fecha sugerida de rodaje: {fechaPublicacion ? new Date(new Date(`${fechaPublicacion}T00:00:00Z`).getTime() - 3 * 86400000).toISOString().slice(0, 10) : 'se calcula al seleccionar publicación'}</div>}
             <fieldset className="space-y-2 sm:col-span-2"><legend className="text-xs font-semibold text-slate-700">Tiendas donde se graba</legend><div className="flex flex-wrap gap-2">{(['PREBO', 'MANONGO'] as const).map((sede) => { const selected = sedes.includes(sede); return <button key={sede} type="button" aria-pressed={selected} onClick={() => setSedes((current) => selected ? current.filter((item) => item !== sede) : [...current, sede])} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${selected ? 'border-blue-700 bg-blue-50 text-blue-800' : 'border-slate-300 bg-white text-slate-700'}`}>{sede === 'MANONGO' ? 'Mañongo' : 'Prebo'}</button>; })}</div><p className="text-[11px] text-slate-500">Puedes elegir más de una tienda.</p></fieldset>

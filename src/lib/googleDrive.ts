@@ -120,8 +120,9 @@ export async function deletePublicacionDriveFolder(folderId: string): Promise<{ 
 export async function hasPublicacionDeliverable(folderId: string): Promise<{ hasFile: boolean; error?: string }> {
   if (!/^[a-zA-Z0-9_-]+$/.test(folderId)) return { hasFile: false, error: 'La carpeta de Drive no tiene un identificador válido.' };
   try {
+    const deliverables = await ensureChildFolder(folderId, 'Entregables');
     const response = await getDriveClient().files.list({
-      q: `'${folderId}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
+      q: `'${deliverables.id}' in parents and trashed = false and mimeType != 'application/vnd.google-apps.folder'`,
       pageSize: 1,
       fields: 'files(id)',
       supportsAllDrives: true,
@@ -131,6 +132,66 @@ export async function hasPublicacionDeliverable(folderId: string): Promise<{ has
   } catch (error) {
     return { hasFile: false, error: error instanceof Error ? error.message : 'No se pudo comprobar el contenido de Drive.' };
   }
+}
+
+export type DriveBriefFile = { id: string; name: string; mimeType: string; size: number; createdTime: string; webViewLink: string | null; thumbnailLink: string | null };
+const FOLDER_MIME = 'application/vnd.google-apps.folder';
+
+async function ensureChildFolder(parentId: string, name: string): Promise<{ id: string; url: string | null }> {
+  const drive = getDriveClient();
+  const safeName = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const found = await drive.files.list({ q: `'${parentId}' in parents and name = '${safeName}' and mimeType = '${FOLDER_MIME}' and trashed = false`, pageSize: 2, fields: 'files(id,webViewLink)', supportsAllDrives: true, includeItemsFromAllDrives: true });
+  const existing = found.data.files?.[0];
+  if (existing?.id) return { id: existing.id, url: existing.webViewLink || `https://drive.google.com/drive/folders/${existing.id}` };
+  const created = await drive.files.create({ requestBody: { name, mimeType: FOLDER_MIME, parents: [parentId] }, fields: 'id,webViewLink', supportsAllDrives: true });
+  if (!created.data.id) throw new Error(`No se pudo crear la carpeta ${name}.`);
+  await drive.permissions.create({ fileId: created.data.id, supportsAllDrives: true, requestBody: { type: 'anyone', role: 'reader' } }).catch(() => undefined);
+  return { id: created.data.id, url: created.data.webViewLink || `https://drive.google.com/drive/folders/${created.data.id}` };
+}
+
+export async function ensurePublicacionDriveFolders(rootId: string) {
+  const [brief, deliverables] = await Promise.all([ensureChildFolder(rootId, 'Brief'), ensureChildFolder(rootId, 'Entregables')]);
+  return { brief, deliverables };
+}
+
+export async function listDriveFolderFiles(folderId: string): Promise<DriveBriefFile[]> {
+  const response = await getDriveClient().files.list({ q: `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`, pageSize: 100, orderBy: 'createdTime desc', fields: 'files(id,name,mimeType,size,createdTime,webViewLink,thumbnailLink)', supportsAllDrives: true, includeItemsFromAllDrives: true });
+  return (response.data.files || []).flatMap((file) => file.id ? [{ id: file.id, name: file.name || 'Archivo', mimeType: file.mimeType || 'application/octet-stream', size: Number(file.size || 0), createdTime: file.createdTime || '', webViewLink: file.webViewLink || `https://drive.google.com/open?id=${file.id}`, thumbnailLink: file.thumbnailLink || null }] : []);
+}
+
+export async function countDriveFolderFiles(folderId: string): Promise<number> {
+  const response = await getDriveClient().files.list({ q: `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`, pageSize: 1000, fields: 'files(id)', supportsAllDrives: true, includeItemsFromAllDrives: true });
+  return response.data.files?.length || 0;
+}
+
+export async function createDriveResumableSession(input: { folderId: string; uploadId: string; name: string; mimeType: string; size: number }) {
+  if (getDriveAuthMode() !== 'oauth') throw new Error('La carga directa a Drive requiere las credenciales OAuth configuradas.');
+  const oauth = new google.auth.OAuth2(process.env.GOOGLE_CLIENT_ID, process.env.GOOGLE_CLIENT_SECRET);
+  oauth.setCredentials({ refresh_token: process.env.GOOGLE_REFRESH_TOKEN });
+  const { token } = await oauth.getAccessToken();
+  if (!token) throw new Error('No se pudo autorizar la carga en Google Drive.');
+  const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,mimeType,size,createdTime,webViewLink,thumbnailLink', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json; charset=UTF-8', 'X-Upload-Content-Type': input.mimeType, 'X-Upload-Content-Length': String(input.size) },
+    body: JSON.stringify({ name: input.name, mimeType: input.mimeType, parents: [input.folderId], appProperties: { kromiUploadId: input.uploadId } }),
+  });
+  if (!response.ok) throw new Error(`Drive no pudo iniciar la carga (${response.status}).`);
+  const sessionUri = response.headers.get('location');
+  if (!sessionUri || !sessionUri.startsWith('https://www.googleapis.com/upload/drive/')) throw new Error('Drive no devolvió una sesión de carga válida.');
+  return sessionUri;
+}
+
+export async function revokeDriveResumableSession(sessionUri: string): Promise<boolean> {
+  if (!sessionUri.startsWith('https://www.googleapis.com/upload/drive/')) return false;
+  const response = await fetch(sessionUri, { method: 'DELETE' });
+  return response.ok || response.status === 404 || response.status === 410;
+}
+
+export async function findDriveUploadedFile(folderId: string, uploadId: string): Promise<DriveBriefFile | null> {
+  const response = await getDriveClient().files.list({ q: `'${folderId}' in parents and trashed = false and appProperties has { key='kromiUploadId' and value='${uploadId}' }`, pageSize: 2, fields: 'files(id,name,mimeType,size,createdTime,webViewLink,thumbnailLink,appProperties)', supportsAllDrives: true, includeItemsFromAllDrives: true });
+  const item = response.data.files?.find((file) => file.appProperties?.kromiUploadId === uploadId);
+  if (!item?.id) return null;
+  return { id: item.id, name: item.name || '', mimeType: item.mimeType || '', size: Number(item.size || 0), createdTime: item.createdTime || '', webViewLink: item.webViewLink || null, thumbnailLink: item.thumbnailLink || null };
 }
 
 /**

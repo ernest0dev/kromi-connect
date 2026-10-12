@@ -24,6 +24,7 @@ export interface CreatePostInput {
   body_texto?: string;
   cta_texto?: string;
   hashtags?: string[];
+  requiere_diseno?: boolean;
   requiere_rodaje?: boolean;
   fecha_rodaje?: string | null;
   sedes?: SedeEnum[];
@@ -124,7 +125,15 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
       p_prioridad: prioridad,
     });
     if (productionError || productionSaved !== true) return { success: false, error: `La publicación se creó, pero no se pudo guardar Producción: ${productionError?.message || 'intenta editarla nuevamente'}` };
-    const newPost = { ...(publicationJson as unknown as PublicacionConCuentas), hora_publicacion: input.hora_publicacion || null, requiere_rodaje: input.requiere_rodaje || false, fecha_rodaje: fechaRodaje, sedes, prioridad };
+    const requiereDiseno = input.requiere_diseno ?? true;
+    if (!requiereDiseno) {
+      const { error: designRequirementError } = await supabase.rpc('set_publication_design_requirement', {
+        p_publicacion_id: publicationId,
+        p_requiere_diseno: false,
+      });
+      if (designRequirementError) return { success: false, error: `La publicación se creó, pero no se pudo guardar que no requiere Design: ${designRequirementError.message}` };
+    }
+    const newPost = { ...(publicationJson as unknown as PublicacionConCuentas), hora_publicacion: input.hora_publicacion || null, requiere_rodaje: input.requiere_rodaje || false, requiere_diseno: requiereDiseno, fecha_rodaje: fechaRodaje, sedes, prioridad };
     if (!newPost?.id) return { success: false, error: "Supabase no devolvió la publicación creada." };
     const categoryRows = categoryIds.length
       ? await supabase.from("categorias_contenido").select("id, nombre").in("id", categoryIds)

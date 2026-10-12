@@ -28,6 +28,8 @@ export function TicketDetailCard({
   const { calcularSlaState, SLA_META } = useSLA();
   const slaState = calcularSlaState(publicacion.fecha_limite_brief);
   const slaMeta = SLA_META[slaState];
+  const briefCheckedAt = publicacion.drive_brief_checked_at ? new Date(publicacion.drive_brief_checked_at).getTime() : 0;
+  const canRequestDesign = publicacion.drive_brief_file_count > 0 && briefCheckedAt > Date.now() - 5 * 60 * 1000;
 
   return (
     <article
@@ -61,6 +63,7 @@ export function TicketDetailCard({
               {publicacion.linea_contenido}
         </p>
       )}
+      {!publicacion.requiere_diseno && <span className="mb-2 w-fit rounded-full bg-slate-100 px-2 py-1 text-[9px] font-semibold text-slate-700">Sin diseño de Design</span>}
       <p className="-mt-1 mb-2 truncate text-[10px]" style={{ color: nombreCampana ? 'var(--morado)' : 'var(--gris)' }}>
             Campaña · {nombreCampana || 'Sin campaña'}
       </p>
@@ -71,6 +74,9 @@ export function TicketDetailCard({
           <StatusSelect
             currentStatus={publicacion.estatus}
             onChange={onStatusChange}
+            canRequestDesign={canRequestDesign}
+            requiresDesign={publicacion.requiere_diseno}
+            requiresShooting={publicacion.requiere_rodaje}
           />
         </div>
       </div>
@@ -81,16 +87,16 @@ export function TicketDetailCard({
         style={{
         borderColor: 'var(--borde)' }}
       >
-        <span style={{color: 'var(--gris)' }} aria-label={`Fecha límite del brief: ${formatDate(publicacion.fecha_limite_brief)}`}>Fecha límite del brief</span>
+        <span style={{color: 'var(--gris)' }} aria-label={!publicacion.requiere_diseno ? 'SLA del brief: no aplica' : `Fecha límite del brief: ${formatDate(publicacion.fecha_limite_brief)}`}>SLA del brief</span>
         <span
           className="flex items-center gap-1 rounded-[5px] px-1.5 py-1 text-right font-semibold"
           style={{background: slaMeta.bgVar, color: slaMeta.textVar }}
         >
-          {(slaState === 'vencido' || slaState === 'hoy') && (
+          {publicacion.requiere_diseno && (slaState === 'vencido' || slaState === 'hoy') && (
             <AlertTriangle size={11} aria-hidden="true" />
           )}
-          {slaMeta.label}
-          {publicacion.fecha_limite_brief && ` · ${formatDate(publicacion.fecha_limite_brief)}`}
+          {publicacion.requiere_diseno ? slaMeta.label : 'No aplica'}
+          {publicacion.requiere_diseno && publicacion.fecha_limite_brief && ` · ${formatDate(publicacion.fecha_limite_brief)}`}
         </span>
       </div>
 

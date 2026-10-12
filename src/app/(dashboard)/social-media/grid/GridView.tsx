@@ -22,6 +22,7 @@ import { TicketEditModal } from "./components/TicketEditModal";
 import { archivePublicationAction } from "@/app/actions/publicaciones/archive";
 import { transitionPublicationAction } from "@/app/actions/publicaciones/workflow";
 import { retryPublicacionDriveFolderAction } from "@/app/actions/publicaciones/drive";
+import { PublicationDriveFiles } from "./components/PublicationDriveFiles";
 import type { ContentCategoryOption } from "./components/ContentCategorySelector";
 import { ESTATUS_STYLE } from "./utils/constants";
 import { getFormatoDisplayLabel } from "./utils/constants";
@@ -208,7 +209,7 @@ export default function GridView({
     if (result.success) {
       removePublicationFromGrid(publicationToArchive.id);
       setPublicationToArchive(null);
-    } else setActionError(result.error);
+    } else setActionError(result.error || "No se pudo completar la acción.");
     setIsPublicationActionPending(false);
   };
 
@@ -241,7 +242,7 @@ export default function GridView({
       );
       setPublicationToCancel(null);
       setCancelReason("");
-    } else setActionError(result.error);
+    } else setActionError(result.error || "No se pudo completar la acción.");
     setIsPublicationActionPending(false);
   };
 
@@ -262,7 +263,7 @@ export default function GridView({
       setPublicaciones((items) =>
         items.map((item) => (item.id === updated.id ? updated : item)),
       );
-    } else setDriveRetryError(result.error);
+    } else setDriveRetryError(result.error || "No se pudo preparar Drive.");
     setIsPublicationActionPending(false);
   };
 
@@ -507,6 +508,25 @@ export default function GridView({
           categories={categoriasContenidoIniciales}
           accounts={cuentasSocialesIniciales}
           onClose={() => setEditingPublication(null)}
+          onDriveState={(updatedPublication) => {
+            setPublicaciones((current) =>
+              current.map((publication) =>
+                publication.id === updatedPublication.id
+                  ? updatedPublication
+                  : publication,
+              ),
+            );
+            setSelectedPublication((current) =>
+              current?.id === updatedPublication.id
+                ? updatedPublication
+                : current,
+            );
+            setEditingPublication((current) =>
+              current?.id === updatedPublication.id
+                ? updatedPublication
+                : current,
+            );
+          }}
           onSaved={(updatedPublication) => {
             setPublicaciones((current) =>
               current.map((publication) =>
@@ -775,7 +795,7 @@ export default function GridView({
                     return account ? (
                       <span
                         key={id}
-                        className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700"
+                        className="me-1 rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700"
                       >
                         {account.platform} · {account.handle}
                       </span>
@@ -894,6 +914,31 @@ export default function GridView({
 
                 <aside className="space-y-5">
                   <section className="space-y-4">
+                    <PublicationDriveFiles
+                      publicationId={selectedPublication.id}
+                      onBriefState={(count, checkedAt) => {
+                        setSelectedPublication((current) =>
+                          current?.id === selectedPublication.id
+                            ? {
+                                ...current,
+                                drive_brief_file_count: Math.min(count, 10),
+                                drive_brief_checked_at: checkedAt,
+                              }
+                            : current,
+                        );
+                        setPublicaciones((current) =>
+                          current.map((item) =>
+                            item.id === selectedPublication.id
+                              ? {
+                                  ...item,
+                                  drive_brief_file_count: Math.min(count, 10),
+                                  drive_brief_checked_at: checkedAt,
+                                }
+                              : item,
+                          ),
+                        );
+                      }}
+                    />
                     <div>
                       <p className="text-xs font-semibold text-slate-500">
                         Fecha de publicación
@@ -1019,17 +1064,19 @@ export default function GridView({
                       {[
                         {
                           label: "Límite del brief",
-                          value: displayDate(
+                          value: selectedPublication.requiere_diseno ? displayDate(
                             selectedPublication.fecha_limite_brief,
-                          ),
-                          detail: "Fecha calculada",
+                          ) : "No aplica",
+                          detail: selectedPublication.requiere_diseno ? "Fecha calculada" : "Material de Drive opcional",
                         },
                         {
                           label: "Solicitud de diseño",
-                          value: displayTimestamp(
+                          value: selectedPublication.requiere_diseno ? displayTimestamp(
                             selectedPublication.fecha_solicitud_diseno,
-                          ),
-                          detail: selectedPublication.fecha_solicitud_diseno
+                          ) : "No aplica",
+                          detail: !selectedPublication.requiere_diseno
+                            ? "Publicación sin flujo de Design"
+                            : selectedPublication.fecha_solicitud_diseno
                             ? "Fecha real"
                             : selectedPublication.estatus ===
                                   "PENDIENTE_BRIEF" ||
@@ -1039,14 +1086,18 @@ export default function GridView({
                         },
                         {
                           label: "Entrega de diseño",
-                          value:
+                          value: !selectedPublication.requiere_diseno
+                            ? "No aplica"
+                            :
                             displayTimestamp(
                               selectedPublication.fecha_entrega_diseno_real,
                             ) ||
                             displayDate(
                               selectedPublication.fecha_entrega_diseno_estimada,
                             ),
-                          detail: selectedPublication.fecha_entrega_diseno_real
+                          detail: !selectedPublication.requiere_diseno
+                            ? "Publicación sin flujo de Design"
+                            : selectedPublication.fecha_entrega_diseno_real
                             ? "Entrega real"
                             : selectedPublication.fecha_entrega_diseno_estimada
                               ? "Fecha estimada"

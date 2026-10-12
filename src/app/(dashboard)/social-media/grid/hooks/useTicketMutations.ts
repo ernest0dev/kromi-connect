@@ -41,6 +41,8 @@ export function useTicketMutations(
         setPublicaciones((prev) =>
           prev.map((p) => (p.id === pub.id ? { ...p, estatus: estatusAnterior } : p))
         );
+      } else if (nuevoEstatus === 'PENDIENTE_BRIEF') {
+        setPublicaciones((prev) => prev.map((p) => p.id === pub.id ? { ...p, estatus: nuevoEstatus, fecha_solicitud_diseno: null, fecha_entrega_diseno_estimada: null } : p));
       }
     });
   };

@@ -1,6 +1,6 @@
 # Plan de implementación: brief con Drive y retorno reversible
 
-**Estado:** decisiones funcionales confirmadas el 2026-10-11; falta validar la carga resumible directa desde el navegador en el dominio desplegado. OAuth y la conexión de Drive se probaron con `/api/test-connections`. Este documento es un plan, no modifica código ni base de datos.
+**Estado:** decisiones funcionales confirmadas el 2026-10-11. La implementación local está desarrollada y `pnpm run build` termina correctamente. Falta aplicar la migración en Supabase y completar las validaciones de Drive desde el dominio real antes del despliegue.
 **Alcance:** publicaciones de `/social-media/grid`, acciones de servidor, Google Drive y transición al flujo de Design.
 **Base revisada:** el repositorio actual y `202610100001_publication_workflow_archive.sql`.
 
@@ -176,3 +176,23 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 
 
 **Decisiones de producto pendientes:** ninguna. **Validaciones técnicas previas al despliegue:** CORS/preflight y encabezados de la carga desde el origen real; progreso/reanudación/cancelación; subida directa de un archivo de varios MB y un MP4 grande; permisos heredados de las subcarpetas/archivos OAuth; expiración y liberación de reservas de carga.
+
+## 11. Implementación local (2026-10-11)
+
+- Social Media tiene lista/carga de Brief en Crear, Editar y Detalle; Design consulta Brief y Entregables desde su cola existente.
+- Las cargas usan sesiones Drive resumibles y fragmentos de 8 MiB, con progreso, reanudación (tras recargar se vuelve a seleccionar el mismo archivo), cancelación y cupos reservados en Supabase. Si falla la revocación, el cupo se conserva hasta vencer la sesión.
+- La migración propuesta está en `supabase/migrations/202610110001_publication_brief_drive_uploads.sql`. Debe aplicarse antes de desplegar el código.
+- La compilación comprueba TypeScript y generación Next.js; no prueba la sintaxis/ejecución SQL contra el proyecto Supabase ni el CORS en el navegador de producción.
+- La API Drive v3 documenta consulta/reanudación de sesiones, pero no documenta una operación de revocación; el cliente intenta `DELETE` y conserva el cupo cuando no obtiene confirmación.
+- Las subcarpetas se localizan por nombre y se crean si no existen. La carga concurrente de carpetas debe verificarse en Drive para confirmar que no aparezcan duplicados.
+
+## 12. Flujo opcional sin Design (2026-10-11)
+
+Una publicación puede no requerir trabajo del rol Design. `publicaciones.requiere_diseno` usa `true` como valor predeterminado para conservar el flujo vigente. Social Media puede cambiarlo solo en `PENDIENTE_BRIEF` o `EN_RODAJE`; si la solicitud ya se envió, primero debe retirarla a Brief mientras Design no la haya abierto.
+
+- Sin diseño y sin rodaje, Social Media puede pasar de `PENDIENTE_BRIEF` directamente a `PENDIENTE_APROBACION_GERENCIA`.
+- Sin diseño y con rodaje, el recorrido es `PENDIENTE_BRIEF` → `EN_RODAJE` → `PENDIENTE_APROBACION_GERENCIA`.
+- Aprobación, programación y publicación conservan las transiciones actuales. Social Media registra la aprobación externa.
+- Brief, solicitud, entrega y SLA de Design se muestran como `No aplica`. Los archivos de Drive son opcionales y no habilitan ni bloquean el avance.
+- Las publicaciones sin Design se excluyen de `get_design_publication_queue`; las RPC rechazan solicitar o ejecutar acciones de Design para ellas.
+- La migración `202610110002_publication_design_requirement.sql` protege el cambio de la preferencia mediante una RPC autorizada y limita cuándo puede cambiarse.
