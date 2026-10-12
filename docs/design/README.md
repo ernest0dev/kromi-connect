@@ -8,6 +8,7 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 |---|---|
 | [`modales-publicacion.md`](./modales-publicacion.md) | Especificación de Crear, Editar, Detalle, Archivo y la sección Brief: campos, permisos, flujo confirmado, migraciones y alcance. |
 | [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md) | Decisiones, arquitectura y estado de implementación del brief con Drive y retorno `SOLICITADO → PENDIENTE_BRIEF`. |
+| [`plan-rol-design.md`](./plan-rol-design.md) | Plan por fases del perfil Design completo: instrucciones obligatorias, auto-asignación, carga de entregables en la app, historial y revisión por Social Media. |
 | [`prototypes/`](./prototypes) | Maquetas HTML + CSS de cada artboard (un archivo `.dc.html` por pantalla) y `canvas.json` con su posición en el lienzo. |
 
 ## Cómo leer los prototipos
