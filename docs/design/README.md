@@ -34,4 +34,6 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 
 ## Alcance actual
 
+_Estado del producto al 2026-10-12, según el repositorio. No describe el objetivo previsto: las mejoras de Design (instrucciones, toma de tickets, carga de entregables en la app, revisión e historial) están en [`plan-rol-design.md`](./plan-rol-design.md) y siguen sin implementar._
+
 En Editar quedan inactivas las pestañas **Producción** e **Historial**. La cola Design está en `/design/publications`, permite consultar listas de Brief y Entregables, abrir solicitudes y entregar piezas; la carga final sigue en Drive y no hay asignación individual. **Archivo** permite restaurar publicaciones y resolver manualmente fallos de limpieza. **Brief** ya cuenta con carga directa resumible a Drive, listado de archivos y solicitud validada; consulta `plan-validacion-brief-drive.md` para sus límites y `modales-publicacion.md` para el alcance de cada modal. La opción de publicación sin Design está descrita en esos documentos y su migración local es `202610110002_publication_design_requirement.sql`.
