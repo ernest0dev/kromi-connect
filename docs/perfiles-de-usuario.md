@@ -1,104 +1,85 @@
 # Perfiles de usuario
 
-Este documento describe quién usa Kromi Connect, qué necesita resolver y cómo esas necesidades orientan los flujos y la interfaz. Es una referencia funcional viva para el desarrollo: se amplía conforme se investigan y construyen perfiles nuevos.
-
-## Cómo usar y mantener este documento
-
-- Describe necesidades, tareas y experiencia de uso; no concede acceso técnico.
-- Los roles y permisos efectivos se documentan en la [sección 7 del SRS](kromi-connect-srs.md) y en las migraciones Supabase. Antes de implementar una acción, confirmar allí los permisos vigentes.
-- Mantener explícita la diferencia entre lo observado/implementado, lo definido como objetivo y lo que sigue pendiente de validar.
-- Actualizar la ficha del perfil cuando cambien sus flujos o se añadan módulos relevantes. Registrar decisiones pendientes en vez de completar vacíos con supuestos.
+Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Estado revisado contra el repositorio local al 2026-10-12; no implica consulta directa al proyecto remoto.
 
 ## Estado de perfiles
 
-| Perfil funcional | Estado de definición | Referencia de rol de acceso | Nota |
-|---|---|---|---|
-| Social Media / Responsable de Redes Sociales | Descrito; es el perfil que guía el desarrollo actual | `social-media` | Perfil funcional más desarrollado; alcance y estado por módulo en el SRS. |
-| Eventos | Por definir | `events` | El rol está enumerado; tareas, flujos y necesidades de interfaz no están especificados. |
-| Diseño / Diseñador | Base operativa implementada; perfil funcional por validar con usuarios | `design` | Cuenta con cola compartida de solicitudes y acciones de inicio/entrega; asignación y gestión avanzada de assets siguen pendientes. |
-| Interno | Por definir | `internal` | El rol está enumerado; falta precisar a quién representa y qué tareas realiza. |
-| Atención al cliente | Por definir | `customer-support` | El rol está enumerado; falta definir alcance, relación con escucha social y flujos de `/support`. |
-| Gerencia | Por definir | `management` | El rol está enumerado; falta especificar decisiones, indicadores y vistas requeridas. |
+| Perfil | Rol de acceso | Estado funcional |
+|---|---|---|
+| Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
+| Diseño / Diseñador | `design` | Cola compartida implementada; queda por definir y construir el perfil completo. |
+| Eventos | `events` | Rol existente; perfil funcional pendiente. |
+| Interno | `internal` | Rol existente; perfil funcional pendiente. |
+| Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
+| Gerencia | `management` | Rol existente; no tiene vista de aprobación de publicaciones. Social Media registra el resultado externo. |
 
-`pending` y `admin` son roles de acceso descritos en el SRS, no perfiles funcionales de producto en este documento. El primero representa una cuenta que aún no tiene acceso habilitado; el segundo gestiona acceso. No se deben tratar como personas usuarias con necesidades operativas equivalentes a las fichas anteriores.
+`pending` y `admin` son roles de acceso, no perfiles operativos. `admin` no adquiere acceso global a publicaciones solo por su nombre de rol.
 
-## Perfil: Social Media / Responsable de Redes Sociales
+## Social Media / Responsable de Redes Sociales
 
-**Estado:** perfil de referencia para la Fase 1. El sistema y su interfaz se han desarrollado principalmente para este perfil. La cobertura real de sus funciones varía por módulo; consultar la auditoría del [SRS](kromi-connect-srs.md) antes de considerar una función terminada.
+**Propósito:** planificar contenido, redactar copy y briefs, coordinar producción y rodaje, revisar entregas y gestionar el paso editorial hasta la publicación.
 
-### Propósito
+### Funciones implementadas en Grid
 
-Planificar y coordinar la presencia de marca en redes sociales, desde la planificación de contenido y la preparación de briefs hasta el seguimiento de producción, campañas y resultados.
+- Crear, ver y editar publicaciones; asignar cuentas sociales permitidas, campaña y categorías; editar copy, hashtags, fechas, hora y campos de producción disponibles.
+- Reprogramar publicaciones y ver sus estados, fechas de SLA, historial y observaciones.
+- Subir y listar archivos de Brief en Drive desde Crear (después de guardar), Editar y Detalle. La carga es directa del navegador a Drive mediante sesión resumible autorizada en servidor. El MVP permite JPG/JPEG, PNG, WebP, PDF y MP4, hasta 100 MB por archivo y 10 archivos presentes o reservados por publicación. La validación es por extensión/MIME y metadatos; no escanea contenido. No incluye preview dentro de Kromi ni eliminación de archivos.
+- Solicitar diseño solo tras comprobación reciente de al menos un archivo en Brief. El retorno a `PENDIENTE_BRIEF` se permite desde `SOLICITADO` antes de que Design inicie; elimina las fechas del ciclo actual, conserva el historial y al volver a solicitar calcula un ciclo nuevo.
+- Marcar si se requiere Design. Por defecto sí; el cambio está permitido en `PENDIENTE_BRIEF` o `EN_RODAJE`. Sin Design, el Brief es opcional y se omiten solicitud/entrega y SLA de diseño. Sin rodaje puede avanzar directamente de `PENDIENTE_BRIEF` a `PENDIENTE_APROBACION_GERENCIA`; con rodaje pasa por `EN_RODAJE` primero.
+- Revisar una entrega, enviar a corrección con comentario obligatorio, registrar aprobación externa (`APROBADO`), programar, publicar o cancelar desde cualquier estado activo con motivo obligatorio.
+- Archivar lógicamente por un mes calendario, restaurar durante el plazo y resolver manualmente fallos de limpieza de Drive desde Archivo.
 
-### Responsabilidades documentadas
+### Flujo de estados
 
-- Planificar el calendario mensual de contenido.
-- Redactar briefs y copys.
-- Coordinar rodajes en sedes, documentadas como Prebo y Mañongo.
-- Gestionar solicitudes de terceros.
-- Dar seguimiento a entregas de diseño y sus SLA.
-- Revisar métricas y atender escucha social.
+| Estado/acción | Quién actúa | Resultado |
+|---|---|---|
+| `PENDIENTE_BRIEF` / `EN_RODAJE` | Social Media | Prepara brief y producción; solicita a Design cuando corresponde y el Brief contiene archivo validado. |
+| `SOLICITADO` | Design | Abrir la solicitud cambia a `EN_DISENO`. Social Media puede devolverla a `PENDIENTE_BRIEF` antes del inicio. |
+| `EN_DISENO` | Design | Entrega el archivo final en Drive `Entregables`; el servidor comprueba su presencia y cambia a `EN_REVISION_CM`. |
+| `EN_REVISION_CM` | Social Media | Envía a `EN_CORRECCION` con observación, o continúa a `PENDIENTE_APROBACION_GERENCIA`, `PROGRAMADO` o `PUBLICADO`, según el caso. |
+| `EN_CORRECCION` | Design | Al abrir la corrección, vuelve a `EN_DISENO`. |
+| `PENDIENTE_APROBACION_GERENCIA` | Social Media | Registra la respuesta externa pasando a `APROBADO`; no existe interfaz de Gerencia. |
+| `APROBADO` | Social Media | Programa o marca como publicado. |
+| `PROGRAMADO` | Social Media | Confirma `PUBLICADO` cuando la publicación ya está en plataforma. |
+| Cualquier estado activo | Social Media | Puede cancelar a `CANCELADO`, con motivo obligatorio; es terminal. |
 
-Estas responsabilidades corresponden al alcance funcional descrito en la sección 1 del [SRS](kromi-connect-srs.md). La auditoría del SRS marca varias de ellas como parciales o pendientes; su inclusión aquí no afirma que estén implementadas de extremo a extremo.
+`RECHAZADO_DISENO` no se usa como transición nueva; la cancelación expresa que la pieza dejó de ser necesaria. `INCOMPLETO` y estados históricos no se normalizan automáticamente.
 
-### Interacciones principales
+### Límites de acceso
 
-- **Diseño:** preparar briefs y assets para revisión y aprobación. El flujo previsto se detalla en el SRS; la edición completa del brief y el QA/aprobación tienen brechas documentadas.
-- **Eventos, sedes y terceros:** coordinar rodajes y solicitudes relacionadas con campañas y contenido. El alcance específico para esos otros perfiles todavía debe definirse.
-- **Cuentas sociales:** organizar publicaciones para cuentas asignadas. Las reglas de asignación y alcance están descritas en [Publicaciones por cuenta social](publicaciones-por-cuenta-social.md).
+Las acciones requieren el permiso correspondiente y alcance sobre las cuentas destino. Leer requiere al menos una cuenta asignada; editar o archivar requiere todas las cuentas de la publicación. No asumir que todas las rutas existentes están habilitadas para el rol: Kanban, solicitudes, rodaje, soporte y terceros dependen de sus concesiones vigentes. Consultar §7 del SRS y las migraciones.
 
-### Áreas de producto relacionadas
+## Design / Diseñador de publicaciones
 
-El SRS relaciona este perfil con calendario/Grid, Kanban, solicitudes, rodaje, campañas, efemérides y escucha social. La disponibilidad y madurez no son uniformes: algunas rutas carecen actualmente de permisos concedidos y algunas tablas todavía no tienen consumidor de interfaz. La lista de permisos efectivos está en §7.3 del [SRS](kromi-connect-srs.md); el estado funcional está en §6 del mismo documento.
-
-### Límites conocidos del acceso actual
-
-El rol `social-media` cuenta con permisos aprobados para Grid, publicaciones, campañas y efemérides. No asumir que el nombre del perfil habilita automáticamente Kanban, solicitudes, rodaje, soporte o terceros: el SRS indica que esas rutas no tienen concesiones actuales. Además, las publicaciones tienen alcance por cuentas asignadas, según el documento de publicaciones por cuenta social.
-
-### Preguntas por resolver
-
-- Precisar qué decisiones puede tomar el perfil en el flujo de QA y aprobación de diseño.
-- Definir el flujo completo de briefing, revisiones, SLA y entrega de assets.
-- Confirmar el alcance de escucha social y su relación con Atención al cliente.
-- Validar qué módulos deben ser centrales en la navegación de este perfil y cuáles son tareas ocasionales.
-
-## Perfil: Design / Diseñador de publicaciones
-
-**Estado:** hay un flujo inicial de cliente y servidor para colaborar con Social Media. Esta ficha registra el comportamiento existente y preguntas para una futura etapa; no es alcance de desarrollo de esta sesión ni una especificación completa del perfil.
-
-### Propósito actual
-
-Recibir solicitudes de diseño, trabajar la pieza y devolverla a Social Media para revisión, incluyendo la atención de correcciones.
+**Estado:** flujo operativo inicial implementado; este registro orienta desarrollo futuro y no afirma que exista un perfil completo.
 
 ### Puede hacer hoy
 
-- Entrar a `/design/publications` si tiene el permiso `design.posts.read`.
-- Ver la cola compartida de publicaciones activas en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`, con brief, formato, fecha, hashtags, observaciones de corrección y enlace a Drive disponible.
-- Abrir una solicitud: el estado pasa a `EN_DISENO`.
-- Cargar manualmente el archivo en la carpeta de Drive y entregar la pieza. El servidor verifica que la carpeta tenga al menos un archivo antes de moverla a `EN_REVISION_CM`.
-- Volver a abrir una corrección: `EN_CORRECCION` pasa a `EN_DISENO`.
+- Abrir `/design/publications` si cuenta con `design.posts.read` y ver la cola compartida de publicaciones activas que requieren diseño en `SOLICITADO`, `EN_DISENO` o `EN_CORRECCION`.
+- Consultar los metadatos del brief y listas de archivos de las carpetas `Brief` y `Entregables`, con enlace a Drive.
+- Abrir una solicitud o corrección; el estado pasa a `EN_DISENO`.
+- Subir manualmente el entregable final a `Entregables` desde Drive y entregarlo en Kromi. El servidor verifica que haya al menos un archivo antes de cambiar a `EN_REVISION_CM`.
 
-Las operaciones requieren `design.posts.start` o `design.posts.deliver` según corresponda. La RPC valida actor y transición; la cola SQL no amplía la lectura general de `publicaciones`. La vista actual es una cola por estado, no una bandeja filtrada por `disenador_id`: no asigna ni reclama solicitudes por persona.
+Las acciones de inicio y entrega requieren `design.posts.start` y `design.posts.deliver`. La cola es compartida: no asigna, reclama ni filtra por `disenador_id`. La decisión `requiere_diseno = false` excluye la publicación de la cola.
 
-### Límites actuales
+### No puede hacer hoy
 
-- No crea ni edita briefs, cuentas destino, campaña, programación ni copy de la publicación.
-- No tiene carga de archivos dentro de Kromi Connect; usa Drive externo/manual.
-- No administra versiones, múltiples entregables, comentarios de respuesta ni estados de aprobación/publicación.
-- No puede cancelar, archivar ni restaurar publicaciones.
-- En el historial visible se registra actor/fecha en base de datos, pero la interfaz actual no expone el nombre del perfil del autor.
+- Crear o editar publicaciones, Brief, copy, cuentas destino o campañas.
+- Subir archivos dentro de Kromi Connect, administrar versiones o eliminar archivos de Drive.
+- Aprobar publicaciones, cambiar estados editoriales de Social Media, cancelar, archivar o restaurar.
+- Asignar solicitudes a sí mismo u otras personas, ni gestionar comentarios de respuesta.
 
-### Preguntas para diseñar el perfil futuro
+### Decisiones para el futuro perfil
 
-- ¿La cola será compartida o se asignará a una persona? Si hay asignación, ¿quién la crea y puede Design reasignarla?
-- ¿Qué archivos y criterios debe cumplir una entrega (formatos, cantidad, nombre, ubicación, revisiones)?
-- ¿Basta Drive como repositorio o se requiere carga, previsualización y versionado dentro de la app?
-- ¿Design puede responder a una corrección o marcarla resuelta? ¿Qué historial debe conservarse?
-- ¿Qué datos personales de creador/diseñador se mostrarán entre roles y mediante qué acceso seguro a `profiles`?
-- ¿Qué ocurre si la solicitud cambia o se cancela mientras Design trabaja?
+- Cola compartida frente a asignación individual; reglas de prioridad, carga y reasignación.
+- Convenciones de entrega: tipos, cantidades, nombres, revisiones y ubicación en Drive.
+- Si se requiere carga, vista previa, versionado o respuesta a correcciones dentro de Kromi.
+- Visibilidad segura de nombres de autor/diseñador y de datos de `profiles` entre roles.
+- Tratamiento de una solicitud modificada o cancelada mientras está en trabajo.
+- Métricas de trabajo y notificaciones.
 
-Estas decisiones podrían requerir nuevas columnas/tablas de asignación, permisos, policies/RPC y acceso seguro a perfiles. Resolverlas antes de ampliar la interfaz.
+Resolver estas decisiones antes de ampliar la UI; pueden requerir permisos, RPC/policies y cambios de datos.
 
-## Fichas futuras
+## Perfiles por definir
 
-Crear una ficha para cada perfil cuando haya información suficiente. Como mínimo, registrar propósito, responsabilidades, tareas frecuentes, áreas de producto necesarias, interacciones con otros perfiles, límites/decisiones, estado de implementación y preguntas abiertas. Las etiquetas de rol actuales sirven como inventario inicial, no como especificaciones funcionales completas.
+Eventos, Interno, Atención al cliente y Gerencia requieren entrevistas y una ficha funcional antes de desarrollar vistas específicas. Los nombres de rol disponibles no sustituyen la definición de tareas, límites y permisos.

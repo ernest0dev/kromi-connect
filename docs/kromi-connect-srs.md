@@ -2,15 +2,28 @@
 
 > Documento interno de seguimiento operativo de desarrollo. No apto para distribución externa ni comercial.
 > Stack objetivo: Next.js (App Router) + Supabase/PostgreSQL + Server Actions.
-> **Estado del documento:** actualizado al 2026-10-10. Secciones 1-5: alcance funcional; secciones 6-7: estado auditado del repositorio. El usuario confirma que `202610100001_publication_workflow_archive.sql` se ejecutó en Supabase; esta actualización no consultó la instancia remota.
+> **Estado del documento:** actualización de repositorio al 2026-10-12. Secciones 1-5 conservan el alcance funcional; el anexo de estado actual más abajo supersede afirmaciones anteriores sobre Grid, Brief, cola Design, transiciones y migraciones. No se consultó la instancia Supabase remota en esta actualización.
+
+## Estado actual del repositorio (2026-10-12)
+
+Esta sección consolida la implementación presente en código y migraciones locales. El usuario reportó aplicadas `202610110001_publication_brief_drive_uploads.sql` y la migración del flujo sin Design, y compartió verificaciones de RLS/grants/trigger para 110001, así como existencia de `get_design_publication_queue`, `request_publication_to_design`, `transition_publicacion_status` y la columna `requiere_diseno`. No se compartió aún una consulta que confirme específicamente `set_publication_design_requirement` y `guard_publication_design_requirement`. El estado remoto se registra según esas evidencias; no se consultó directamente desde esta auditoría.
+
+- **Brief Drive:** Social Media lista y sube archivos directamente desde el navegador a la carpeta `Brief` con carga resumible; el servidor autoriza la sesión y valida metadatos de Drive al finalizar. El contenido binario no pasa por Vercel ni se guarda en Supabase. Políticas: JPG/JPEG, PNG, WebP, PDF y MP4; máximo 100 MB por archivo y 10 archivos existentes o reservados por publicación. La validación no escanea firmas ni contenido. El MVP lista metadatos y enlaces de Drive, sin preview embebido ni borrado desde Kromi.
+- **Solicitud estricta a Design:** la acción del servidor vuelve a consultar Drive antes de solicitar. La RPC `request_publication_to_design` solo se concede a `service_role`; la transición genérica rechaza `SOLICITADO`. Debe existir al menos un archivo Brief y comprobación dentro de la ventana de cinco minutos.
+- **Ciclo reversible:** Social Media puede devolver `SOLICITADO` a `PENDIENTE_BRIEF` solo antes de que Design inicie. Se limpian las fechas de solicitud/entrega estimada del ciclo vigente; historial retiene los intentos y la nueva solicitud recalcula fechas.
+- **Sin Design:** `requiere_diseno` vale `true` por defecto. En `PENDIENTE_BRIEF` o `EN_RODAJE`, Social Media puede cambiarlo mediante RPC autorizada. Con Design desactivado, el brief es opcional y la cola/SLA de diseño se omiten; se pasa a `PENDIENTE_APROBACION_GERENCIA` directamente desde Brief si no hay rodaje, o después de Rodaje. Gerencia sigue sin UI y Social Media registra el resultado externo.
+- **Cola Design:** `/design/publications` es compartida y muestra publicaciones que requieren diseño en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`, con listas de Brief y Entregables. Design abre, reabre correcciones y entrega; la entrega exige al menos un archivo en `Entregables`. La carga final se realiza manualmente en Drive.
+- **Estados restantes:** Social Media devuelve una entrega a corrección con comentario obligatorio; puede cancelar desde cualquier estado activo con motivo obligatorio. `CANCELADO` es terminal. `RECHAZADO_DISENO` e `INCOMPLETO` no se ofrecen en el flujo nuevo.
+- **Archivo:** borrado lógico con un mes calendario para restauración; solo Social Media. La purga de filas y carpeta Drive se ejecuta con worker/cron del servidor. Los fallos quedan para resolución manual, sin reintentos automáticos.
+- **Límites de auditoría:** las capacidades descritas como código/migración local no equivalen a validación end-to-end en producción. OAuth se probó mediante `/api/test-connections`; eso no sustituye la validación de CORS/carga resumible desde el dominio desplegado. Consultar [perfiles](perfiles-de-usuario.md), [migraciones](supabase-db-migration.md) y [plan Brief Drive](design/plan-validacion-brief-drive.md).
 
 ---
 
-## Estado de implementación actualizado (2026-10-10)
+## Estado de implementación actualizado (2026-10-12)
 
-La vista `/social-media/grid` cuenta con modales de Crear, Editar y Detalle rediseñados, y una vista separada de Archivo. Social Media administra el contenido y sus transiciones editoriales; Design tiene una cola inicial en `/design/publications` para tomar solicitudes y entregar piezas. La migración `202610100001_publication_workflow_archive.sql` agrega las tablas, columnas, permisos, políticas y RPC descritas en la sección 4; su ejecución fue confirmada por el usuario, pero este documento no afirma haber verificado la instancia remota.
+La vista `/social-media/grid` cuenta con modales de Crear, Editar y Detalle, sección Brief con carga resumible directa a Drive, transición reversible a Brief y vista Archivo. La acción de solicitud comprueba el contenido de Brief en servidor. Design tiene una cola compartida con listas de Brief/Entregables, inicio y entrega validada. La opción sin trabajo de Design está implementada en el cliente y la migración `202610110002_publication_design_requirement.sql`; el usuario reportó haber realizado la migración y confirmó la existencia de la columna y RPC principales, aunque no se ha recibido comprobación específica de la RPC setter y trigger de guardia. `202610100001` y `202610110001` también fueron reportadas aplicadas.
 
-La funcionalidad de Design es una primera cola compartida y no un sistema de asignación, carga de archivos o versiones. No hay interfaz de Gerencia. Los detalles de alcance y pendientes están en [`design/modales-publicacion.md`](design/modales-publicacion.md) y el perfil futuro en [`perfiles-de-usuario.md`](perfiles-de-usuario.md).
+La funcionalidad de Design es una primera cola compartida sin asignación individual ni carga final dentro de Kromi. No hay interfaz de Gerencia. Los detalles están en [`design/modales-publicacion.md`](design/modales-publicacion.md), [`design/plan-validacion-brief-drive.md`](design/plan-validacion-brief-drive.md) y [`perfiles-de-usuario.md`](perfiles-de-usuario.md).
 
 ## 1. Perfil de Usuario: Responsable de Redes Sociales
 
@@ -266,6 +279,8 @@ La migración `202610100001_publication_workflow_archive.sql` agrega columnas de
 
 ## 6. Auditoría de Implementación contra Código Real (parcial)
 
+> Las subsecciones 6.0–6.6 conservan una auditoría anterior. Para Grid, Brief, la cola de Design y el despliegue de migraciones, prevalecen el [estado actual al 2026-10-12](#estado-actual-del-repositorio-2026-10-12), §6.7 actualizado y §7.5. Las conclusiones históricas que difieran no describen el código presente.
+
 > Auditoría del repositorio `ernest0dev/kromi-connect`, rama `main`, según el informe adjunto. Las capacidades se consideran implementadas solo cuando el informe describe el flujo de datos/código observado. No se verificaron módulos completos, configuración desplegada de Supabase ni ramas distintas de `main`.
 
 ### 6.0 Nomenclatura de Grid y Kanban
@@ -280,9 +295,9 @@ Son proyecciones de `publicaciones`, pero no interfaces equivalentes: Grid permi
 
 ### 6.1 Grid (`/social-media/grid`)
 
-**Implementado en el cliente:** calendario mensual, filtros, reprogramación, tarjetas y modales Crear/Editar/Detalle. Crear admite prefill de fecha, formato, campaña, cuenta(s), temas, copy y hashtags normalizados, hora opcional y datos de producción disponibles en el esquema; muestra SLA de brief y puede crear/reintentar la carpeta de Drive. Editar separa Contenido y Flujo y SLA; los controles de Producción e Historial están inactivos. Detalle incluye destinos, copy copiable, temas, producción, SLA, historial y observaciones.
+**Implementado en el cliente:** calendario mensual, filtros, reprogramación, tarjetas y modales Crear/Editar/Detalle. Crear admite prefill de fecha, formato, campaña, cuentas, temas, copy/hashtags, hora y producción disponible. Después de crear puede cargar archivos a Drive `Brief`; Editar y Detalle listan, suben y comprueban archivos. Las cargas directas resumibles usan límites operativos de 100 MB por archivo y 10 archivos por publicación. Editar separa Contenido y Flujo y SLA; Producción e Historial siguen inactivos. Detalle incluye destinos, copy copiable, temas, producción, SLA, historial y observaciones. La opción `requiere_diseno` se puede cambiar en Brief/Rodaje mediante acción RPC protegida; el SQL local 110002 aún debe confirmarse en Supabase.
 
-**Transiciones del flujo:** Social Media envía a `SOLICITADO` desde las etapas previas permitidas; desde `EN_REVISION_CM` puede solicitar `EN_CORRECCION` (motivo obligatorio), dejar `PENDIENTE_APROBACION_GERENCIA`, pasar a `PROGRAMADO` o `PUBLICADO`; registra `APROBADO` cuando recibe aprobación externa y confirma `PUBLICADO` desde `PROGRAMADO`. Puede cancelar desde cualquier estado no terminal con motivo obligatorio. Las transiciones se validan en `transition_publicacion_status`, con historial y fechas reales registradas por el sistema.
+**Transiciones del flujo:** Social Media solicita Design con acción de servidor que comprueba Drive; la RPC genérica bloquea `SOLICITADO`. Puede devolver `SOLICITADO` a `PENDIENTE_BRIEF` antes del inicio. Para publicaciones sin Design, pasa desde Brief directamente a aprobación si no hay rodaje, o desde `EN_RODAJE` a aprobación. Desde `EN_REVISION_CM` puede solicitar correcciones (motivo obligatorio), pasar a aprobación, programar o publicar; registra `APROBADO` al recibir la decisión externa y confirma `PUBLICADO` desde `PROGRAMADO`. Puede cancelar desde cualquier estado activo con motivo obligatorio. Las transiciones se validan con historial y fechas reales registradas por sistema.
 
 **Archivo:** acción separada de borrado lógico, restauración durante un mes calendario y resolución manual de fallos de Drive. La purga automática diaria de publicaciones vencidas se ejecuta desde un endpoint programado de servidor; SQL por sí solo no elimina carpetas de Drive.
 
@@ -338,9 +353,9 @@ La auditoría describe revisión de código, no validación del despliegue ni de
 
 ## 6.7 Cola del rol Design
 
-Existe `/design/publications`, implementado en `src/app/(dashboard)/design/publications/`. Presenta una cola compartida de publicaciones activas en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`; no filtra ni asigna por `disenador_id`. Design puede abrir una solicitud (`EN_DISENO`) y entregar una pieza (`EN_REVISION_CM`); antes de entregar, el servidor requiere una carpeta de Drive con al menos un archivo. Al abrir una devolución, `EN_CORRECCION` vuelve a `EN_DISENO`. La cola muestra el brief y las observaciones de corrección. No incluye carga de archivos en la app, versionado ni aprobación/publicación.
+Existe `/design/publications`, implementado en `src/app/(dashboard)/design/publications/`. Presenta una cola compartida de publicaciones activas que requieren Design en `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION`; no filtra ni asigna por `disenador_id`. Design puede abrir una solicitud (`EN_DISENO`) y entregar una pieza (`EN_REVISION_CM`); el servidor requiere al menos un archivo en `Entregables`. Al abrir una devolución, `EN_CORRECCION` vuelve a `EN_DISENO`. La cola muestra metadatos y listas de archivos de `Brief` y `Entregables`, con enlace a Drive. La carga final sigue siendo manual en Drive; no hay versionado ni aprobación/publicación.
 
-La acción `src/app/actions/publicaciones/workflow.ts` y las RPC `get_design_publication_queue()` y `transition_publicacion_status(...)` validan los permisos y el estado de las operaciones.
+La acción `src/app/actions/publicaciones/workflow.ts` y las RPC `get_design_publication_queue()` y `transition_publicacion_status(...)` validan permisos y estados. El campo `requiere_diseno` filtra la cola según la migración 110002 local.
 
 ## 7. Autenticación, roles y permisos (implementados en repositorio; despliegue sujeto a verificación)
 
@@ -400,8 +415,8 @@ Las páginas y Server Actions existentes se guardan según sus permisos. Algunas
 
 ### 7.5 Despliegue y verificación de Supabase
 
-El usuario confirma que ejecutó `supabase/migrations/202610100001_publication_workflow_archive.sql` en Supabase. Esta documentación no se conectó a la instancia para verificarlo. Antes de futuras modificaciones, comparar la línea base desplegada con `supabase db pull` y auditar objetos, grants, RLS, triggers y funciones.
+El usuario reportó como ejecutadas `202610100001_publication_workflow_archive.sql`, `202610110001_publication_brief_drive_uploads.sql` y la migración del flujo sin Design (`202610110002_publication_design_requirement.sql`). Para 110001 compartió comprobaciones de RLS/grants/RPC/trigger; para la migración sin Design compartió existencia de las RPC principales y un esquema con `requiere_diseno`. Falta una comprobación explícita de `set_publication_design_requirement` y `guard_publication_design_requirement`. Antes de futuras modificaciones, comparar con `supabase db pull` y verificar objetos, grants, RLS, triggers y funciones.
 
-La migración incorpora tablas de historial/comentarios, columnas de Archivo/Drive/producción, permisos de Social Media y Design, policies y RPC. El detalle se registra en [`supabase-db-migration.md`](supabase-db-migration.md) y en `docs/design/modales-publicacion.md`. La captura `docs/supabase-schema-public.png` fue actualizada por el usuario; la migración no altera el esquema `auth`, por lo que `supabase-schema-auth.png` no requiere cambio por este flujo.
+Las migraciones de octubre incorporan columnas de Archivo/Drive/producción, Brief, historial/comentarios, permisos, policies y RPC de flujo. El detalle se registra en [`supabase-db-migration.md`](supabase-db-migration.md) y en `docs/design/modales-publicacion.md`. La captura y el esquema Markdown `supabase-schema-public` fueron actualizados por el usuario; estas migraciones no alteran `auth`, por lo que `supabase-schema-auth` no requiere cambio por este flujo.
 
 La ejecución de una migración no sustituye pruebas con usuarios reales por rol ni verifica la configuración de `CRON_SECRET`, credenciales de Drive y cron del despliegue. La purga programada vive en `/api/cron/purge-publicaciones` y requiere `CRON_SECRET`.

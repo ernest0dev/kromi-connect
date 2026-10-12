@@ -47,6 +47,6 @@ erDiagram
 
 ## Aplicación manual en Supabase
 
-La estructura base de cuentas y políticas iniciales se aplicó desde SQL Editor. El siguiente paso de base de datos está en [`202610080001_authenticated_publication_writes.sql`](../supabase/migrations/202610080001_authenticated_publication_writes.sql). Pegar su contenido completo en SQL Editor antes de usar las nuevas acciones: define las funciones transaccionales y los permisos RLS de escritura que requieren.
+La migración [`202610080001_authenticated_publication_writes.sql`](../supabase/migrations/202610080001_authenticated_publication_writes.sql) contiene las escrituras autenticadas transaccionales de publicaciones y sus relaciones. Esta página explica el modelo de alcance por cuenta y no es una instrucción vigente para volver a pegar la migración; confirmar su estado con `supabase db pull` antes de cambios adicionales.
 
 Las asignaciones iniciales son administradas en `user_social_accounts`. La asignación de una cuenta a un usuario concede acceso a las publicaciones relacionadas; los permisos funcionales por rol siguen siendo necesarios. Administradores no reciben acceso global automático si no están asignados a las cuentas.

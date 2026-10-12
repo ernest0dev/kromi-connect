@@ -1,6 +1,6 @@
 # Documentación Técnica: Lógica de Negocio y Server Actions
 
-> **Estado:** revisado y corregido para reflejar el código real (2026-09-19), tras la reorganización de estructura en `chore/reorganize-structure`.
+> **Estado:** descripción histórica de acciones auditadas al 2026-09-19. El anexo 7 registra los flujos de publicaciones añadidos después; los apartados anteriores no deben tomarse como inventario actual completo.
 
 ## 1. Resumen de Implementación
 
@@ -106,3 +106,15 @@ Se implementó la función `calcularMatrizSLA` como unidad de lógica pura, sin 
 
 - `actions/campanas/campaigns.ts`, `actions/support/customerSupport.ts` y `actions/third-parties/thirdParties.ts` no han sido auditadas línea por línea en esta revisión — su documentación en secciones anteriores de este proyecto puede no reflejar el código real de la misma forma en que se corrigió para `publicaciones/` y `solicitudes/`.
 - El valor `estatus_solicitud = 'RECHAZADO'` y `'CONVERTIDA'` son convenciones de aplicación (campo `TEXT` libre en el schema, no un enum de base de datos) — no hay constraint a nivel de Supabase que impida un valor distinto o inconsistente si se escribe desde otro punto del código.
+
+## 7. Actualización de publicaciones (2026-10-12)
+
+Los apartados anteriores documentan el diseño inicial de Server Actions; el flujo actual de publicaciones usa cliente autenticado/RPC y validación explícita de permisos, no la afirmación histórica de que toda escritura se haga con Service Role.
+
+- `src/app/actions/publicaciones/drive.ts` autoriza sesiones de carga resumible a Google Drive, confirma/cancela reservas y lista archivos de Brief o Entregables. Los bytes viajan del navegador a Drive; no se envían a Vercel/Supabase.
+- `src/app/actions/publicaciones/workflow.ts` comprueba en Drive que haya Brief antes de solicitar a Design y que haya Entregables antes de entregar. `request_publication_to_design` es la RPC interna con `service_role`; `transition_publicacion_status` no permite solicitar por la ruta genérica.
+- La vuelta `SOLICITADO → PENDIENTE_BRIEF` está permitida antes de que Design abra la solicitud. La operación limpia fechas del ciclo vigente, preserva el evento en historial y una nueva solicitud calcula fechas nuevas.
+- La acción de requisito de diseño cambia `requiere_diseno` mediante la RPC autenticada `set_publication_design_requirement`; puede usarse en `PENDIENTE_BRIEF` y `EN_RODAJE`. La migración local `202610110002_publication_design_requirement.sql` debe confirmarse en el entorno Supabase antes de desplegar/usar esa capacidad.
+- La retención/limpieza de Archivo está documentada en la migración `202610100001_publication_workflow_archive.sql` y en §10 de `supabase-db-migration.md`.
+
+Para parámetros, límites operativos y estado reportado de despliegue, consultar [`design/plan-validacion-brief-drive.md`](design/plan-validacion-brief-drive.md) y [`supabase-db-migration.md`](supabase-db-migration.md).

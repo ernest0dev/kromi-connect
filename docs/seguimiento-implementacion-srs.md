@@ -1,5 +1,7 @@
 # Seguimiento de desarrollo: auditoría de implementación frente al SRS
 
+> **Estado vigente (2026-10-12):** el análisis extenso que comienza debajo conserva su fecha histórica de 2026-09-17. Sus diagnósticos de Grid/Brief/Design no describen el estado actual. Para cambios de publicaciones, usar este anexo y el [SRS vigente](kromi-connect-srs.md).
+
 > Estado del análisis: auditoría estática y validación técnica del proyecto principal (`main`).
 >
 > Fecha de corte: 2026-09-17.
@@ -12,6 +14,8 @@
 
 > **Actualización posterior (2026-10-10):** la fecha de corte del análisis detallado de abajo es **2026-09-17**. Sus conclusiones son una instantánea histórica, no el estado actual. Para evitar usarlas como diagnóstico vigente, este anexo supersede sus conclusiones sobre Grid, editor de publicaciones, flujo Design, permisos y esquema de publicaciones. El usuario confirma que ejecutó `202610100001_publication_workflow_archive.sql`; no se verificó la instancia viva en esta actualización.
 
+> **Actualización posterior (2026-10-12):** este anexo supersede también el estado del 10 de octubre para Brief Drive y flujo opcional sin Design. El usuario reportó aplicadas las migraciones 110001 y 110002. Compartió comprobaciones para objetos/grants de 110001 y las RPC principales/columna `requiere_diseno` de 110002; falta comprobar específicamente la RPC setter y su trigger.
+
 ## Estado actual de los cambios de publicaciones
 
 - Grid ahora tiene modales Crear, Editar y Detalle; editar copy, cuentas/temas, programacion y flujo/SLA sustituye la descripcion historica de edicion limitada a titulo/fecha. Las pestanas Produccion e Historial de Editar siguen inactivas segun el alcance de diseno.
@@ -19,6 +23,10 @@
 - Se agregaron `publicacion_estatus_historial` y `publicacion_comentarios`; motivos de correccion/cancelacion se guardan con autor y fecha. `CANCELADO` es terminal y requiere motivo.
 - Archivo implementa borrado logico por un mes calendario. Restauracion y resolucion manual de fallos de Drive se restringen a Social Media. La purga requiere endpoint/cron de servidor ademas de la RPC SQL.
 - Para detalle de columnas, permisos, RPC y limites, consultar `supabase-db-migration.md` seccion 10, `design/modales-publicacion.md` y `perfiles-de-usuario.md`.
+- Social Media sube/lista archivos del Brief directamente en Drive con sesión resumible; la solicitud comprueba el contenido en servidor y la RPC genérica no permite asignar `SOLICITADO`. Design consulta Brief/Entregables en su cola; el entregable final se sube manualmente a Drive.
+- La opción sin Design está implementada localmente: `requiere_diseno` por defecto verdadero, editable por Social Media en Brief/Rodaje; publicaciones sin Design salen de la cola y pueden continuar a aprobación con o sin paso de rodaje. El SQL local 110002 debe confirmarse en Supabase.
+- El informe de conexión OAuth mediante `/api/test-connections` no demuestra una carga resumible end-to-end desde el dominio desplegado. Ese paso queda como validación operativa, no como bloqueo para documentar el código implementado.
+- Consultar `supabase-db-migration.md` §§10–12 para el estado reportado de las migraciones y sus límites de verificación.
 - El SRS vigente se actualizo para incluir estas capacidades y estados. Los modulos restantes de Fases 2-5 siguen sujetos a la auditoria historica; esta actualizacion no los declara terminados.
 
 ---

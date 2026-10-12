@@ -1,8 +1,8 @@
 # Plan de implementación: brief con Drive y retorno reversible
 
-**Estado:** decisiones funcionales confirmadas el 2026-10-11. La implementación local está desarrollada y `pnpm run build` termina correctamente. Falta aplicar la migración en Supabase y completar las validaciones de Drive desde el dominio real antes del despliegue.
+**Estado (2026-10-12):** la carga/listado del Brief, la solicitud validada y la vista de archivos para Design están implementadas localmente. El usuario reportó aplicadas `202610110001_publication_brief_drive_uploads.sql` y la migración 110002 de la opción sin Design, y compartió comprobaciones parciales de sus objetos. Falta confirmar específicamente `set_publication_design_requirement` y su trigger. El OAuth y la conexión se probaron en `/api/test-connections`; la carga resumible desde el dominio desplegado requiere validación propia.
 **Alcance:** publicaciones de `/social-media/grid`, acciones de servidor, Google Drive y transición al flujo de Design.
-**Base revisada:** el repositorio actual y `202610100001_publication_workflow_archive.sql`.
+**Base revisada:** repositorio y migraciones locales hasta `202610110002_publication_design_requirement.sql`; esquema remoto solo según evidencia compartida por el usuario.
 
 ## 1. Resultado esperado
 
@@ -181,7 +181,7 @@ La migración no debe ejecutar llamadas HTTP a Google desde PostgreSQL. La acci�
 
 - Social Media tiene lista/carga de Brief en Crear, Editar y Detalle; Design consulta Brief y Entregables desde su cola existente.
 - Las cargas usan sesiones Drive resumibles y fragmentos de 8 MiB, con progreso, reanudación (tras recargar se vuelve a seleccionar el mismo archivo), cancelación y cupos reservados en Supabase. Si falla la revocación, el cupo se conserva hasta vencer la sesión.
-- La migración propuesta está en `supabase/migrations/202610110001_publication_brief_drive_uploads.sql`. Debe aplicarse antes de desplegar el código.
+- `202610110001_publication_brief_drive_uploads.sql` y la migración 110002 están reportadas como aplicadas. Antes de usar el control «Requiere Design» en producción, confirmar que `set_publication_design_requirement` y `guard_publication_design_requirement` existen con los grants previstos.
 - La compilación comprueba TypeScript y generación Next.js; no prueba la sintaxis/ejecución SQL contra el proyecto Supabase ni el CORS en el navegador de producción.
 - La API Drive v3 documenta consulta/reanudación de sesiones, pero no documenta una operación de revocación; el cliente intenta `DELETE` y conserva el cupo cuando no obtiene confirmación.
 - Las subcarpetas se localizan por nombre y se crean si no existen. La carga concurrente de carpetas debe verificarse en Drive para confirmar que no aparezcan duplicados.

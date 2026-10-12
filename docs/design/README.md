@@ -7,7 +7,7 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 | Archivo | Para qué sirve |
 |---|---|
 | [`modales-publicacion.md`](./modales-publicacion.md) | Especificación de Crear, Editar, Detalle, Archivo y la sección Brief: campos, permisos, flujo confirmado, migraciones y alcance. |
-| [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md) | Plan funcional y técnico del brief con archivos en Drive y el retorno `SOLICITADO → PENDIENTE_BRIEF`; decisiones confirmadas. |
+| [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md) | Decisiones, arquitectura y estado de implementación del brief con Drive y retorno `SOLICITADO → PENDIENTE_BRIEF`. |
 | [`prototypes/`](./prototypes) | Maquetas HTML + CSS de cada artboard (un archivo `.dc.html` por pantalla) y `canvas.json` con su posición en el lienzo. |
 
 ## Cómo leer los prototipos
@@ -19,18 +19,18 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 
 ## Fuente de verdad
 
-1. Base de datos desplegada: manda sobre cualquier documento.
+1. Base desplegada: manda sobre cualquier documento; su estado solo se considera verificado con una consulta o evidencia actual del proyecto remoto.
 2. `modales-publicacion.md`: decisiones confirmadas y alcance de implementación.
 3. Prototipos: apariencia. Si difieren del documento, gana el documento.
 
 ## Uso con Codex
 
 1. Lee este README y `modales-publicacion.md` completos antes de empezar.
-2. Implementa por pantalla, en este orden: crear → detalle → editar (Contenido y Flujo y SLA) → diálogos → solo lectura → Archivo → Brief (artboards `CrearBrief`, `DetalleBrief`, `EditarBrief`, `BriefEstados`, `BriefDialogos`, `BriefMovil*`; seguir las fases del plan).
+2. Los prototipos indican diseño objetivo; comprueba el estado de cada capacidad en `modales-publicacion.md` antes de implementarla.
 3. Cada pantalla corresponde a un archivo de `prototypes/` (tabla de la sección 3 del documento) y a un componente actual o nuevo indicado en la sección 1.
 4. No añadas lo marcado como fuera de alcance (sección 7). Antes de cambiar la base, parte de `supabase db pull` y revisa constraints, triggers, funciones y políticas desplegados.
 5. Al terminar una pantalla, actualiza la columna **Estado** de la tabla de campos.
 
 ## Alcance actual
 
-En el modal Editar quedan inactivas las pestañas **Producción** e **Historial**. El flujo inicial del rol Design sí tiene una cola separada en `/design/publications` para abrir solicitudes, atender correcciones y entregar piezas; no incluye asignación por persona ni carga/versionado de archivos en la app. **Archivo** es una vista independiente para restaurar publicaciones y resolver manualmente fallos de limpieza de Drive. La sección **Brief** (subida de archivos a Drive y retorno a `PENDIENTE_BRIEF`) está diseñada pero pendiente de implementar. El estado detallado se mantiene en `modales-publicacion.md`.
+En Editar quedan inactivas las pestañas **Producción** e **Historial**. La cola Design está en `/design/publications`, permite consultar listas de Brief y Entregables, abrir solicitudes y entregar piezas; la carga final sigue en Drive y no hay asignación individual. **Archivo** permite restaurar publicaciones y resolver manualmente fallos de limpieza. **Brief** ya cuenta con carga directa resumible a Drive, listado de archivos y solicitud validada; consulta `plan-validacion-brief-drive.md` para sus límites y `modales-publicacion.md` para el alcance de cada modal. La opción de publicación sin Design está descrita en esos documentos y su migración local es `202610110002_publication_design_requirement.sql`.

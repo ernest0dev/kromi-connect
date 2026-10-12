@@ -1,10 +1,10 @@
 # Modales de publicación (`/social-media/grid`)
 
-Especificación y seguimiento de implementación. Cubre crear, editar, detalle y Archivo. Actualizado: 2026-10-11 (añade la sección Brief; el plan funcional y técnico está en [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md)).
+Especificación y seguimiento de implementación. Cubre crear, editar, detalle, Archivo y Brief. Actualizado: 2026-10-12. El plan funcional y técnico está en [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md).
 
 > **Para quien implemente (Codex u otra persona):** este documento dice qué construir; los archivos de [`prototypes/`](./prototypes) dicen cómo se ve. Antes de tocar código lee la sección 8 (reglas de implementación) y respeta lo marcado como **Fuera de alcance**. La base de datos desplegada manda sobre este texto.
 
-Estado de cada fila: **Existe** (en código o esquema confirmado), **Migración aplicada** (incluida en `202610100001_publication_workflow_archive.sql`, cuya ejecución reportó el usuario), **Pendiente** (requiere desarrollo/decisión). No equivale a una verificación remota independiente.
+Estado de cada fila: **Existe** (en código/esquema local), **Reportada aplicada** (el usuario confirmó la migración), **Pendiente** (requiere desarrollo/decisión). No equivale a una verificación remota independiente. El usuario reportó ejecutada la migración `202610110002_publication_design_requirement.sql` y compartió existencia del campo y RPC principales; falta comprobar específicamente la RPC setter y trigger.
 
 ## Acuerdos confirmados
 
@@ -78,9 +78,10 @@ Columnas de `publicaciones` salvo que se indique otra tabla.
 | Diseñador | `disenador_id` | — | no editable en esta etapa | nombre pendiente | sin asignación individual ni lectura segura de nombre | Pendiente de perfil futuro |
 | Creador | `creador_id` | automático | lectura | nombre pendiente | UUID guardado; nombre requiere acceso seguro a `profiles` | Pendiente de perfil futuro |
 | Carpeta de Drive | `drive_folder_url` | automático | lectura | enlace | acción de servidor | Existe |
-| Subcarpetas `Brief` y `Entregables` | IDs en `publicaciones` o tabla de metadatos Drive (a definir en la migración del plan) | automático | lectura | lectura | acción de servidor, idempotente | Pendiente |
-| Archivos de Brief | Drive (subcarpeta `Brief`); no se guardan en la base | subir | subir | lista con enlace a Drive | carga directa del navegador iniciada y confirmada por el servidor | Pendiente |
-| Estado sincronizado del Brief | conteo y fecha de última comprobación | — | — | chip y texto de comprobación | solo `service_role`; ventana de 5 minutos | Pendiente |
+| Subcarpetas `Brief` y `Entregables` | `publicaciones.drive_brief_folder_id`, `drive_deliverables_folder_id` | automático | lectura | lectura | acción de servidor, idempotente | Existe; 110001 reportada aplicada |
+| Archivos de Brief | Drive (subcarpeta `Brief`); reservas en `publicacion_drive_uploads` | subir tras guardar | subir | lista con enlace a Drive | carga directa resumible; servidor autoriza y confirma | Existe; 110001 reportada aplicada |
+| Estado sincronizado del Brief | `drive_brief_file_count`, `drive_brief_checked_at` | — | — | chip y última comprobación | sincronización restringida a `service_role`; solicitud exige comprobación reciente | Existe; 110001 reportada aplicada |
+| Requiere Design | `publicaciones.requiere_diseno` | sí (por defecto) | sí, solo en Brief/Rodaje | sí | RPC `set_publication_design_requirement`; permisos Social Media y alcance de cuentas | Implementado localmente; migración 110002 reportada aplicada; falta verificar RPC setter y trigger |
 | Estado de sincronización/limpieza con Drive | columnas de estado/error de Drive | — | — | lectura | acción de servidor y purga programada | Migración aplicada |
 | Archivo | `deleted_at` + estado de limpieza Drive | — | restaurar dentro de un mes / resolución manual de errores | lectura | solo rol Social Media | Migración aplicada |
 | Comprobación de alcance de cuentas | función `user_has_all_publication_accounts` | — | valida el guardado | — | RPC booleana; todas las cuentas para editar o archivar | Existe |

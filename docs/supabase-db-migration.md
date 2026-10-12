@@ -3,11 +3,11 @@
 > **Proyecto:** Kromi Connect — Fase 1 (Perfil Social Media Manager)
 > **Motor:** Supabase / PostgreSQL
 > **Tipo de documento:** Bitácora de migración y arquitectura de esquema
-> **Estado:** Migración ejecutada y verificada
+> **Estado:** bitácora de esquema y migraciones; las últimas migraciones tienen estado de despliegue diferenciado más abajo.
 
 ---
 
-> **Vigencia:** los capítulos 1–9 documentan la arquitectura base y migraciones anteriores; no son un volcado completo del esquema desplegado actual. La imagen [`supabase-schema-public.png`](supabase-schema-public.png) fue actualizada por el usuario. La migración de flujo/Archivo `202610100001_publication_workflow_archive.sql` fue reportada como ejecutada. El anexo 10 registra esa extensión. Este repositorio no verificó el estado vivo; reconciliar con `supabase db pull` antes de generar nuevas migraciones.
+> **Vigencia:** los capítulos 1–9 documentan la arquitectura base y migraciones anteriores; no son un volcado completo del esquema desplegado actual. La imagen [`supabase-schema-public.png`](supabase-schema-public.png) y el esquema Markdown fueron actualizados por el usuario. `202610100001`, `202610110001` y la migración del flujo sin Design `202610110002` fueron reportadas como ejecutadas. El usuario compartió comprobaciones parciales; este repositorio no verificó el estado vivo. Reconciliar con `supabase db pull` antes de generar nuevas migraciones.
 
 ---
 
@@ -418,3 +418,18 @@ El modelo de cuentas vigente usa `social_accounts`, `user_social_accounts` y `pu
 La llamada a Drive ocurre en `src/app/api/cron/purge-publicaciones/route.ts`, programado desde `vercel.json`; SQL no llama a Drive. El cron diario requiere `CRON_SECRET` y credenciales de servidor. Los fallos quedan en Archivo para resolucion manual. El esquema auth no cambia con esta migracion; `supabase-schema-auth.png` no necesita actualizarse por este cambio.
 
 La migración no crea `YOUTUBE_SHORTS`, no normaliza categorías históricas, no crea versiones de copy ni asigna solicitudes a diseñadores.
+## 11. Brief y cargas directas a Google Drive (`202610110001`)
+
+La migración añade a `publicaciones` los IDs de las subcarpetas `drive_brief_folder_id` y `drive_deliverables_folder_id`, además del conteo y fecha de comprobación del Brief (`drive_brief_file_count`, `drive_brief_checked_at`). Crea `publicacion_drive_uploads` para reservas y sesiones de carga. La tabla tiene RLS activado; según la comprobación compartida por el usuario, `service_role` puede acceder y `authenticated` no tiene acceso directo.
+
+Las funciones `reserve_publication_brief_upload`, `sync_publication_drive_brief` y `request_publication_to_design` están restringidas a `service_role`. La RPC genérica `transition_publicacion_status` permanece disponible para `authenticated` y `service_role`, pero rechaza `SOLICITADO`; ese cambio debe pasar por la acción validada que comprueba el contenido de Drive. La migración crea `guard_publication_drive_brief_sync` para proteger los campos sincronizados. El usuario compartió resultados que confirman la existencia de dicho trigger y las concesiones indicadas, además de las funciones. Esta documentación no vuelve a consultar el proyecto remoto.
+
+La aplicación valida JPG/JPEG, PNG, WebP, PDF y MP4, hasta 100 MB por archivo y 10 archivos por Brief contando presentes/reservados. Las comprobaciones usan extensiones, MIME y metadatos; no se inspecciona contenido ni firma. El navegador sube directamente a Drive con sesión resumible, por lo que el binario no atraviesa Vercel/Supabase. El OAuth fue probado con `/api/test-connections`; la subida desde el origen desplegado requiere su propia comprobación de CORS y flujo resumible.
+
+## 12. Publicaciones sin trabajo de Design (`202610110002`)
+
+La migración local añade `publicaciones.requiere_diseno`, `boolean NOT NULL DEFAULT true`, y la RPC `set_publication_design_requirement(uuid, boolean)`. Un trigger impide alterar directamente la columna; la RPC permite a Social Media cambiarla solo con permiso y alcance de cuentas, mientras el estado sea `PENDIENTE_BRIEF` o `EN_RODAJE`.
+
+Actualiza `request_publication_to_design` para rechazar publicaciones sin Design, `get_design_publication_queue` para excluirlas y `transition_publicacion_status` para permitir a Social Media pasar a `PENDIENTE_APROBACION_GERENCIA` desde `PENDIENTE_BRIEF` (sin rodaje) o `EN_RODAJE` cuando `requiere_diseno = false`. El brief y SLA de diseño quedan fuera de ese camino; el flujo externo de aprobación continúa bajo control de Social Media.
+
+**Estado de despliegue:** el usuario reportó haber ejecutado la migración y compartió resultados que muestran `get_design_publication_queue`, `request_publication_to_design`, `transition_publicacion_status` y la columna `requiere_diseno`. No se recibió resultado específico para `set_publication_design_requirement` ni `guard_publication_design_requirement`. Antes de depender del toggle en cliente, verificar esos dos objetos y sus grants; no volver a ejecutar a ciegas.
