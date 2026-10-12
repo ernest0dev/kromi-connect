@@ -105,6 +105,62 @@
       "h": 1063,
       "title": "Detalle · 390 px",
       "radius": 16
+    },
+    "CrearBrief.dc.html": {
+      "x": 0,
+      "y": 5500,
+      "w": 640,
+      "h": 728,
+      "title": "Crear · Brief tras guardar",
+      "radius": 16
+    },
+    "DetalleBrief.dc.html": {
+      "x": 720,
+      "y": 5500,
+      "w": 760,
+      "h": 1031,
+      "title": "Detalle · Brief",
+      "radius": 16
+    },
+    "EditarBrief.dc.html": {
+      "x": 1560,
+      "y": 5500,
+      "w": 760,
+      "h": 1093,
+      "title": "Editar · Brief y solicitud",
+      "radius": 16
+    },
+    "BriefEstados.dc.html": {
+      "x": 0,
+      "y": 6713,
+      "w": 1432,
+      "h": 1053,
+      "title": "Brief · Estados de la sección",
+      "radius": 16
+    },
+    "BriefDialogos.dc.html": {
+      "x": 1512,
+      "y": 6713,
+      "w": 1320,
+      "h": 796,
+      "title": "Brief · Selector y diálogos",
+      "radius": 16
+    },
+    "BriefMovil.dc.html": {
+      "x": 0,
+      "y": 7886,
+      "w": 390,
+      "h": 793,
+      "title": "Brief · 390 px · Subiendo",
+      "radius": 16
+    },
+    "BriefMovilVacio.dc.html": {
+      "x": 470,
+      "y": 7886,
+      "w": 390,
+      "h": 641,
+      "title": "Brief · 390 px · Vacío",
+      "radius": 16
     }
   },
   "order": [
@@ -119,7 +175,14 @@
     "Archivo.dc.html",
     "Dialogos.dc.html",
     "CrearMovil.dc.html",
-    "DetalleMovil.dc.html"
+    "DetalleMovil.dc.html",
+    "CrearBrief.dc.html",
+    "DetalleBrief.dc.html",
+    "EditarBrief.dc.html",
+    "BriefEstados.dc.html",
+    "BriefDialogos.dc.html",
+    "BriefMovil.dc.html",
+    "BriefMovilVacio.dc.html"
   ],
   "notes": {
     "t1": {
@@ -142,6 +205,13 @@
       "text": "Diálogos y pantalla angosta",
       "kind": "title1",
       "maxW": 2260
+    },
+    "t4": {
+      "x": 0,
+      "y": 5260,
+      "text": "Brief con Drive y retorno reversible",
+      "kind": "title1",
+      "maxW": 2832
     }
   },
   "designSystems": []

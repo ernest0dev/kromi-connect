@@ -6,7 +6,8 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 
 | Archivo | Para qué sirve |
 |---|---|
-| [`modales-publicacion.md`](./modales-publicacion.md) | Especificación de Crear, Editar, Detalle y Archivo: campos, permisos, flujo confirmado, migraciones y alcance. |
+| [`modales-publicacion.md`](./modales-publicacion.md) | Especificación de Crear, Editar, Detalle, Archivo y la sección Brief: campos, permisos, flujo confirmado, migraciones y alcance. |
+| [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md) | Plan funcional y técnico del brief con archivos en Drive y el retorno `SOLICITADO → PENDIENTE_BRIEF`; decisiones confirmadas. |
 | [`prototypes/`](./prototypes) | Maquetas HTML + CSS de cada artboard (un archivo `.dc.html` por pantalla) y `canvas.json` con su posición en el lienzo. |
 
 ## Cómo leer los prototipos
@@ -25,11 +26,11 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 ## Uso con Codex
 
 1. Lee este README y `modales-publicacion.md` completos antes de empezar.
-2. Implementa por pantalla, en este orden: crear → detalle → editar (Contenido y Flujo y SLA) → diálogos → solo lectura → Archivo.
+2. Implementa por pantalla, en este orden: crear → detalle → editar (Contenido y Flujo y SLA) → diálogos → solo lectura → Archivo → Brief (artboards `CrearBrief`, `DetalleBrief`, `EditarBrief`, `BriefEstados`, `BriefDialogos`, `BriefMovil*`; seguir las fases del plan).
 3. Cada pantalla corresponde a un archivo de `prototypes/` (tabla de la sección 3 del documento) y a un componente actual o nuevo indicado en la sección 1.
 4. No añadas lo marcado como fuera de alcance (sección 7). Antes de cambiar la base, parte de `supabase db pull` y revisa constraints, triggers, funciones y políticas desplegados.
 5. Al terminar una pantalla, actualiza la columna **Estado** de la tabla de campos.
 
 ## Alcance actual
 
-En el modal Editar quedan inactivas las pestañas **Producción** e **Historial**. El flujo inicial del rol Design sí tiene una cola separada en `/design/publications` para abrir solicitudes, atender correcciones y entregar piezas; no incluye asignación por persona ni carga/versionado de archivos en la app. **Archivo** es una vista independiente para restaurar publicaciones y resolver manualmente fallos de limpieza de Drive. El estado detallado se mantiene en `modales-publicacion.md`.
+En el modal Editar quedan inactivas las pestañas **Producción** e **Historial**. El flujo inicial del rol Design sí tiene una cola separada en `/design/publications` para abrir solicitudes, atender correcciones y entregar piezas; no incluye asignación por persona ni carga/versionado de archivos en la app. **Archivo** es una vista independiente para restaurar publicaciones y resolver manualmente fallos de limpieza de Drive. La sección **Brief** (subida de archivos a Drive y retorno a `PENDIENTE_BRIEF`) está diseñada pero pendiente de implementar. El estado detallado se mantiene en `modales-publicacion.md`.

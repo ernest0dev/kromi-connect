@@ -85,7 +85,7 @@ El resto de transiciones editoriales existentes no cambia. La ida a `PENDIENTE_B
 
 ### Fase 2 — UI de Brief y archivos
 
-- Crear sección reusable de Brief con selección múltiple/drag and drop, progreso por archivo, cancelación y reanudación según soporte de la sesión, y errores recuperables. Diseñar sus estados (vacío, subiendo, error, listo) en el lienzo y en `modales-publicacion.md` antes de implementarla.
+- Crear sección reusable de Brief con selección múltiple/drag and drop, progreso por archivo, cancelación y reanudación según soporte de la sesión, y errores recuperables. Los estados (vacío, subiendo, errores, listo, límite alcanzado y sin carpeta) ya están diseñados en el lienzo y en `modales-publicacion.md` (sección 3.1); los artboards están en `docs/design/prototypes/`.
 - Añadir lista de archivos de Brief (nombre, tipo, tamaño, fecha y enlace para abrir en Drive; sin preview embebido en MVP).
 - Integrarla en Crear después de crear la publicación/carpeta y en Editar/Detalle cuando exista publicación.
 - Mostrar estado accesible “Faltan archivos” / “Brief listo” y cantidad/última comprobación. No permitir que el estado dependa únicamente de un hook local sin actualizar el servidor.

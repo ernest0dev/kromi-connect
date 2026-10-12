@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Brief · Selector y diálogos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Inter',system-ui,sans-serif;color:#10233F}
+button,input,select,textarea{font-family:inherit}
+.sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:#5E6680}
+.lbl{display:block;font-size:12px;font-weight:600;color:#3C4663;margin-bottom:6px}
+.fld{width:100%;height:40px;box-sizing:border-box;border:1px solid #D2CCC0;border-radius:8px;background:#fff;padding:0 12px;font-size:14px;color:#10233F}
+.fld[readonly]{background:#F3F0E9;color:#3C4663}
+textarea.fld{height:auto;padding:10px 12px;line-height:1.45;resize:none}
+.hint{font-size:12px;color:#5E6680;margin-top:6px;line-height:1.4}
+.btn{white-space:nowrap;height:36px;padding:0 14px;border-radius:8px;font-size:13px;font-weight:600;border:1px solid #D2CCC0;background:#fff;color:#10233F;cursor:pointer}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.dng{background:#B42318;border-color:#B42318;color:#fff}
+.btn.off{opacity:.5;cursor:not-allowed}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.lg{height:40px;font-size:14px;padding:0 16px}
+.tag{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 12px;border-radius:999px;border:1px solid #D2CCC0;background:#fff;font-size:13px;color:#3C4663}
+.k{font-size:12px;font-weight:600;color:#5E6680}
+.v{font-size:14px;margin-top:3px}
+.link{font-size:13px;font-weight:600;color:#0066D2;text-decoration:none;white-space:nowrap}
+.card{border:1px solid #E7E4DC;border-radius:14px;background:#fff}
+.row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid #E7E4DC}
+.row:first-child{border-top:0;padding-top:2px}
+.th{flex:none;width:40px;height:40px;border-radius:8px;background:#F3F0E9;color:#3C4663;font-size:10px;font-weight:700;letter-spacing:.04em;display:flex;align-items:center;justify-content:center}
+.th.bad{background:#FEF3F2;color:#B42318}
+.th.up{background:#E6F0FB;color:#002F80}
+.nm{font-size:14px;font-weight:600;line-height:1.3;overflow-wrap:anywhere}
+.mt{font-size:12px;color:#5E6680;margin-top:2px;line-height:1.4}
+.bar{height:6px;border-radius:999px;background:#E7E4DC;overflow:hidden;margin-top:8px}
+.bar>span{display:block;height:100%;background:#0066D2}
+.drop{border:1.5px dashed #A9C8EE;border-radius:12px;background:#F4F8FD;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}
+.note{border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.45;display:flex;gap:8px;align-items:flex-start}
+.note.warn{background:#FFF1D0;color:#4F3500}
+.note.ok{background:#E3F4EA;color:#14573A}
+.note.bad{background:#FEF3F2;color:#7A271A;border:1px solid #F2C4BF}
+.note.info{background:#E6F0FB;color:#002F80}
+.dlg{width:296px;box-sizing:border-box;border-radius:14px;background:#fff;border:1px solid #E7E4DC;padding:20px;display:flex;flex-direction:column;gap:10px}
+.dlg h2{margin:0;font-size:17px;font-weight:700}
+.dlg p{margin:0;font-size:13px;line-height:1.5;color:#3C4663}
+.foot{margin-top:auto;display:flex;gap:8px;justify-content:flex-end;padding-top:6px}
+</style>
+</helmet>
+<div id="root" style="width: 1320px; height: 796px; box-sizing: border-box; background: #fff; display: flex; flex-direction: column; color: #10233F">
+<div style="background:#F3F0E9;padding:34px 32px;flex:1;display:flex;flex-direction:column;gap:24px;color:#10233F"><div style="display:flex;gap:24px;align-items:stretch"><div class="dlg" aria-label="Selector de estado en la tarjeta" style="gap:8px"><h2 style="font-size:15px">Selector de estado</h2><div class="sec" style="margin-top:2px">Sin archivos</div><div style="border:1px solid #D2CCC0;border-radius:10px;overflow:hidden;background:#fff"><div style="padding:8px 12px;font-size:12px;font-weight:600;background:#FAF8F4;color:#5E6680">Pendiente · completar brief</div><div style="padding:8px 12px;border-top:1px solid #E7E4DC;" aria-disabled="true"><div style="font-size:13px;font-weight:600;color:#8A8FA3">Solicitado a diseño</div><div class="mt" style="margin:2px 0 0;color:#6B4600">Faltan archivos del brief · agrégalos para habilitarlo</div></div></div><div class="sec" style="margin-top:4px">Con archivos</div><div style="border:1px solid #D2CCC0;border-radius:10px;overflow:hidden;background:#fff"><div style="padding:8px 12px;font-size:12px;font-weight:600;background:#FAF8F4;color:#5E6680">Pendiente · completar brief</div><div style="padding:8px 12px;border-top:1px solid #E7E4DC;"><div style="font-size:13px;font-weight:600;color:#10233F">Solicitado a diseño</div></div></div><div class="sec" style="margin-top:4px">Ya solicitado</div><div style="border:1px solid #D2CCC0;border-radius:10px;overflow:hidden;background:#fff"><div style="padding:8px 12px;font-size:12px;font-weight:600;background:#E6F0FB;color:#002F80">Solicitado a diseño</div><div style="padding:8px 12px;border-top:1px solid #E7E4DC;"><div style="font-size:13px;font-weight:600;color:#10233F">Volver a Brief</div><div class="mt" style="margin:2px 0 0;color:#6B4600">Antes de que Design abra la solicitud</div></div></div></div><div class="dlg" role="dialog" aria-label="Solicitar a Design"><h2>Solicitar a Design</h2>
+<p>La publicación pasará a <strong>Solicitado a diseño</strong>. Design verá los archivos de Brief.</p>
+<div class="note ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#14573A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l3 3 5-6"></path></svg><span><strong>3 archivos en Brief</strong><br>Se comprobará de nuevo en Drive al confirmar.</span></div>
+<div class="mt" style="margin:0">Entrega estimada: lun 12 oct 2026</div>
+<div class="foot"><button type="button" class="btn">Cancelar</button><button type="button" class="btn pri">Solicitar a Design</button></div></div><div class="dlg" role="alertdialog" aria-label="No se pudo solicitar"><h2>No se pudo solicitar</h2>
+<div class="note bad" role="alert"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg><span>Drive no tiene archivos en Brief. La última comprobación mostraba 3; pueden haberse borrado desde Drive.</span></div>
+<p>La publicación sigue en <strong>Pendiente · completar brief</strong>. Sube al menos un archivo y vuelve a solicitar.</p>
+<div class="foot"><button type="button" class="btn">Cerrar</button><button type="button" class="btn pri">Subir archivos</button></div></div><div class="dlg" role="dialog" aria-label="Volver a Brief"><h2>Volver a Brief</h2>
+<p>La publicación pasará a <strong>Pendiente · completar brief</strong> y saldrá de la cola de Design. Podrás completar los archivos y solicitar de nuevo.</p>
+<div><label class="lbl" for="mv">Motivo (opcional)</label><textarea class="fld" id="mv" rows="3" placeholder="Por qué se retira la solicitud"></textarea></div>
+<div class="foot"><button type="button" class="btn">Cancelar</button><button type="button" class="btn pri">Volver a Brief</button></div></div></div><div style="display:flex;gap:24px;align-items:stretch"><div class="dlg" role="dialog" aria-label="Comprobando Drive" aria-busy="true"><h2>Comprobando Drive…</h2>
+<p>Verificamos que la carpeta Brief tenga archivos antes de enviar la solicitud.</p>
+<div class="bar" role="progressbar" aria-label="Comprobando" style="margin-top:4px"><span style="width:45%"></span></div>
+<div class="foot"><button type="button" class="btn off" aria-disabled="true">Cancelar</button><button type="button" class="btn pri off" aria-disabled="true">Solicitando…</button></div></div><div class="dlg" role="alertdialog" aria-label="No se pudo comprobar Drive"><h2>No se pudo comprobar Drive</h2>
+<div class="note bad" role="alert"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B42318" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg><span>Drive no respondió. La publicación no cambió de estado.</span></div>
+<p>Reintenta en unos minutos. Si el problema continúa, copia el detalle técnico y compártelo con el equipo de sistemas.</p>
+<div class="foot"><button type="button" class="btn">Copiar detalle</button><button type="button" class="btn pri">Reintentar</button></div></div><div class="dlg" role="dialog" aria-label="Volver a Brief no disponible"><h2>Design ya abrió la solicitud</h2>
+<div class="note warn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B4600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex:none"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16.5v.01"></path></svg><span>La publicación está <strong>En diseño</strong>. Ya no se puede volver a Brief.</span></div>
+<p>Si necesitas cambios, pide una corrección cuando llegue a revisión o cancela la publicación indicando el motivo.</p>
+<div class="foot"><button type="button" class="btn pri">Entendido</button></div></div><div class="dlg" role="alertdialog" aria-label="Subidas en curso"><h2>¿Cerrar y cancelar las subidas?</h2>
+<p>Hay 2 archivos subiéndose y 1 en cola. Si cierras ahora, se cancelarán y no contarán para el brief.</p>
+<ul style="margin:0;padding-left:18px;font-size:13px;color:#3C4663;line-height:1.5"><li>toma-referencia.mp4 · 63 %</li><li>portada-borrador.jpg · 12 %</li><li>paleta-colores.png · en cola</li></ul>
+<div class="foot"><button type="button" class="btn">Volver</button><button type="button" class="btn dng">Cancelar y cerrar</button></div></div></div></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1320,"height":796}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

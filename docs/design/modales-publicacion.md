@@ -1,6 +1,6 @@
 # Modales de publicación (`/social-media/grid`)
 
-Especificación y seguimiento de implementación. Cubre crear, editar, detalle y Archivo. Actualizado: 2026-10-10.
+Especificación y seguimiento de implementación. Cubre crear, editar, detalle y Archivo. Actualizado: 2026-10-11 (añade la sección Brief; el plan funcional y técnico está en [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md)).
 
 > **Para quien implemente (Codex u otra persona):** este documento dice qué construir; los archivos de [`prototypes/`](./prototypes) dicen cómo se ve. Antes de tocar código lee la sección 8 (reglas de implementación) y respeta lo marcado como **Fuera de alcance**. La base de datos desplegada manda sobre este texto.
 
@@ -16,13 +16,15 @@ Estado de cada fila: **Existe** (en código o esquema confirmado), **Migración 
 - `INCOMPLETO` queda fuera del flujo nuevo y no se ofrece en la interfaz. Las filas existentes con ese estado requieren una decisión de migración antes de cambiar su valor.
 - Eliminar es lógico. Solo Social Media puede eliminar/restaurar, además de cumplir el alcance de todas las cuentas destino. La publicación queda restaurable durante un mes calendario desde `deleted_at`; al vencer, comienza la purga definitiva de sus registros y carpeta de Drive.
 - Si falla la eliminación de Drive, no hay reintento automático. La publicación permanece en **Archivo**, ya vencida y no restaurable, hasta que Social Media elija reintentar la eliminación de Drive o conservar Drive y eliminar definitivamente los registros.
+- **Brief con archivos en Drive** (decidido el 2026-10-11, detalle en el plan): cada publicación tiene subcarpetas `Brief` (Social Media) y `Entregables` (Design). Social Media sube a `Brief` desde la app, con carga directa del navegador a Drive; JPG, PNG, WebP, PDF y MP4, hasta 100 MB por archivo y 10 archivos. Solicitar a Design exige al menos un archivo en `Brief`, comprobado en Drive (el conteo sirve 5 minutos). Desde `SOLICITADO` se puede volver a `PENDIENTE_BRIEF` (motivo opcional) mientras Design no abra la solicitud. Los archivos sueltos de carpetas antiguas se ignoran.
 - La revisión y el backfill de categorías quedan fuera de esta implementación. El tema heredado `linea_contenido` se conserva como dato legado sin crear categorías nuevas ni transformarlo.
 
 ### Matriz de transiciones acordada
 
 | Estado actual | Actor y evento | Nuevo estado | Requisito |
 |---|---|---|---|
-| Estados previos al trabajo de diseño | Social Media envía la solicitud | `SOLICITADO` | Permiso de Social Media |
+| `PENDIENTE_BRIEF` / `EN_RODAJE` | Social Media envía la solicitud | `SOLICITADO` | Permiso de Social Media y al menos un archivo en `Brief` (comprobado en Drive); fija las fechas del ciclo |
+| `SOLICITADO` | Social Media retira la solicitud antes de que Design la abra | `PENDIENTE_BRIEF` | Permiso de Social Media; motivo opcional; limpia solicitud y entrega estimada, conserva el límite del brief. No existe desde `EN_DISENO` ni `EN_RODAJE` |
 | `SOLICITADO` | Design abre/toma la solicitud | `EN_DISENO` | Permiso de Design; cambio registrado por el sistema |
 | `EN_DISENO` | Design carga/entrega la pieza | `EN_REVISION_CM` | Permiso de Design; registrar fecha real de entrega |
 | `EN_REVISION_CM` | Social Media pide correcciones | `EN_CORRECCION` | Observación obligatoria; autor/fecha registrados |
@@ -72,6 +74,9 @@ Columnas de `publicaciones` salvo que se indique otra tabla.
 | Diseñador | `disenador_id` | — | no editable en esta etapa | nombre pendiente | sin asignación individual ni lectura segura de nombre | Pendiente de perfil futuro |
 | Creador | `creador_id` | automático | lectura | nombre pendiente | UUID guardado; nombre requiere acceso seguro a `profiles` | Pendiente de perfil futuro |
 | Carpeta de Drive | `drive_folder_url` | automático | lectura | enlace | acción de servidor | Existe |
+| Subcarpetas `Brief` y `Entregables` | IDs en `publicaciones` o tabla de metadatos Drive (a definir en la migración del plan) | automático | lectura | lectura | acción de servidor, idempotente | Pendiente |
+| Archivos de Brief | Drive (subcarpeta `Brief`); no se guardan en la base | subir | subir | lista con enlace a Drive | carga directa del navegador iniciada y confirmada por el servidor | Pendiente |
+| Estado sincronizado del Brief | conteo y fecha de última comprobación | — | — | chip y texto de comprobación | solo `service_role`; ventana de 5 minutos | Pendiente |
 | Estado de sincronización/limpieza con Drive | columnas de estado/error de Drive | — | — | lectura | acción de servidor y purga programada | Migración aplicada |
 | Archivo | `deleted_at` + estado de limpieza Drive | — | restaurar dentro de un mes / resolución manual de errores | lectura | solo rol Social Media | Migración aplicada |
 | Comprobación de alcance de cuentas | función `user_has_all_publication_accounts` | — | valida el guardado | — | RPC booleana; todas las cuentas para editar o archivar | Existe |
@@ -112,7 +117,38 @@ El prototipo `EditarSoloLectura` y la opción “Duplicar con mis cuentas” son
 | `DetalleVacio` | Sin copy (Story), sin observaciones, sin temas, sin historial; error al crear carpeta de Drive. |
 | `Dialogos` | Descartar cambios, enviar corrección (motivo obligatorio) y eliminar lógicamente con fecha límite de restauración. |
 | `CrearMovil`, `DetalleMovil` | 390 px: una columna, objetivos táctiles de 44 px, acciones apiladas al pie. |
+| `CrearBrief` | Paso posterior a guardar: confirmación, resumen, sección Brief con subida en curso y atajo “Solicitar a Design” deshabilitado hasta terminar. |
+| `DetalleBrief` | Detalle en `PENDIENTE_BRIEF` con la tarjeta Brief (lista, comprobación, agregar, solicitar). |
+| `EditarBrief` | Flujo y SLA en `SOLICITADO`: “Volver a Brief”, tarjeta Brief, tarjeta de diseño con entrega estimada. |
+| `BriefEstados` | Seis estados de la sección: vacío, subiendo, con errores, listo, límite alcanzado y sin carpeta de Drive. |
+| `BriefDialogos` | Selector de estado (sin archivos, con archivos, ya solicitado) y diálogos: solicitar, brief vacío al comprobar, volver a Brief, comprobando, Drive sin respuesta, Design ya abrió y cerrar con subidas en curso. |
+| `BriefMovil`, `BriefMovilVacio` | 390 px: tarjeta Brief subiendo y vacía; acción “Solicitar a Design” fija al pie. |
 | `Archivo` | Publicaciones con borrado lógico, acción de restaurar dentro del mes y resolución manual cuando falla la eliminación de Drive. |
+
+### 3.1 Sección Brief
+
+Una sola tarjeta reutilizable, con el mismo contenido en Crear (tras guardar), Editar (Flujo y SLA) y Detalle. Encabezado “Brief” y una etiqueta de estado con icono y texto (nunca solo color).
+
+| Estado | Etiqueta | Contenido |
+|---|---|---|
+| Vacío | Faltan archivos | Zona de arrastre con “Elegir archivos”, límites y aviso ámbar: “Para solicitar a Design necesitas subir al menos uno”. |
+| Subiendo | “N de M subidos” | Filas con barra de progreso (`role="progressbar"`), “Cancelar” por archivo y “En cola”. Solo cuentan los archivos confirmados. |
+| Con errores | “N archivos con error” | Cada fila falla por separado, con su causa: tipo no permitido, más de 100 MB o conexión cortada. “Quitar” saca la fila; “Reintentar” reanuda la subida. |
+| Listo | Brief listo · N archivos | Lista con nombre, tipo, tamaño, fecha y “Abrir” (Drive). Línea “Comprobado en Drive hace N min · Volver a comprobar”. |
+| Límite alcanzado | Brief listo · 10 archivos | “Agregar archivos” deshabilitado. Kromi Connect no elimina archivos todavía; se borran desde Drive. |
+| Sin carpeta de Drive | Sin carpeta de Drive | Aviso de error con “Reintentar carpeta”; la subida queda deshabilitada hasta crearla. |
+
+**Reglas de comportamiento**
+
+- Los archivos se validan al elegirlos (extensión/MIME y tamaño) y otra vez al confirmarlos en Drive. Un archivo rechazado o incompleto no cuenta para el brief.
+- No hay vista previa embebida ni eliminación en esta etapa; “Abrir” lleva a Drive.
+- Cerrar el modal con subidas en curso pide confirmación (“¿Cerrar y cancelar las subidas?”). La reanudación tras cerrar no se ofrece.
+- “Solicitar a Design” siempre vuelve a consultar Drive: si el conteo guardado tiene más de 5 minutos o Drive no muestra archivos, la acción lo indica con el diálogo correspondiente y la publicación no cambia de estado.
+- En Crear, el botón “Solicitar a Design” del pie es un atajo que ejecuta la misma acción de servidor; permanece deshabilitado mientras haya subidas en curso o falten archivos.
+- La subida sigue disponible mientras la publicación esté activa; el retorno a `PENDIENTE_BRIEF` solo se ofrece en `SOLICITADO` (en el selector de la tarjeta y en Editar › Flujo y SLA).
+- El selector de estado conserva el `select` nativo: la opción “Solicitado a diseño” se muestra deshabilitada con el texto “Faltan archivos del brief” y “Volver a Brief” aparece solo en `SOLICITADO`. Sustituye el `window.prompt` de “En corrección” por el diálogo de “Pedir corrección” ya diseñado.
+
+**Accesibilidad**: cada enlace “Abrir” lleva `aria-label` con el nombre del archivo; las barras de progreso exponen valor; los botones deshabilitados usan `aria-disabled`; los errores se anuncian con `role="alert"`.
 
 Reglas de texto: errores bajo el campo con su causa; avisos que no bloquean en ámbar; no usar solo el color para indicar estado.
 
@@ -142,6 +178,9 @@ Antes de futuras modificaciones: `supabase db pull` para comparar con la línea 
 - Reglas de “Duplicar” y “Repetir” (qué se copia, qué cuentas).
 - Límite de caracteres de caption por plataforma (Instagram sin verificar).
 - SLA: 5/3/2 días viven en `src/utils/sla.ts`; `fecha_limite_brief` es el valor actual y se recalcula al reprogramar.
+
+- Design no tiene hoy una vista de los archivos de `Brief` dentro de la app: usa la carpeta de Drive (enlace público). Decidir si la cola de Design muestra la lista de Brief.
+- Eliminar o reemplazar archivos del Brief desde Kromi Connect y reanudar subidas después de cerrar el modal.
 
 ## 7. Fuera de alcance por ahora
 
