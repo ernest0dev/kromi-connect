@@ -1,5 +1,3 @@
-> **Vigencia de la captura:** esquema de referencia actualizado por el usuario. No constituye volcado de funciones, grants ni estado de migraciones. `requiere_diseno` aparece en el esquema compartido, pero para confirmar el RPC `set_publication_design_requirement` y su trigger, consultar Supabase; la migración local 110002 contiene ambos.
-
 ## Table `campanas`
 
 ### Columns
@@ -63,6 +61,7 @@
 | `drive_brief_file_count`        | `int4`         |             |
 | `drive_brief_checked_at`        | `timestamptz`  | Nullable    |
 | `requiere_diseno`               | `bool`         |             |
+| `instrucciones_diseno`          | `text`         | Nullable    |
 
 ## Table `publicacion_canales`
 
@@ -309,6 +308,7 @@
 | `expires_at`     | `timestamptz` |             |
 | `created_at`     | `timestamptz` |             |
 | `completed_at`   | `timestamptz` | Nullable    |
+| `carpeta`        | `text`        |             |
 
 ## Custom Types / Enums
 
@@ -429,3 +429,4 @@
 
 | Policy                      | Command | Roles         | Action     | USING                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | WITH CHECK |
 | --------------------------- | ------- | ------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `publication_comments_read` | SELECT  | authenticated | PERMISSIVE | `((( SELECT has_permission('social-media.posts.read'::text) AS has_permission) AND (EXISTS ( SELECT 1    FROM (publicacion_canales pc      JOIN user_social_accounts usa ON ((usa.social_account_id = pc.social_account_id)))   WHERE ((pc.publicacion_id = publicacion_comentarios.publicacion_id) AND (usa.user_id = ( SELECT auth.uid() AS uid)))))) OR (( SELECT has_permission('design.posts.read'::text) AS has_permission) AND (EXISTS ( SELECT 1    FROM publicaciones p   WHERE ((p.id = publicacion_comentarios.publicacion_id) AND (p.deleted_at IS NULL) AND (p.estatus = ANY (ARRAY['SOLICITADO'::estatus_enum, 'EN_DISENO'::estatus_enum, 'EN_CORRECCION'::estatus_enum])))))))` | —          |
