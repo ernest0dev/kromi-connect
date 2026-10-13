@@ -126,6 +126,12 @@ export interface Database {
           { foreignKeyName: 'publicacion_categorias_categoria_id_fkey'; columns: ['categoria_id']; referencedRelation: 'categorias_contenido'; referencedColumns: ['id'] }
         ];
       };
+      publicacion_drive_uploads: {
+        Row: { id: string; publicacion_id: string; actor_id: string; file_name: string; mime_type: string; file_size: number; carpeta: 'BRIEF' | 'ENTREGABLES'; session_uri: string | null; status: 'RESERVING' | 'UPLOADING' | 'COMPLETE' | 'CANCEL_PENDING' | 'CANCELLED' | 'EXPIRED'; drive_file_id: string | null; expires_at: string; created_at: string; completed_at: string | null };
+        Insert: { id?: string; publicacion_id: string; actor_id: string; file_name: string; mime_type: string; file_size: number; carpeta?: 'BRIEF' | 'ENTREGABLES'; session_uri?: string | null; status?: 'RESERVING' | 'UPLOADING' | 'COMPLETE' | 'CANCEL_PENDING' | 'CANCELLED' | 'EXPIRED'; drive_file_id?: string | null; expires_at?: string; created_at?: string; completed_at?: string | null };
+        Update: { id?: string; publicacion_id?: string; actor_id?: string; file_name?: string; mime_type?: string; file_size?: number; carpeta?: 'BRIEF' | 'ENTREGABLES'; session_uri?: string | null; status?: 'RESERVING' | 'UPLOADING' | 'COMPLETE' | 'CANCEL_PENDING' | 'CANCELLED' | 'EXPIRED'; drive_file_id?: string | null; expires_at?: string; created_at?: string; completed_at?: string | null };
+        Relationships: [{ foreignKeyName: 'publicacion_drive_uploads_publicacion_id_fkey'; columns: ['publicacion_id']; referencedRelation: 'publicaciones'; referencedColumns: ['id'] }];
+      };
       publicaciones: {
         Row: {
           id: string;
@@ -137,6 +143,7 @@ export interface Database {
           hora_publicacion: string | null;
           requiere_rodaje: boolean;
           requiere_diseno: boolean;
+          instrucciones_diseno: string | null;
           fecha_rodaje: string | null;
           sedes: SedeEnum[];
           prioridad: number;
@@ -178,6 +185,7 @@ export interface Database {
           hora_publicacion?: string | null;
           requiere_rodaje?: boolean;
           requiere_diseno?: boolean;
+          instrucciones_diseno?: string | null;
           fecha_rodaje?: string | null;
           sedes?: SedeEnum[];
           prioridad?: number;
@@ -219,6 +227,7 @@ export interface Database {
           hora_publicacion?: string | null;
           requiere_rodaje?: boolean;
           requiere_diseno?: boolean;
+          instrucciones_diseno?: string | null;
           fecha_rodaje?: string | null;
           sedes?: SedeEnum[];
           prioridad?: number;
@@ -669,6 +678,26 @@ export interface Database {
       set_publication_design_requirement: {
         Args: { p_publicacion_id: string; p_requiere_diseno: boolean };
         Returns: Database['public']['Tables']['publicaciones']['Row'];
+      };
+      set_publication_design_instructions: {
+        Args: { p_publicacion_id: string; p_instrucciones: string | null };
+        Returns: boolean;
+      };
+      reserve_publication_deliverable_upload: {
+        Args: { p_actor_id: string; p_publication_id: string; p_file_name: string; p_mime_type: string; p_file_size: number; p_drive_file_count: number };
+        Returns: string;
+      };
+      get_design_publication_history: {
+        Args: { p_limit?: number; p_offset?: number };
+        Returns: Database['public']['Tables']['publicaciones']['Row'][];
+      };
+      get_design_publication_comments: {
+        Args: { p_ids: string[] };
+        Returns: { id: string; publicacion_id: string; texto: string; tipo: string; creado_en: string }[];
+      };
+      get_publication_designer_names: {
+        Args: { p_ids: string[] };
+        Returns: { publicacion_id: string; disenador_id: string | null; full_name: string | null }[];
       };
       archive_publication: {
         Args: { p_publicacion_id: string };

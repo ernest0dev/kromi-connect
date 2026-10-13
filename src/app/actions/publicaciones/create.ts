@@ -25,6 +25,7 @@ export interface CreatePostInput {
   cta_texto?: string;
   hashtags?: string[];
   requiere_diseno?: boolean;
+  instrucciones_diseno?: string;
   requiere_rodaje?: boolean;
   fecha_rodaje?: string | null;
   sedes?: SedeEnum[];
@@ -133,7 +134,14 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
       });
       if (designRequirementError) return { success: false, error: `La publicación se creó, pero no se pudo guardar que no requiere Design: ${designRequirementError.message}` };
     }
-    const newPost = { ...(publicationJson as unknown as PublicacionConCuentas), hora_publicacion: input.hora_publicacion || null, requiere_rodaje: input.requiere_rodaje || false, requiere_diseno: requiereDiseno, fecha_rodaje: fechaRodaje, sedes, prioridad };
+    if (requiereDiseno && input.instrucciones_diseno?.trim()) {
+      const { data: instructionsSaved, error: instructionsError } = await supabase.rpc('set_publication_design_instructions', {
+        p_publicacion_id: publicationId,
+        p_instrucciones: input.instrucciones_diseno.trim(),
+      });
+      if (instructionsError || instructionsSaved !== true) return { success: false, error: `La publicación se creó, pero no se pudieron guardar las instrucciones: ${instructionsError?.message || 'intenta editarla nuevamente'}` };
+    }
+    const newPost = { ...(publicationJson as unknown as PublicacionConCuentas), hora_publicacion: input.hora_publicacion || null, requiere_rodaje: input.requiere_rodaje || false, requiere_diseno: requiereDiseno, instrucciones_diseno: requiereDiseno ? input.instrucciones_diseno?.trim() || null : null, fecha_rodaje: fechaRodaje, sedes, prioridad };
     if (!newPost?.id) return { success: false, error: "Supabase no devolvió la publicación creada." };
     const categoryRows = categoryIds.length
       ? await supabase.from("categorias_contenido").select("id, nombre").in("id", categoryIds)

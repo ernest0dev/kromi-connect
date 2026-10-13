@@ -898,6 +898,7 @@ export default function GridView({
                         </p>
                       </>
                     )}
+                    {selectedPublication.instrucciones_diseno && <section className="rounded-lg border border-blue-100 bg-blue-50 p-3"><h3 className="text-xs font-bold text-blue-900">Instrucciones para Diseño</h3><p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{selectedPublication.instrucciones_diseno}</p></section>}
                   </section>
                   {selectedPublication.formato === "STORY" && (
                     <section className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-600">

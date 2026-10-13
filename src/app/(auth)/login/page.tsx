@@ -6,6 +6,7 @@ export default async function LoginPage() {
   const context = await getAuthContext();
   if (context?.profile?.role_code === "social-media") redirect("/social-media/grid");
   if (context?.profile?.role_code === "customer-support") redirect("/support");
+  if (context?.profile?.role_code === "design") redirect("/design/publications");
   if (context?.user) redirect("/access-pending");
 
   return (

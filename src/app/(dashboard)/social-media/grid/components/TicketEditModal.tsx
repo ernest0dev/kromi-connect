@@ -12,6 +12,7 @@ import { SocialAccountSelector } from '../../components/SocialAccountSelector';
 import { transitionPublicationAction } from '@/app/actions/publicaciones/workflow';
 import { parseHashtags } from '@/utils/hashtags';
 import { PublicationDriveFiles } from './PublicationDriveFiles';
+import { DeliverablesReview } from './DeliverablesReview';
 
 const FORMATOS: FormatoEnum[] = ['CARRUSEL', 'POST', 'REEL', 'STORY'];
 const controlClass = 'ui-control w-full rounded-lg px-3 py-2 text-sm';
@@ -68,6 +69,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
   const [campanaId, setCampanaId] = useState(publicacion.campana_id || '');
   const [socialAccountIds, setSocialAccountIds] = useState(publicacion.social_account_ids);
   const [requiereDiseno, setRequiereDiseno] = useState(publicacion.requiere_diseno);
+  const [instruccionesDiseno, setInstruccionesDiseno] = useState(publicacion.instrucciones_diseno || '');
   const [copyFeedback, setCopyFeedback] = useState('');
   const puedeCambiarRequisitoDiseno = ['PENDIENTE_BRIEF', 'EN_RODAJE'].includes(publicacion.estatus);
   const slaWillChange = publicacion.fecha_publicacion !== fechaPublicacion;
@@ -109,6 +111,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
       fecha_publicacion: fechaPublicacion,
       hora_publicacion: horaPublicacion || null,
       requiere_diseno: requiereDiseno,
+      instrucciones_diseno: instruccionesDiseno,
       fecha_solicitud_diseno: publicacion.fecha_solicitud_diseno,
       fecha_entrega_diseno_real: publicacion.fecha_entrega_diseno_real,
       fecha_aprobacion_gerencia: publicacion.fecha_aprobacion_gerencia,
@@ -173,6 +176,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
               </div>
               <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
               <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} disableYoutube={formato === 'STORY'} />
+              {requiereDiseno && <section className="space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">{puedeCambiarRequisitoDiseno ? 'Escritas por Social Media' : 'Fijas después de solicitar'}</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} disabled={!puedeCambiarRequisitoDiseno} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} className="w-full resize-y rounded-lg border border-[#D2CCC0] bg-[#FAF8F4] px-3 py-2 text-sm leading-6 text-[#10233F] focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE] disabled:bg-[#F7F5F0] disabled:text-[#5E6680]" placeholder="Objetivo, referencias y detalles de la pieza."/><p className="flex flex-wrap justify-between gap-2 text-xs text-[#5E6680]"><span>{puedeCambiarRequisitoDiseno ? 'Al solicitar, cualquier cambio posterior se envía como corrección.' : 'Para cambiarlas, devuelve la solicitud a Brief o pide una corrección.'}</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
               <section className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <label className={`flex items-start gap-2 text-sm font-medium text-slate-800 ${puedeCambiarRequisitoDiseno ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'}`}>
                   <input type="checkbox" checked={requiereDiseno} disabled={!puedeCambiarRequisitoDiseno} onChange={(event) => setRequiereDiseno(event.target.checked)} />
@@ -201,6 +205,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
               <section className="rounded-xl border border-slate-200 p-4 sm:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Estado actual</p><p className="mt-1 text-base font-bold text-slate-900">{ESTATUS_STYLE[publicacion.estatus].label}</p></div></div>
                 {publicacion.estatus === 'EN_REVISION_CM' && <div className="mt-4 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <DeliverablesReview publicationId={publicacion.id} deliveredAt={publicacion.fecha_entrega_diseno_real} estimatedAt={publicacion.fecha_entrega_diseno_estimada} />
                   <label className="block space-y-1 text-xs font-semibold text-amber-950">Observación para Design<textarea rows={3} value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} className={controlClass} placeholder="Describe los cambios necesarios." /></label>
                   <button type="button" disabled={isPending || !correctionReason.trim()} onClick={() => startTransition(() => transition('EN_CORRECCION', correctionReason))} className="rounded-lg bg-amber-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Pedir corrección</button>
                 </div>}

@@ -433,3 +433,53 @@ La migración local añade `publicaciones.requiere_diseno`, `boolean NOT NULL DE
 Actualiza `request_publication_to_design` para rechazar publicaciones sin Design, `get_design_publication_queue` para excluirlas y `transition_publicacion_status` para permitir a Social Media pasar a `PENDIENTE_APROBACION_GERENCIA` desde `PENDIENTE_BRIEF` (sin rodaje) o `EN_RODAJE` cuando `requiere_diseno = false`. El brief y SLA de diseño quedan fuera de ese camino; el flujo externo de aprobación continúa bajo control de Social Media.
 
 **Estado de despliegue:** el usuario reportó haber ejecutado la migración y compartió resultados que muestran `get_design_publication_queue`, `request_publication_to_design`, `transition_publicacion_status` y la columna `requiere_diseno`. No se recibió resultado específico para `set_publication_design_requirement` ni `guard_publication_design_requirement`. Antes de depender del toggle en cliente, verificar esos dos objetos y sus grants; no volver a ejecutar a ciegas.
+
+## 13. Perfil Design completo (`202610120001`)
+
+La migración local agrega `publicaciones.instrucciones_diseno`, protege su edición y bloquea la solicitud a Design si está vacía. Registra al diseñador que abre el ticket, agrega la carpeta `carpeta` a las reservas de Drive y eleva el límite físico a 500 MB; los límites de cada flujo se aplican en sus RPC. El cupo del Brief y el de Entregables se cuentan por separado. También agrega el permiso `design.posts.upload`, la reserva de entregables y las RPC de historial, comentarios y nombres.
+
+La aplicación local incluye la cola y ficha de Design, la carga resumible directa a Drive, la regla de archivo nuevo tras corrección, el historial, instrucciones en Social Media y la revisión de entregables. `202610120001_design_profile.sql` está **pendiente de aplicar y verificar en remoto**. No se ejecutó `supabase db push` durante esta implementación.
+
+Antes de aplicar, revisar el esquema vivo y confirmar la restricción `publicacion_drive_uploads_file_size_check`. Con el proyecto vinculado al ref correcto, los comandos son:
+
+```powershell
+supabase link --project-ref <project-ref>
+supabase db pull
+supabase migration list --linked
+supabase db push --dry-run
+supabase db push
+```
+
+Después, verificar columnas, función y permisos con:
+
+```sql
+select column_name, data_type
+from information_schema.columns
+where table_schema = 'public'
+  and ((table_name = 'publicaciones' and column_name = 'instrucciones_diseno')
+    or (table_name = 'publicacion_drive_uploads' and column_name = 'carpeta'));
+
+select conname, pg_get_constraintdef(oid)
+from pg_constraint
+where conrelid = 'public.publicacion_drive_uploads'::regclass
+  and conname = 'publicacion_drive_uploads_file_size_check';
+
+select proname, prosecdef
+from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+where n.nspname = 'public'
+  and proname in ('set_publication_design_instructions', 'reserve_publication_deliverable_upload',
+    'get_design_publication_history', 'get_design_publication_comments', 'get_publication_designer_names');
+
+select routine_name, grantee, privilege_type
+from information_schema.routine_privileges
+where specific_schema = 'public'
+  and routine_name in ('set_publication_design_instructions', 'reserve_publication_deliverable_upload',
+    'get_design_publication_history', 'get_design_publication_comments', 'get_publication_designer_names')
+order by routine_name, grantee;
+
+select role_code, permission_code
+from public.role_permissions
+where (role_code = 'design' and permission_code in ('design.posts.read', 'design.posts.start', 'design.posts.deliver', 'design.posts.upload'));
+```
+
+Las pruebas de invocación de RPC con el rol `design` se hacen en una base local/de prueba. En remoto, inspeccionar grants y cuerpos sin llamar funciones mutables. Tras aplicar, ejecutar `supabase db pull` y actualizar `supabase-schema-public.md`/captura con evidencia del esquema real.

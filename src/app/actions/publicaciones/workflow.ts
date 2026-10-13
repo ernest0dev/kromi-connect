@@ -3,7 +3,8 @@
 import { revalidatePath } from 'next/cache';
 import { authorizeAction } from '@/lib/auth/dal';
 import { EstatusEnum } from '@/types';
-import { hasPublicacionDeliverable } from '@/lib/googleDrive';
+import { ensurePublicacionDriveFolders, listDriveFolderFiles } from '@/lib/googleDrive';
+import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { requestPublicationToDesignAction } from '@/app/actions/publicaciones/drive';
 
 const ESTADOS_DE_FLUJO: EstatusEnum[] = [
@@ -35,10 +36,26 @@ export async function transitionPublicationAction(input: {
     if (queueError) return { success: false as const, error: queueError.message };
     const publication = queue?.find((item) => item.id === input.publicationId);
     if (!publication || publication.estatus !== 'EN_DISENO') return { success: false as const, error: 'La solicitud no está en diseño o ya cambió de estado.' };
-    if (!publication.drive_folder_id) return { success: false as const, error: 'Esta publicación no tiene carpeta de Drive. Pide a Social Media que la cree antes de entregar.' };
-    const deliverable = await hasPublicacionDeliverable(publication.drive_folder_id);
-    if (deliverable.error) return { success: false as const, error: `No se pudo verificar la carpeta de Drive: ${deliverable.error}` };
-    if (!deliverable.hasFile) return { success: false as const, error: 'Sube la pieza final a la carpeta de Drive antes de entregarla a revisión.' };
+    if (!publication.drive_folder_id) return { success: false as const, error: 'Esta publicación no tiene carpeta de Drive.' };
+    try {
+      const admin = getSupabaseAdmin();
+      let deliverablesFolderId = publication.drive_deliverables_folder_id;
+      if (!deliverablesFolderId) {
+        const folders = await ensurePublicacionDriveFolders(publication.drive_folder_id);
+        deliverablesFolderId = folders.deliverables.id;
+        await (admin.from('publicaciones')).update({ drive_brief_folder_id: folders.brief.id, drive_deliverables_folder_id: folders.deliverables.id }).eq('id', publication.id);
+      }
+      const [filesResult, cycleResult] = await Promise.all([
+        listDriveFolderFiles(deliverablesFolderId),
+        admin.from('publicacion_estatus_historial').select('cambiado_en').eq('publicacion_id', publication.id).eq('estatus_nuevo', 'EN_DISENO').order('cambiado_en', { ascending: false }).limit(1).maybeSingle(),
+      ]);
+      if (cycleResult.error) throw new Error(cycleResult.error.message);
+      const cycleStart = cycleResult.data?.cambiado_en;
+      const eligible = cycleStart ? filesResult.some((file) => file.createdTime && new Date(file.createdTime).getTime() > new Date(cycleStart).getTime()) : filesResult.length > 0;
+      if (!eligible) return { success: false as const, error: cycleStart ? 'Sube un archivo nuevo después de abrir o reabrir esta solicitud antes de entregarla.' : 'Sube la pieza final a Entregables antes de entregarla a revisión.' };
+    } catch (error) {
+      return { success: false as const, error: `No se pudo verificar Entregables en Drive: ${error instanceof Error ? error.message : 'error desconocido'}` };
+    }
   } else access = await authorizeAction('social-media.posts.status.update');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'Inicia sesión para continuar.' };
 
@@ -53,6 +70,7 @@ export async function transitionPublicationAction(input: {
   revalidatePath('/social-media/grid/archive');
   revalidatePath('/social-media/kanban');
   revalidatePath('/design/publications');
+  revalidatePath('/design/publications/history');
   return { success: true as const, data };
 }
 

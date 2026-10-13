@@ -5,6 +5,7 @@ import { TicketDetailCardProps } from '../types/grid';
 import { useSLA } from '../hooks/useSLA';
 import { FORMATO_LABEL_UPPER } from '../utils/constants';
 import { StatusSelect } from './StatusSelect';
+import { DesignerAttribution } from './DesignerAttribution';
 
 function formatDate(iso: string | null | undefined): string {
   if (!iso) return '';
@@ -29,7 +30,7 @@ export function TicketDetailCard({
   const slaState = calcularSlaState(publicacion.fecha_limite_brief);
   const slaMeta = SLA_META[slaState];
   const briefCheckedAt = publicacion.drive_brief_checked_at ? new Date(publicacion.drive_brief_checked_at).getTime() : 0;
-  const canRequestDesign = publicacion.drive_brief_file_count > 0 && briefCheckedAt > Date.now() - 5 * 60 * 1000;
+  const canRequestDesign = publicacion.drive_brief_file_count > 0 && briefCheckedAt > Date.now() - 5 * 60 * 1000 && !!publicacion.instrucciones_diseno?.trim();
 
   return (
     <article
@@ -64,6 +65,7 @@ export function TicketDetailCard({
         </p>
       )}
       {!publicacion.requiere_diseno && <span className="mb-2 w-fit rounded-full bg-slate-100 px-2 py-1 text-[9px] font-semibold text-slate-700">Sin diseño de Design</span>}
+      {publicacion.disenador_id && <div className="mb-2"><DesignerAttribution publicationId={publicacion.id}/></div>}
       <p className="-mt-1 mb-2 truncate text-[10px]" style={{ color: nombreCampana ? 'var(--morado)' : 'var(--gris)' }}>
             Campaña · {nombreCampana || 'Sin campaña'}
       </p>

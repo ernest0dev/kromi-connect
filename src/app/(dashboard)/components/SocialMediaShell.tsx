@@ -10,6 +10,7 @@ export interface NavItem {
   href: string;
   label: string;
   icon: LucideIcon;
+  exact?: boolean;
 }
 
 export interface NavGroup {
@@ -107,8 +108,9 @@ function ShellInner({
                 )}
                 <div className="flex gap-1 min-[768px]:flex-col min-[768px]:space-y-0.75">
                   {group.items.map((item) => {
-                    const isActive =
-                      activePath === item.href || activePath.startsWith(`${item.href}/`);
+                    const isActive = item.exact
+                      ? activePath === item.href
+                      : activePath === item.href || activePath.startsWith(`${item.href}/`);
                     const Icon = item.icon;
                     return (
                       <Link

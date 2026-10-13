@@ -32,7 +32,7 @@ export function StatusSelect({ currentStatus, onChange, disabled, canRequestDesi
     >
       <option value="">{ESTATUS_STYLE[currentStatus].label}</option>
       {choices.map((est) => est === 'SOLICITADO' && !canRequestDesign
-        ? <option key={est} value={est} disabled title="Abre el detalle y sube al menos un archivo al brief">Solicitado · falta completar Brief</option>
+        ? <option key={est} value={est} disabled title="Completa el Brief y escribe las instrucciones para Diseño">Solicitado · faltan requisitos</option>
         : <option key={est} value={est}>{ESTATUS_STYLE[est].label}</option>)}
     </select>
   );

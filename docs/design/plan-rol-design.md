@@ -1,6 +1,6 @@
 # Plan de implementación: perfil Design completo
 
-**Estado (2026-10-12):** plan propuesto, sin implementar. Base revisada: rama `main` del repositorio (commit `4b2368e`) y las migraciones locales hasta `202610110002_publication_design_requirement.sql`. El esquema remoto solo se conoce por la evidencia que el equipo compartió; ver [Fase 0](#fase-0--preparación-y-verificaciones).
+**Estado (2026-10-12):** implementación local completada en el workspace; migración `202610120001_design_profile.sql` creada, pendiente de aplicar y verificar en Supabase. No se ejecutaron cambios contra el proyecto remoto. La base de referencia fue la rama `main` y las migraciones locales hasta `202610110002_publication_design_requirement.sql`; el estado remoto requiere las comprobaciones de [Fase 0](#fase-0--preparación-y-verificaciones).
 **Alcance:** rol `design`, rutas `/design/publications*`, Drive (carpeta `Entregables`), campo de instrucciones en los modales de `/social-media/grid` y revisión de entregables por Social Media.
 **Documentos relacionados:** [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md), [`modales-publicacion.md`](./modales-publicacion.md).
 

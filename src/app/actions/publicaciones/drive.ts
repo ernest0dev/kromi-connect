@@ -15,7 +15,7 @@ async function getAuthorizedPublication(publicationId: string, permission: 'soci
   if (access.error || !access.context) return { error: access.error || 'Inicia sesión para continuar.' } as const;
   const { data: allowed, error: allowedError } = await access.context.supabase.rpc('user_has_all_publication_accounts', { p_publicacion_id: publicationId });
   if (allowedError || !allowed) return { error: 'No tienes acceso a todas las cuentas destino de esta publicación.' } as const;
-  const { data, error } = await access.context.supabase.from('publicaciones').select('id, drive_folder_id, drive_folder_url, drive_brief_folder_id, drive_deliverables_folder_id, estatus, deleted_at').eq('id', publicationId).maybeSingle();
+  const { data, error } = await access.context.supabase.from('publicaciones').select('id, drive_folder_id, drive_folder_url, drive_brief_folder_id, drive_deliverables_folder_id, drive_brief_file_count, drive_brief_checked_at, instrucciones_diseno, requiere_diseno, estatus, deleted_at').eq('id', publicationId).maybeSingle();
   if (error || !data || data.deleted_at) return { error: error?.message || 'No se encontró la publicación activa.' } as const;
   if (!data.drive_folder_id) return { error: 'La publicación todavía no tiene carpeta de Drive.' } as const;
   return { access, publication: data } as const;
@@ -32,7 +32,7 @@ async function ensureFolders(publicationId: string, rootId: string, cachedBrief:
 
 async function reconcileBriefUploads(publicationId: string, folderId: string) {
   const admin=getSupabaseAdmin();
-  const {data,error}=await (admin.from('publicacion_drive_uploads') as any).select('id,file_size,mime_type,status,expires_at').eq('publicacion_id',publicationId).in('status',['RESERVING','UPLOADING','CANCEL_PENDING']);
+  const {data,error}=await (admin.from('publicacion_drive_uploads') as any).select('id,file_size,mime_type,status,expires_at').eq('publicacion_id',publicationId).eq('carpeta','BRIEF').in('status',['RESERVING','UPLOADING','CANCEL_PENDING']);
   if(error)throw new Error(error.message);
   for(const upload of data||[]){
     if(new Date(upload.expires_at).getTime()<=Date.now()){
@@ -57,7 +57,7 @@ export async function listPublicacionBriefFilesAction(publicationId: string) {
     const { error } = await getSupabaseAdmin().rpc('sync_publication_drive_brief', { p_publication_id: publicationId, p_brief_folder_id: folder.briefId, p_deliverables_folder_id: folder.deliverablesId, p_file_count: Math.min(count, 10) });
     if (error) throw new Error(error.message);
     revalidatePath('/social-media/grid');
-    const {data:pendingUploads}=await (getSupabaseAdmin().from('publicacion_drive_uploads') as any).select('id,file_name,mime_type,file_size,expires_at').eq('publicacion_id',publicationId).eq('actor_id',result.access.context!.user.id).eq('status','UPLOADING').gt('expires_at',new Date().toISOString());
+    const {data:pendingUploads}=await (getSupabaseAdmin().from('publicacion_drive_uploads') as any).select('id,file_name,mime_type,file_size,expires_at').eq('publicacion_id',publicationId).eq('carpeta','BRIEF').eq('actor_id',result.access.context!.user.id).eq('status','UPLOADING').gt('expires_at',new Date().toISOString());
     return { success: true as const, data: { files, count, checkedAt: new Date().toISOString(), folderUrl: `https://drive.google.com/drive/folders/${folder.briefId}`, pendingUploads:(pendingUploads||[]).map((upload:any)=>({id:upload.id,name:upload.file_name,mimeType:upload.mime_type,size:Number(upload.file_size),expiresAt:upload.expires_at})) } };
   } catch (error) { return { success: false as const, error: error instanceof Error ? error.message : 'No se pudo consultar el brief en Drive.' }; }
 }
@@ -182,6 +182,7 @@ export async function cancelPublicacionBriefUploadAction(uploadId: string) {
 export async function requestPublicationToDesignAction(publicationId: string) {
   const result = await getAuthorizedPublication(publicationId, 'social-media.posts.status.update');
   if ('error' in result) return { success: false as const, error: result.error };
+  if (result.publication.requiere_diseno && !result.publication.instrucciones_diseno?.trim()) return { success: false as const, error: 'Escribe las instrucciones para Diseño antes de solicitar la pieza.' };
   try {
     const folders = await ensureFolders(publicationId, result.publication.drive_folder_id!, result.publication.drive_brief_folder_id, result.publication.drive_deliverables_folder_id);
     const count = await countDriveFolderFiles(folders.briefId);

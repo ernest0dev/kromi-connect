@@ -67,6 +67,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
   const [campanaId, setCampanaId] = useState('');
   const [socialAccountIds, setSocialAccountIds] = useState<string[]>([]);
   const [requiereDiseno, setRequiereDiseno] = useState(true);
+  const [instruccionesDiseno, setInstruccionesDiseno] = useState('');
   const [requiereRodaje, setRequiereRodaje] = useState(false);
   const [sedes, setSedes] = useState<SedeEnum[]>([]);
   const [prioridad, setPrioridad] = useState(2);
@@ -76,7 +77,9 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
   const briefVencido = requiereDiseno && !!fechaLimiteBrief && fechaLimiteBrief < todayInCaracas();
 
   useEffect(() => {
-    if (isOpen) setFechaPublicacion(initialDate || '');
+    if (!isOpen) return;
+    const timer = window.setTimeout(() => setFechaPublicacion(initialDate || ''), 0);
+    return () => window.clearTimeout(timer);
   }, [initialDate, isOpen]);
 
   if (!isOpen) return null;
@@ -108,6 +111,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         fecha_publicacion: fechaPublicacion,
         hora_publicacion: horaPublicacion || null,
         requiere_diseno: requiereDiseno,
+        instrucciones_diseno: instruccionesDiseno,
         requiere_rodaje: requiereRodaje,
         sedes,
         prioridad,
@@ -129,6 +133,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         setCampanaId('');
         setSocialAccountIds([]);
         setRequiereDiseno(true);
+        setInstruccionesDiseno('');
         setRequiereRodaje(false);
         setSedes([]);
         setPrioridad(2);
@@ -250,6 +255,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
             {briefVencido && fechaLimiteBrief && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 md:col-span-2">El brief debía estar listo el {formatDate(fechaLimiteBrief)}. Puedes continuar y guardar igualmente.</p>}
             <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
             <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} disableYoutube={formato === 'STORY'} />
+            {requiereDiseno && <section className="space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4 md:col-span-2"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">Obligatorias al solicitar a Design</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} placeholder="Describe el objetivo, las referencias, el formato o los detalles que debe respetar Diseño." className="w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-6 focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE]" style={inputStyle}/><p className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#5E6680]"><span>Al solicitar, las instrucciones quedan fijas. Los cambios posteriores se envían como corrección.</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
           </div>
 
           <details className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-bold text-slate-800">Producción <span className="ml-1 text-xs font-normal text-slate-500">Opcional</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-2">

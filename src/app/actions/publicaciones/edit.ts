@@ -32,6 +32,7 @@ export interface EditPublicacionInput {
   categoria_ids: string[];
   social_account_ids: string[];
   requiere_diseno: boolean;
+  instrucciones_diseno: string;
 }
 
 export async function editPublicacionAction(input: EditPublicacionInput): Promise<
@@ -150,6 +151,13 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
       });
       if (designRequirementError) return { success: false, error: `El contenido se guardó, pero no se pudo actualizar la opción de Design: ${designRequirementError.message}` };
     }
+    if (input.requiere_diseno && ['PENDIENTE_BRIEF', 'EN_RODAJE'].includes(current.estatus)) {
+      const { data: instructionsSaved, error: instructionsError } = await supabase.rpc('set_publication_design_instructions', {
+        p_publicacion_id: input.publicacionId,
+        p_instrucciones: input.instrucciones_diseno,
+      });
+      if (instructionsError || instructionsSaved !== true) return { success: false, error: `La publicación se guardó, pero no se pudieron guardar las instrucciones: ${instructionsError?.message || 'intenta nuevamente'}` };
+    }
     const { data: hourSaved, error: hourError } = await supabase.rpc('set_publication_hour', {
       p_publicacion_id: input.publicacionId,
       p_hora_publicacion: input.hora_publicacion,
@@ -163,7 +171,7 @@ export async function editPublicacionAction(input: EditPublicacionInput): Promis
 
     revalidatePath("/social-media/grid");
     revalidatePath("/social-media/kanban");
-    return { success: true, data: { ...data, hora_publicacion: input.hora_publicacion, requiere_diseno: input.requiere_diseno, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
+    return { success: true, data: { ...data, hora_publicacion: input.hora_publicacion, requiere_diseno: input.requiere_diseno, instrucciones_diseno: input.requiere_diseno ? input.instrucciones_diseno.trim() || null : null, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || data.linea_contenido, social_account_ids: selectedAccountIds } as PublicacionConCuentas };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Ocurrió un error inesperado al guardar la publicación." };
   }
