@@ -19,9 +19,14 @@ export function Nav() {
           <a href="#sla">Automatización</a>
           <a href="#stack">Stack</a>
         </div>
-        <a className="nav-cta whitespace-nowrap rounded-full bg-[var(--tinta)] px-5 py-[10px] text-sm font-semibold text-white no-underline" href="#contacto">
-          Hablemos
-        </a>
+        <div className="flex items-center gap-3">
+          <a className="nav-cta whitespace-nowrap rounded-full border border-[var(--borde)] bg-transparent px-5 py-[10px] text-sm font-semibold text-[var(--gris)] no-underline hover:bg-[var(--naranja)] hover:border-[var(--naranja)] hover:text-white" href="/auth/login">
+            Iniciar sesión
+          </a>
+          <a className="nav-cta whitespace-nowrap rounded-full bg-[var(--tinta)] px-5 py-[10px] text-sm font-semibold text-white no-underline" href="#contacto">
+            Hablemos
+          </a>
+        </div>
       </div>
     </nav>
   );

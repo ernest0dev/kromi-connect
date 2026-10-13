@@ -9,7 +9,7 @@ export default async function LoginPage() {
   if (context?.profile?.role_code === "design") redirect("/design/publications");
   if (context?.user) redirect("/access-pending");
 
-  return (
+return (
     <main className="flex min-h-screen items-center justify-center bg-[#f4f6f9] px-4 py-10">
       <section className="w-full max-w-md rounded-2xl border border-[#e1e6ee] bg-white p-7 shadow-[0_12px_40px_rgba(18,38,63,0.09)] sm:p-9">
         <div className="mb-8 flex items-center gap-3">
@@ -23,6 +23,9 @@ export default async function LoginPage() {
         <h1 className="mb-2 text-2xl font-bold text-[#10233f]">Iniciar sesión</h1>
         <p className="mb-7 text-sm text-[#6b7482]">Ingresa con el correo y la contraseña de tu cuenta.</p>
         <LoginForm />
+        <p className="mt-6 text-center text-sm text-[#6b7482]">
+          <a href="/" className="font-medium text-[#0066d2] hover:underline">← Volver al inicio</a>
+        </p>
       </section>
     </main>
   );
