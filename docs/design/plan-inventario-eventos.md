@@ -1,6 +1,6 @@
 # Plan de implementación: inventario compartido del rol Eventos
 
-**Estado (2026-10-13):** implementación local completada en la rama `feat/events-inventory`. La migración `202610130001_events_inventory.sql` se probó en un PostgreSQL local con esquema `auth` simulado; **no está aplicada ni verificada en Supabase remoto**. Se comprobaron `tsc`, lint de los archivos nuevos, 11 pruebas unitarias y `next build`. No se probó la interfaz contra datos reales ni con un usuario `events` en un entorno desplegado.
+**Estado (2026-10-13):** implementación local en `main` (commit `56cdb4d`), con corrección posterior en `202610130002_events_inventory_transfer_identity.sql`. Las migraciones `202610130001` y `202610130002` **no están aplicadas ni verificadas en Supabase remoto**. El estado de pruebas y compilación registrado corresponde al commit inicial; la migración correctiva aún requiere validación en un PostgreSQL local antes de desplegarse. No se probó la interfaz contra datos reales ni con un usuario `events` en un entorno desplegado.
 **Alcance:** rol `events`, ruta `/events/inventory`, migración, Server Actions y maquetas de [`prototypes/events-inventory/`](./prototypes/events-inventory).
 **Documentos relacionados:** [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`supabase-db-migration.md`](../supabase-db-migration.md) §15.
 
@@ -9,7 +9,7 @@
 1. Eventos ve el inventario de **siete sedes** en pestañas (Prebo, Mañongo, Trigal Sur, Trigal Norte, Guataparo, Castillito, San Felipe), con conteo por sede.
 2. Busca y filtra por categoría, ubicación, condición y tipo de control; ordena y pagina. El estado vive en la URL.
 3. Añade y edita artículos, registra **traslados, salidas, retornos y ajustes**, y consulta la **actividad** de cada artículo.
-4. Cada cambio queda con usuario y fecha. El historial no se edita: los errores se corrigen con un ajuste con motivo.
+4. Cada movimiento de inventario queda con usuario y fecha; el historial de movimientos no se edita. Los cambios descriptivos del artículo conservan únicamente el último usuario y fecha de modificación, sin historial de valores anteriores. Los errores de cantidad se corrigen con un ajuste con motivo.
 5. Dos personas pueden trabajar a la vez sin pisarse (control de versión).
 
 ## 2. Modelo de datos
@@ -19,7 +19,7 @@
 | `inventario_sedes` | Catálogo propio de sedes (no depende de `sede_enum`, que solo conoce Prebo y Mañongo). |
 | `inventario_ubicaciones` | Ubicaciones internas por sede; única por (sede, nombre normalizado). |
 | `inventario_categorias` | Insumo, Mobiliario, Decoración. |
-| `inventario_articulos` | Una fila por (artículo, ubicación). `tipo_control` `LOTE` o `INDIVIDUAL`; una unidad individual tiene `cantidad` 0 o 1 y código único. `condicion`, `version`, auditoría de creación y modificación, `atributos` jsonb reservado. |
+| `inventario_articulos` | Una fila por (artículo, ubicación). `tipo_control` `LOTE` o `INDIVIDUAL`; una unidad individual tiene `cantidad` 0 o 1 y código único. `condicion`, `version`, metadatos de creación y última modificación, `atributos` jsonb reservado. |
 | `inventario_movimientos` | Historial inmutable (trigger que bloquea UPDATE y DELETE). Tipos `CONTEO_INICIAL`, `TRASLADO`, `SALIDA`, `RETORNO`, `AJUSTE`. |
 
 No reutiliza `inventario_premios` (premios de sorteos).
@@ -28,7 +28,7 @@ No reutiliza `inventario_premios` (premios de sorteos).
 
 | Tipo | Efecto |
 |---|---|
-| `TRASLADO` | Descuenta en el origen y suma en el destino (busca o crea la fila de destino con el mismo artículo, especificaciones, unidad y condición). Una unidad individual cambia de ubicación sin duplicarse. |
+| `TRASLADO` | Descuenta en el origen y suma en el destino (busca o crea la fila de destino con la misma categoría, nombre normalizado, especificaciones, unidad, condición y atributos). La búsqueda/creación se serializa por identidad para evitar filas duplicadas en traslados concurrentes. Una unidad individual cambia de ubicación sin duplicarse. |
 | `SALIDA` | Descuenta; `destino_externo` es texto libre. Una unidad individual pasa a 0 ("Fuera de sede"). |
 | `RETORNO` | Suma en la ubicación elegida; una unidad individual pasa de 0 a 1. |
 | `AJUSTE` | La cantidad enviada es la **contada**; se guarda la diferencia con signo. Motivo obligatorio. |
@@ -39,7 +39,8 @@ Invariante: la suma de los `delta` de la actividad de un artículo es igual a su
 ### 2.2 Concurrencia y duplicados
 
 - `version` aumenta con cada cambio; las funciones fallan con `CONFLICTO_VERSION` si el cliente trabaja sobre una versión vieja. La interfaz muestra las diferencias o refresca el artículo.
-- Crear un lote igual a uno existente en la misma ubicación falla con `POSIBLE_DUPLICADO`; la interfaz ofrece "Crear de todos modos".
+- Al recibir un traslado, lotes con distinta unidad o atributos no se consolidan. La búsqueda y creación del lote destino usa un bloqueo transaccional por identidad.
+- Crear un lote parecido a uno existente en la misma ubicación puede devolver `POSIBLE_DUPLICADO`; la interfaz ofrece "Crear de todos modos". Esta detección es preventiva y no constituye una restricción única.
 
 ## 3. Permisos
 
@@ -57,7 +58,7 @@ Los demás roles no reciben concesiones. RLS solo permite SELECT a quien tenga `
 
 | Capa | Archivos |
 |---|---|
-| Migración | `supabase/migrations/202610130001_events_inventory.sql` |
+| Migraciones | `supabase/migrations/202610130001_events_inventory.sql`, `202610130002_events_inventory_transfer_identity.sql` |
 | Tipos | `src/types/modules/inventory.ts`, `src/types/database.types.ts` |
 | Lógica pura | `src/lib/inventory.ts` (consulta en URL, formato, validadores); pruebas en `tests/inventory.test.ts` |
 | Acciones | `src/app/actions/inventory/inventory.ts` |
@@ -83,7 +84,7 @@ Las maquetas son referencia visual; si difieren de este documento, gana el docum
 | Fase | Contenido | Estado |
 |---|---|---|
 | 0 | Verificar en remoto: roles y permisos existentes, que no haya tablas `inventario_*` distintas de `inventario_premios`, y `has_permission`. | **Pendiente** |
-| 1 | Aplicar la migración en un entorno de prueba y repetir las pruebas SQL con usuarios reales de `events` y `social-media`. | **Pendiente** |
+| 1 | Aplicar ambas migraciones en un entorno de prueba y repetir las pruebas SQL con usuarios reales de `events` y `social-media`, incluyendo atributos distintos y traslados simultáneos al mismo destino. | **Pendiente** |
 | 2 | Vistas, acciones y pruebas unitarias. | Hecho (local) |
 | 3 | Revisión con el equipo de Eventos: lista de unidades, formato de código, ubicaciones por sede. | **Pendiente** |
 | 4 | Importación del Excel actual (§8). | **Pendiente** |
