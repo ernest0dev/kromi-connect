@@ -7,6 +7,7 @@ export default async function LoginPage() {
   if (context?.profile?.role_code === "social-media") redirect("/social-media/grid");
   if (context?.profile?.role_code === "customer-support") redirect("/support");
   if (context?.profile?.role_code === "design") redirect("/design/publications");
+  if (context?.profile?.role_code === "events") redirect("/events/inventory");
   if (context?.user) redirect("/access-pending");
 
 return (

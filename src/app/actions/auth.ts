@@ -32,6 +32,7 @@ export async function loginAction(_previousState: LoginState, formData: FormData
   if (profile?.role_code === "social-media") redirect("/social-media/grid");
   if (profile?.role_code === "customer-support") redirect("/support");
   if (profile?.role_code === "design") redirect("/design/publications");
+  if (profile?.role_code === "events") redirect("/events/inventory");
   redirect("/access-pending");
 }
 

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Inventario en móvil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.sc{height:44px;padding:0 16px;border-radius:22px;border:1px solid #CBD3DF;background:#fff;font-weight:600;font-size:14px;color:#3A4658;white-space:nowrap;flex-shrink:0}
+.sc.on{background:#0066D2;border-color:#0066D2;color:#fff}
+.in{height:44px;box-sizing:border-box;border:1px solid #AEB9C9;border-radius:10px;background:#fff;padding:0 12px 0 40px;font-family:inherit;font-size:14px;width:100%}
+.ic{width:44px;height:44px;flex-shrink:0;border:1px solid #CBD3DF;border-radius:10px;background:#fff;display:inline-flex;align-items:center;justify-content:center;color:#3A4658}
+.cd{background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.c-ok{background:#E2F5EA;color:#0B6B40}
+.c-bad{background:#FDE8E6;color:#A8200F}
+.c-fix{background:#FDEFD6;color:#7A4800}
+.lote{border:1px solid #CBD3DF;color:#3A4658;background:#fff}
+.ind{background:#14202E;color:#fff}
+.mut{color:#566274;font-size:12px}
+.sc:focus-visible,.ic:focus-visible,.in:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #F3F5F9; position: relative; overflow: hidden">
+  <div style="background: #002F80; color: #fff; padding: 16px 16px 14px; display: flex; align-items: center; justify-content: space-between">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <div style="width: 32px; height: 32px; border-radius: 8px; background: #F28D19; color: #002F80; font-weight: 800; display: flex; align-items: center; justify-content: center">K</div>
+      <div><div style="font-weight: 800; font-size: 17px; line-height: 1.1">Inventario</div><div style="font-size: 12px; color: #BFD3F2">Eventos · compartido</div></div>
+    </div>
+    <div style="width: 34px; height: 34px; border-radius: 50%; background: #CFE3FA; color: #002F80; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 13px">CR</div>
+  </div>
+  <div style="padding: 14px 16px 0; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+      <button class="sc on">Prebo</button><button class="sc">Mañongo</button><button class="sc">Trigal Sur</button><button class="sc">Trigal Norte</button><button class="sc">Guataparo</button><button class="sc">Castillito</button><button class="sc">San Felipe</button>
+    </div>
+    <div style="display: flex; gap: 8px">
+      <label style="position: relative; flex: 1; display: block">
+        <span style="position: absolute; left: 12px; top: 12px; color: #566274; display: flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span>
+        <input class="in" placeholder="Buscar artículo" aria-label="Buscar artículo">
+      </label>
+      <button class="ic" aria-label="Filtros"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button>
+    </div>
+    <div class="mut">131 artículos en Prebo · A–Z</div>
+  </div>
+  <div style="flex: 1; overflow: hidden; padding: 10px 16px 0; display: flex; flex-direction: column; gap: 10px">
+    <sc-for list="{{cards}}" as="c" hint-placeholder-count="4">
+      <div class="cd">
+        <div style="display: flex; justify-content: space-between; gap: 10px; align-items: flex-start">
+          <div><div style="font-weight: 700; font-size: 15px">{{c.name}}</div><div class="mut">{{c.spec}}</div></div>
+          <div style="text-align: right; flex-shrink: 0"><span style="font-weight: 800; font-size: 18px">{{c.qty}}</span> <span class="mut">{{c.unit}}</span></div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+          <span class="chip {{c.cc}}"><span class="dot"></span>{{c.cond}}</span>
+          <span class="chip {{c.kc}}">{{c.ctrl}}</span>
+          <span style="font-size: 13px; font-weight: 600; margin-left: auto">{{c.loc}}</span>
+        </div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 10px">
+    <button style="flex: 1; height: 48px; border-radius: 12px; border: 1px solid #CBD3DF; background: #fff; font-weight: 700; font-size: 15px; color: #14202E; box-shadow: 0 6px 18px rgba(20,32,46,.18)">Movimiento</button>
+    <button style="flex: 1; height: 48px; border-radius: 12px; border: 0; background: #0066D2; color: #fff; font-weight: 700; font-size: 15px; box-shadow: 0 6px 18px rgba(0,102,210,.4)">Añadir artículo</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cc = { 'Disponible': 'c-ok', 'Dañado': 'c-bad', 'En reparación': 'c-fix' };
+    const raw = [
+      ['Cinta adhesiva doble faz', 'Rollo angosto', 15, 'rollos', 'Cuartico', 'Disponible', 'Lote'],
+      ['Estructura arco desmontable', 'DEC-0007 · 3 módulos', 1, 'unidad', 'Mezzanina', 'En reparación', 'Individual'],
+      ['Globos látex surtidos', 'Bolsa mixta de colores', 8, 'bolsas', 'Mezzanina', 'Disponible', 'Lote'],
+      ['Guirnalda de luces cálidas', 'Para exterior', 2, 'unidades', 'Salón', 'Dañado', 'Lote'],
+      ['Mantel rectangular blanco', 'Tela lavable', 24, 'unidades', 'Salón', 'Disponible', 'Lote']
+    ];
+    return { cards: raw.map(r => ({ name: r[0], spec: r[1], qty: r[2], unit: r[3], loc: r[4], cond: r[5], cc: cc[r[5]], ctrl: r[6], kc: r[6] === 'Lote' ? 'lote' : 'ind' })) };
+  }
+}
+</script>
+</body>
+</html>

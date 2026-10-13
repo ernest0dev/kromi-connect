@@ -8,6 +8,7 @@ import {
   CanalEnum,
   SedeEnum,
 } from './enums';
+import type { InventarioActividadRow, InventarioArticuloRow } from './modules/inventory';
 
 export type Json =
   | string
@@ -584,6 +585,44 @@ export interface Database {
         };
         Relationships: [];
       };
+      inventario_sedes: {
+        Row: {
+          id: string;
+          codigo: string;
+          nombre: string;
+          orden: number;
+          activa: boolean;
+          created_at: string;
+        };
+        // Sin escritura directa: se cambia con migraciones (catálogo) o funciones RPC.
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      inventario_ubicaciones: {
+        Row: {
+          id: string;
+          sede_id: string;
+          nombre: string;
+          activa: boolean;
+          created_at: string;
+          created_by: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      inventario_categorias: {
+        Row: {
+          id: string;
+          nombre: string;
+          activa: boolean;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -592,6 +631,78 @@ export interface Database {
       has_permission: {
         Args: { required_permission: string };
         Returns: boolean;
+      };
+      list_inventory_items: {
+        Args: {
+          p_sede_id?: string | null;
+          p_search?: string | null;
+          p_categoria_id?: string | null;
+          p_ubicacion_id?: string | null;
+          p_condicion?: string | null;
+          p_tipo_control?: string | null;
+          p_sort?: string;
+          p_dir?: string;
+          p_limit?: number;
+          p_offset?: number;
+          p_articulo_id?: string | null;
+        };
+        Returns: InventarioArticuloRow[];
+      };
+      get_inventory_sede_counts: {
+        Args: Record<PropertyKey, never>;
+        Returns: { sede_id: string; total: number }[];
+      };
+      get_inventory_item_activity: {
+        Args: { p_articulo_id: string; p_tipo?: string | null; p_limit?: number; p_offset?: number };
+        Returns: InventarioActividadRow[];
+      };
+      create_inventory_location: {
+        Args: { p_sede_id: string; p_nombre: string };
+        Returns: string;
+      };
+      create_inventory_item: {
+        Args: {
+          p_categoria_id: string;
+          p_nombre: string;
+          p_especificaciones: string | null;
+          p_tipo_control: string;
+          p_codigo: string | null;
+          p_cantidad: number | null;
+          p_unidad_medida: string;
+          p_ubicacion_id: string;
+          p_condicion: string;
+          p_atributos?: Json;
+          p_observacion?: string | null;
+          p_confirmar_duplicado?: boolean;
+        };
+        Returns: string;
+      };
+      update_inventory_item: {
+        Args: {
+          p_articulo_id: string;
+          p_expected_version: number;
+          p_categoria_id: string;
+          p_nombre: string;
+          p_especificaciones: string | null;
+          p_codigo: string | null;
+          p_unidad_medida: string;
+          p_condicion: string;
+          p_atributos?: Json;
+        };
+        Returns: number;
+      };
+      register_inventory_movement: {
+        Args: {
+          p_articulo_id: string;
+          p_tipo: string;
+          p_cantidad: number;
+          p_expected_version: number;
+          p_destino_ubicacion_id?: string | null;
+          p_externo?: string | null;
+          p_fecha_hora?: string | null;
+          p_observacion?: string | null;
+        };
+        Returns: { movimiento_id: string; articulo_id: string; version: number; destino_articulo_id: string | null };
       };
       save_campaign_with_efemerides: {
         Args: {

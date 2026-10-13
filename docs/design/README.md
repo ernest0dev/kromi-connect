@@ -10,6 +10,8 @@ Esta carpeta guarda las decisiones de diseño que no caben en el código: qué m
 | [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md) | Decisiones, arquitectura y estado de implementación del brief con Drive y retorno `SOLICITADO → PENDIENTE_BRIEF`. |
 | [`plan-rol-design.md`](./plan-rol-design.md) | Plan por fases del perfil Design completo: instrucciones obligatorias, auto-asignación, carga de entregables en la app, historial y revisión por Social Media. |
 | [`prototypes/`](./prototypes) | Maquetas HTML + CSS de cada artboard (un archivo `.dc.html` por pantalla) y `canvas.json` con su posición en el lienzo. |
+| [`plan-inventario-eventos.md`](./plan-inventario-eventos.md) | Plan del inventario compartido del rol Eventos: modelo, migración `202610130001`, permisos, fases, decisiones pendientes e importación del Excel. |
+| [`prototypes/events-inventory/`](./prototypes/events-inventory) | Siete maquetas del inventario de Eventos (tabla, formulario, actividad, estados, móvil, modelo y decisiones). Mapeadas en [`plan-inventario-eventos.md` §5](./plan-inventario-eventos.md#5-mapa-de-maquetas). Mismo aviso sobre `support.js` que las demás. |
 | [`prototypes/design-role/`](./prototypes/design-role) | Ocho maquetas del perfil Design y de los cambios en Social Media (cola, historial, ficha, instrucciones, revisión). Mapeadas a fases en [`plan-rol-design.md` §8.1](./plan-rol-design.md#81-maquetas-de-referencia). El marco de layout es ilustrativo y no coincide con los colores implementados. |
 
 ## Cómo leer los prototipos

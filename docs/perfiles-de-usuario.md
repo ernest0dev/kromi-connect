@@ -8,7 +8,7 @@ Este documento separa el perfil funcional de los permisos efectivos. Los perfile
 |---|---|---|
 | Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
 | Diseño / Diseñador | `design` | Perfil operativo: cola global, ficha de trabajo, carga de entregables en la app e historial. Pendiente de verificar en producción. |
-| Eventos | `events` | Rol existente; perfil funcional pendiente. |
+| Eventos | `events` | Inventario compartido por sede en `/events/inventory` (ver, añadir, editar, mover, ajustar y consultar actividad). Implementado en local; migración `202610130001` pendiente de aplicar y verificar. Plan en `design/plan-inventario-eventos.md`. |
 | Interno | `internal` | Rol existente; perfil funcional pendiente. |
 | Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
 | Gerencia | `management` | Rol existente; no tiene vista de aprobación de publicaciones. Social Media registra el resultado externo. |
@@ -97,4 +97,4 @@ Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
 
 ## Perfiles por definir
 
-Eventos, Interno, Atención al cliente y Gerencia requieren entrevistas y una ficha funcional antes de desarrollar vistas específicas. Los nombres de rol disponibles no sustituyen la definición de tareas, límites y permisos.
+Interno, Atención al cliente y Gerencia requieren entrevistas y una ficha funcional antes de desarrollar vistas específicas. Los nombres de rol disponibles no sustituyen la definición de tareas, límites y permisos.

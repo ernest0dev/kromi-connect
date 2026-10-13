@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Decisiones pendientes</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+.card{background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:20px 22px;display:flex;flex-direction:column;gap:10px}
+.n{width:28px;height:28px;border-radius:50%;background:#F28D19;color:#14202E;font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.q{font-weight:800;font-size:16px;line-height:1.3}
+.lb{font-size:11px;font-weight:800;letter-spacing:.8px;color:#0054AE;margin-bottom:2px}
+.tx{font-size:13px;line-height:1.5;color:#2B3748}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 780px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 22px">
+  <div>
+    <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.3px">Decisiones pendientes para validar con el equipo</div>
+    <div class="tx" style="margin-top: 4px">Ninguna bloquea el diseño. Cada tarjeta indica qué supuesto usa este borrador mientras se responde.</div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px">
+    <sc-for list="{{items}}" as="i" hint-placeholder-count="6">
+      <div class="card">
+        <div style="display: flex; gap: 12px; align-items: flex-start"><span class="n">{{i.n}}</span><div class="q">{{i.q}}</div></div>
+        <div><div class="lb">SUPUESTO DEL BORRADOR</div><div class="tx">{{i.a}}</div></div>
+        <div><div class="lb">A VALIDAR</div><div class="tx">{{i.v}}</div></div>
+      </div>
+    </sc-for>
+  </div>
+  <div style="background: #FDF1DA; border: 1px solid #EFCB8A; border-radius: 12px; padding: 14px 20px; font-size: 13px; line-height: 1.5; color: #5E3800"><b>Aparte, antes de importar el Excel:</b> tiene 253 filas y 250 nombres distintos, así que conviene revisar posibles duplicados con el equipo antes de cargarlo.</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":780}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return { items: [
+      { n: 1, q: 'Qué artículos se controlan individualmente y cuáles por cantidad o lote',
+        a: 'Los insumos van por lote. Mobiliario, decoración armable y equipos, como televisores o estructuras, van por unidad cuando son piezas identificables.',
+        v: 'Qué piezas necesitan código propio y cómo se etiquetan.' },
+      { n: 2, q: 'Unidades de medida admitidas',
+        a: 'Se usan unidades, cajas, paquetes, bolsas, rollos y metros como ejemplos. La lista sería editable.',
+        v: 'La lista real y si alguien del equipo puede añadir unidades nuevas.' },
+      { n: 3, q: 'Catálogo de categorías',
+        a: 'Insumo, Mobiliario y Decoración vienen del Excel. Equipos es solo una propuesta para televisores.',
+        v: 'Las categorías definitivas, quién puede crear nuevas y si hay subcategorías.' },
+      { n: 4, q: 'Ubicaciones válidas para cada sede',
+        a: 'Cada sede tiene su propia lista. Salón, Cuartico, Mezzanina, Almacén-Rack, Navidad y Navidad San Diego aparecen en el Excel, pero no se asumen en todas.',
+        v: 'Qué ubicaciones existen en cada una de las siete sedes.' },
+      { n: 5, q: 'Si salidas, retornos, traslados y ajustes se registran como movimientos',
+        a: 'Sí, los cuatro. Todos se guardan como completados al instante, sin aprobación.',
+        v: 'Si algún movimiento necesita autorización o confirmación de quien recibe.' },
+      { n: 6, q: 'Quién puede hacer ajustes de inventario y cómo se corrigen errores',
+        a: 'Las tres personas de Eventos pueden. Un error se corrige con un ajuste que pide motivo; el registro anterior no se borra.',
+        v: 'Si los ajustes grandes requieren un segundo usuario y si hay un límite de cantidad.' }
+    ] };
+  }
+}
+</script>
+</body>
+</html>

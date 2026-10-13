@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Formulario de artículo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#C9D1DE;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#14202E;font-weight:600;font-size:14px}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn:focus-visible,.in:focus-visible,.seg:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.in{height:42px;box-sizing:border-box;border:1px solid #AEB9C9;border-radius:8px;background:#fff;padding:0 12px;font-family:inherit;font-size:14px;color:#14202E;width:100%}
+textarea.in{height:84px;padding:10px 12px;resize:none;line-height:1.45}
+.in[readonly]{background:#F1F4F9;border-color:#D6DCE6;color:#3A4658}
+.fl{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13px;color:#14202E}
+.hp{font-weight:400;font-size:12px;color:#566274;line-height:1.4}
+.sec{font-size:12px;font-weight:800;letter-spacing:.8px;color:#0054AE}
+.seg{flex:1;height:42px;border:1px solid #AEB9C9;background:#fff;font-weight:600;font-size:14px;color:#3A4658;font-family:inherit}
+.seg.on{background:#E3EFFC;border-color:#0066D2;color:#0B4A94;position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600}
+.mut{color:#566274;font-size:12px}
+.ib{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:#3A4658}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1060px; box-sizing: border-box; padding: 36px 40px; display: flex; gap: 40px; align-items: flex-start; justify-content: center">
+
+  <section style="width: 640px; display: flex; flex-direction: column; gap: 12px">
+    <div style="font-weight: 800; font-size: 15px">Variante A · Editar un artículo por cantidad / lote</div>
+    <div style="background: #fff; border-radius: 14px; box-shadow: 0 18px 50px rgba(20,32,46,.28); overflow: hidden">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #E6EAF1">
+        <div>
+          <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.3px">Editar artículo</div>
+          <div class="mut" style="margin-top: 2px">Prebo · Inventario compartido de Eventos</div>
+        </div>
+        <button class="ib" aria-label="Cerrar panel"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div style="padding: 22px 24px; display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sec">DATOS GENERALES</div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+            <label class="fl">Categoría<select class="in"><option>Insumo</option></select></label>
+            <label class="fl">Nombre del artículo<input class="in" value="Servilletas blancas"></label>
+          </div>
+          <label class="fl">Descripción / especificaciones<textarea class="in">Paquete grande, 2 capas. Distinto del paquete pequeño de cóctel.</textarea><span class="hp">Incluye lo que ayude a distinguir artículos parecidos: medida, color, material o uso.</span></label>
+          <div style="border: 1.5px dashed #AEB9C9; border-radius: 8px; padding: 10px 14px; color: #566274; font-size: 12px; line-height: 1.45">Aquí podrían ir atributos específicos por categoría. Por definir después de entrevistar al equipo.</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sec">CONTROL Y CANTIDAD</div>
+          <div style="display: flex">
+            <button class="seg on" style="border-radius: 8px 0 0 8px">Por cantidad / lote</button>
+            <button class="seg" style="border-radius: 0 8px 8px 0; margin-left: -1px">Unidad individual</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
+            <label class="fl">Cantidad actual<input class="in" value="40" readonly></label>
+            <label class="fl">Unidad de medida<select class="in"><option>paquetes</option></select></label>
+          </div>
+          <div style="background: #EEF5FE; border: 1px solid #BBD6F7; border-radius: 10px; padding: 12px 14px; display: flex; gap: 12px; align-items: center">
+            <div style="flex: 1; font-size: 13px; line-height: 1.45; color: #12365F"><b>La cantidad y la ubicación no se editan aquí.</b> Para que el cambio quede en el historial, regístralo como movimiento.</div>
+            <button class="btn" style="height: 38px; flex-shrink: 0">Registrar movimiento</button>
+          </div>
+          <div class="hp">¿Hay un error de captura? <b style="color: #0054AE">Corregir dato</b> pide un motivo y también queda en el historial.</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sec">UBICACIÓN Y CONDICIÓN</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
+            <label class="fl">Sede actual<input class="in" value="Prebo" readonly></label>
+            <label class="fl">Ubicación interna<input class="in" value="Cuartico" readonly></label>
+            <label class="fl">Condición<select class="in"><option>Disponible</option></select></label>
+          </div>
+        </div>
+      </div>
+      <div style="padding: 14px 24px; background: #F7F9FC; border-top: 1px solid #E6EAF1; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <div class="mut" style="line-height: 1.5">Creado 02 sep, 10:12 por Andrea M.<br>Modificado hoy 14:32 por Luis P.</div>
+        <div style="display: flex; gap: 10px"><button class="btn">Cancelar</button><button class="btn pri">Guardar cambios</button></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="width: 640px; display: flex; flex-direction: column; gap: 12px">
+    <div style="font-weight: 800; font-size: 15px">Variante B · Añadir un artículo de unidad individual</div>
+    <div style="background: #fff; border-radius: 14px; box-shadow: 0 18px 50px rgba(20,32,46,.28); overflow: hidden">
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; border-bottom: 1px solid #E6EAF1">
+        <div>
+          <div style="font-size: 20px; font-weight: 800; letter-spacing: -0.3px">Añadir artículo</div>
+          <div class="mut" style="margin-top: 2px">Se guardará en el inventario compartido de Eventos</div>
+        </div>
+        <button class="ib" aria-label="Cerrar panel"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <div style="padding: 22px 24px; display: flex; flex-direction: column; gap: 22px">
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sec">DATOS GENERALES</div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px">
+            <label class="fl">Categoría<select class="in"><option>Equipos</option></select></label>
+            <label class="fl">Nombre del artículo<input class="in" value="Televisor de pantalla plana #03"></label>
+          </div>
+          <label class="fl">Descripción / especificaciones<textarea class="in">Con soporte de piso. Etiqueta pegada en la parte trasera.</textarea><span class="hp">Incluye lo que ayude a distinguir artículos parecidos: medida, color, material o uso.</span></label>
+          <div style="border: 1.5px dashed #AEB9C9; border-radius: 8px; padding: 10px 14px; color: #566274; font-size: 12px; line-height: 1.45">Aquí podrían ir atributos específicos por categoría. Por definir después de entrevistar al equipo.</div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sec">CONTROL Y CANTIDAD</div>
+          <div style="display: flex">
+            <button class="seg" style="border-radius: 8px 0 0 8px">Por cantidad / lote</button>
+            <button class="seg on" style="border-radius: 0 8px 8px 0; margin-left: -1px">Unidad individual</button>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
+            <label class="fl">Código o etiqueta<input class="in" value="EQ-0003"><span class="hp">Identifica esta unidad. Formato por definir.</span></label>
+            <label class="fl">Cantidad<input class="in" value="1 unidad" readonly><span class="hp">Una unidad individual siempre vale 1.</span></label>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px">
+          <div class="sec">UBICACIÓN Y CONDICIÓN</div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px">
+            <label class="fl">Sede actual<select class="in"><option>Mañongo</option></select></label>
+            <label class="fl">Ubicación interna<select class="in"><option>Almacén-Rack</option></select><span class="hp">Solo ubicaciones de Mañongo.</span></label>
+            <label class="fl">Condición<select class="in"><option>Disponible</option></select></label>
+          </div>
+          <div style="background: #EEF5FE; border: 1px solid #BBD6F7; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.45; color: #12365F">Al guardar se registra un <b>conteo inicial</b> en el historial, con tu usuario y la fecha.</div>
+        </div>
+      </div>
+      <div style="padding: 14px 24px; background: #F7F9FC; border-top: 1px solid #E6EAF1; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <div class="mut" style="line-height: 1.5">Los campos de creación y modificación<br>se completan al guardar.</div>
+        <div style="display: flex; gap: 10px"><button class="btn">Cancelar</button><button class="btn pri">Guardar artículo</button></div>
+      </div>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

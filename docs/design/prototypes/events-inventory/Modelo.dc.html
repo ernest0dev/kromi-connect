@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Modelo de datos propuesto</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+.card{background:#fff;border:1px solid #DDE3EC;border-radius:12px;overflow:hidden}
+.th{padding:12px 16px;display:flex;align-items:baseline;justify-content:space-between;gap:10px;color:#fff}
+.tn{font-family:'IBM Plex Mono',ui-monospace,monospace;font-weight:600;font-size:14px}
+.row{display:grid;grid-template-columns: 190px 1fr;gap:10px;padding:7px 16px;border-top:1px solid #EDF0F5;align-items:baseline}
+.fn{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12.5px;font-weight:500;color:#14202E}
+.fd{font-size:12.5px;color:#3A4658;line-height:1.4}
+.mut{color:#566274;font-size:12px;line-height:1.45}
+.rule{background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.rule b{font-size:14px}
+.rule span{font-size:13px;line-height:1.5;color:#2B3748}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 880px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 22px">
+  <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 20px; flex-wrap: wrap">
+    <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.3px">Modelo de datos propuesto para el inventario de Eventos</div>
+    <div class="mut" style="font-size: 13px">Propuesta de trabajo. Nombres y tipos se ajustan al validar con el equipo. No reutiliza <span style="font-family: 'IBM Plex Mono', monospace">inventario_premios</span>.</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 0.8fr 1.15fr 1.15fr; gap: 22px; align-items: start">
+    <div style="display: flex; flex-direction: column; gap: 22px">
+      <div class="card">
+        <div class="th" style="background: #5B6B82"><span class="tn">sedes</span><span style="font-size: 12px">catálogo, puede crecer</span></div>
+        <sc-for list="{{sedes}}" as="f" hint-placeholder-count="4">
+          <div class="row" style="grid-template-columns: 120px 1fr"><span class="fn">{{f.n}}</span><span class="fd">{{f.d}}</span></div>
+        </sc-for>
+      </div>
+      <div class="card">
+        <div class="th" style="background: #5B6B82"><span class="tn">sede_ubicaciones</span><span style="font-size: 12px">por sede</span></div>
+        <sc-for list="{{ubic}}" as="f" hint-placeholder-count="4">
+          <div class="row" style="grid-template-columns: 120px 1fr"><span class="fn">{{f.n}}</span><span class="fd">{{f.d}}</span></div>
+        </sc-for>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="th" style="background: #0054AE"><span class="tn">inventario_articulos</span><span style="font-size: 12px">estado vigente · una fila por artículo o lote</span></div>
+      <sc-for list="{{arts}}" as="f" hint-placeholder-count="14">
+        <div class="row"><span class="fn">{{f.n}}</span><span class="fd">{{f.d}}</span></div>
+      </sc-for>
+    </div>
+
+    <div class="card">
+      <div class="th" style="background: #B35F00"><span class="tn">inventario_movimientos</span><span style="font-size: 12px">historial · solo se agregan filas</span></div>
+      <sc-for list="{{movs}}" as="f" hint-placeholder-count="14">
+        <div class="row"><span class="fn">{{f.n}}</span><span class="fd">{{f.d}}</span></div>
+      </sc-for>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+    <div class="rule"><b>El historial solo crece</b><span>Un error se corrige con un nuevo movimiento de ajuste, con motivo. Las filas anteriores no se editan ni se borran.</span></div>
+    <div class="rule"><b>Cambios de ubicación y cantidad</b><span>Se hacen registrando un movimiento. Esa operación actualiza el artículo y guarda el movimiento juntos, o ninguno de los dos.</span></div>
+    <div class="rule"><b>Edición concurrente</b><span>Cada artículo lleva un número de versión. Si cambió desde que se abrió el formulario, se muestra el aviso de conflicto.</span></div>
+    <div class="rule"><b>Permisos comprobados en servidor</b><span>El rol Eventos necesita lectura y gestión de estas tablas, validadas en las Server Actions y en la base de datos, no solo ocultando botones.</span></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":880}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const m = (a) => a.map(r => ({ n: r[0], d: r[1] }));
+    return {
+      sedes: m([
+        ['id', 'Identificador único'],
+        ['nombre', 'Prebo, Mañongo, Trigal Sur, Trigal Norte, Guataparo, Castillito, San Felipe'],
+        ['activa', 'Permite retirar una sede sin borrar su historial']
+      ]),
+      ubic: m([
+        ['id', 'Identificador único'],
+        ['sede_id', 'Sede a la que pertenece'],
+        ['nombre', 'Salón, Cuartico, Mezzanina, Almacén-Rack, Navidad… según la sede'],
+        ['activa', 'Oculta una ubicación sin perder datos antiguos']
+      ]),
+      arts: m([
+        ['id', 'Identificador único'],
+        ['categoria', 'Insumo, Mobiliario, Decoración… (catálogo por definir)'],
+        ['nombre', 'Nombre del artículo'],
+        ['especificaciones', 'Texto libre para distinguir artículos parecidos'],
+        ['atributos', 'Reservado para datos propios de cada categoría (por definir)'],
+        ['tipo_control', 'Por cantidad / lote, o unidad individual'],
+        ['codigo', 'Etiqueta de la unidad. Solo para control individual'],
+        ['cantidad', 'Saldo vigente. Siempre 1 si es individual'],
+        ['unidad_medida', 'unidades, cajas, metros… (lista por definir)'],
+        ['sede_id · ubicacion_id', 'Ubicación vigente que muestra la tabla'],
+        ['condicion', 'Disponible, Dañado, En reparación, Dado de baja'],
+        ['creado_en · creado_por', 'Metadatos de creación'],
+        ['modificado_en · modificado_por', 'Metadatos de última modificación'],
+        ['version', 'Para detectar cambios mientras alguien edita']
+      ]),
+      movs: m([
+        ['id', 'Identificador único'],
+        ['articulo_id', 'Artículo o lote afectado'],
+        ['tipo', 'Traslado, Salida, Retorno, Conteo / ajuste'],
+        ['cantidad', 'Cantidad movida, o diferencia en un ajuste'],
+        ['origen_sede_id · origen_ubicacion_id', 'Dónde estaba (vacío si no aplica)'],
+        ['destino_sede_id · destino_ubicacion_id', 'A dónde fue (vacío si no aplica)'],
+        ['fecha_hora', 'Cuándo ocurrió; por defecto, el momento del registro'],
+        ['registrado_por', 'Usuario que lo registró'],
+        ['registrado_en', 'Cuándo se capturó, para distinguirlo de la fecha real'],
+        ['estado', 'Completado en v1. Pendiente solo si se define autorización'],
+        ['observacion', 'Motivo u observación opcional'],
+        ['saldo_resultante', 'Saldo tras el movimiento, para leer el historial rápido'],
+        ['corrige_movimiento_id', 'Opcional: enlaza un ajuste con el movimiento que corrige']
+      ])
+    };
+  }
+}
+</script>
+</body>
+</html>

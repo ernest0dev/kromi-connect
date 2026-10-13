@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Actividad de un artículo</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#C9D1DE;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 18px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#14202E;font-weight:600;font-size:14px}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn:focus-visible,.in:focus-visible,.tb:focus-visible,.fc:focus-visible,.ty:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.in{height:42px;box-sizing:border-box;border:1px solid #AEB9C9;border-radius:8px;background:#fff;padding:0 12px;font-family:inherit;font-size:14px;color:#14202E;width:100%}
+textarea.in{height:64px;padding:10px 12px;resize:none;line-height:1.45}
+.in[readonly]{background:#F1F4F9;border-color:#D6DCE6;color:#3A4658}
+.fl{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13px}
+.hp{font-weight:400;font-size:12px;color:#566274;line-height:1.4}
+.sec{font-size:12px;font-weight:800;letter-spacing:.8px;color:#0054AE}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.tg{display:inline-block;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600}
+.t-mob{background:#EDE7F8;color:#4B2A8A}
+.c-ok{background:#E2F5EA;color:#0B6B40}
+.lote{border:1px solid #CBD3DF;color:#3A4658;background:#fff}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.mut{color:#566274;font-size:12px}
+.tb{height:46px;padding:0 4px;margin-right:18px;border:0;border-bottom:3px solid transparent;background:transparent;font-weight:600;font-size:14px;color:#4A5668}
+.tb.on{color:#0054AE;border-bottom-color:#0066D2}
+.fc{height:34px;padding:0 14px;border-radius:17px;border:1px solid #CBD3DF;background:#fff;font-size:13px;font-weight:600;color:#3A4658}
+.fc.on{background:#14202E;border-color:#14202E;color:#fff}
+.m-tr{background:#E3EFFC;color:#0B4A94}
+.m-sa{background:#FDEFD6;color:#7A4800}
+.m-re{background:#E2F5EA;color:#0B6B40}
+.m-co{background:#EDE7F8;color:#4B2A8A}
+.ty{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px 12px;border:1px solid #AEB9C9;border-radius:10px;background:#fff;color:#14202E;font-weight:700;font-size:14px}
+.ty span{font-weight:400;font-size:12px;color:#566274}
+.ty.on{background:#E3EFFC;border-color:#0066D2;box-shadow:inset 0 0 0 1px #0066D2}
+.ib{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:8px;background:transparent;color:#3A4658}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1060px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 24px">
+  <div style="display: flex; gap: 40px; align-items: flex-start; justify-content: center">
+
+    <section style="width: 780px; display: flex; flex-direction: column; gap: 12px">
+      <div style="font-weight: 800; font-size: 15px">Panel de detalle · pestaña Actividad (se abre sobre la tabla, sin recargarla)</div>
+      <div style="background: #fff; border-radius: 14px; box-shadow: 0 18px 50px rgba(20,32,46,.28); overflow: hidden">
+        <div style="padding: 20px 24px 0; border-bottom: 1px solid #E6EAF1">
+          <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+            <div style="display: flex; flex-direction: column; gap: 8px">
+              <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.3px">Silla plegable negra</div>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+                <span class="tg t-mob">Mobiliario</span>
+                <span class="chip lote">Lote</span>
+                <span class="chip c-ok"><span class="dot"></span>Disponible</span>
+                <span class="mut" style="margin-left: 4px"><b style="color: #14202E; font-size: 14px">60 unidades</b> · Prebo · Salón</span>
+              </div>
+            </div>
+            <div style="display: flex; gap: 4px">
+              <button class="ib" aria-label="Editar artículo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button>
+              <button class="ib" aria-label="Cerrar panel"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </div>
+          </div>
+          <div style="margin-top: 14px"><button class="tb">Resumen</button><button class="tb on">Actividad</button></div>
+        </div>
+        <div style="padding: 14px 24px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #E6EAF1; background: #FAFBFD">
+          <button class="fc on">Todos</button><button class="fc">Traslados</button><button class="fc">Salidas</button><button class="fc">Retornos</button><button class="fc">Conteos y ajustes</button>
+          <span class="mut" style="margin-left: auto">Del más reciente al más antiguo</span>
+        </div>
+        <div style="padding: 4px 24px 8px">
+          <sc-for list="{{moves}}" as="m" hint-placeholder-count="5">
+            <div style="display: flex; gap: 16px; padding: 14px 0; border-bottom: 1px solid #EDF0F5; align-items: flex-start">
+              <div style="width: 70px; flex-shrink: 0"><div style="font-weight: 700">{{m.d}}</div><div class="mut">{{m.h}}</div></div>
+              <div style="width: 128px; flex-shrink: 0"><span class="chip {{m.tc}}">{{m.t}}</span></div>
+              <div style="flex: 1; min-width: 0">
+                <div style="font-weight: 800; font-size: 15px">{{m.q}}</div>
+                <div style="margin-top: 2px; font-size: 13px; color: #2B3748">{{m.route}}</div>
+                <sc-if value="{{m.note}}" hint-placeholder-val="{{ true }}">
+                  <div class="mut" style="margin-top: 3px; font-style: italic">“{{m.note}}”</div>
+                </sc-if>
+              </div>
+              <div style="text-align: right; flex-shrink: 0">
+                <div style="font-size: 13px">Saldo <b>{{m.bal}}</b></div>
+                <div class="mut">{{m.who}} · Completado</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="padding: 12px 24px; background: #F7F9FC; border-top: 1px solid #E6EAF1" class="mut">El historial no se sobrescribe: un error se corrige con un nuevo registro de ajuste, no editando el anterior.</div>
+      </div>
+    </section>
+
+    <section style="width: 560px; display: flex; flex-direction: column; gap: 12px">
+      <div style="font-weight: 800; font-size: 15px">Registrar movimiento</div>
+      <div style="background: #fff; border-radius: 14px; box-shadow: 0 18px 50px rgba(20,32,46,.28); overflow: hidden">
+        <div style="padding: 18px 24px; border-bottom: 1px solid #E6EAF1; display: flex; justify-content: space-between; align-items: center">
+          <div><div style="font-size: 20px; font-weight: 800; letter-spacing: -0.3px">Registrar movimiento</div><div class="mut" style="margin-top: 2px">Silla plegable negra · Prebo · Salón</div></div>
+          <button class="ib" aria-label="Cerrar panel"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div style="padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <div class="sec">TIPO DE MOVIMIENTO</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
+              <button class="ty on">Traslado<span>Entre sedes o ubicaciones</span></button>
+              <button class="ty">Salida<span>Sale de la sede</span></button>
+              <button class="ty">Retorno<span>Vuelve a una sede</span></button>
+              <button class="ty">Conteo / ajuste<span>Corrige la cantidad contada</span></button>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px">
+            <label class="fl">Cantidad<input class="in" value="15"><span class="hp">Disponible en el origen: 60 unidades</span></label>
+            <label class="fl">Fecha y hora<input class="in" value="13 oct 2026, 14:50"></label>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 22px 1fr; gap: 8px; align-items: end">
+            <div class="fl">Origen<input class="in" value="Prebo · Salón" readonly aria-label="Origen"></div>
+            <div style="height: 42px; display: flex; align-items: center; justify-content: center; color: #566274"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+            <label class="fl">Destino<select class="in"><option>Mañongo · Almacén-Rack</option></select></label>
+          </div>
+          <label class="fl">Observación (opcional)<textarea class="in">Apoyo para evento de aniversario.</textarea></label>
+          <div style="background: #F3F6FB; border: 1px solid #DDE3EC; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.6">
+            <div class="sec" style="margin-bottom: 4px">RESULTADO AL GUARDAR</div>
+            Prebo · Salón: <b>60 → 45 unidades</b><br>
+            Mañongo · Almacén-Rack: <b>10 → 25 unidades</b>
+          </div>
+          <div class="mut" style="line-height: 1.5">Se registrará con tu usuario (Carla R.) y estado <b style="color: #0B6B40">Completado</b>. Si el equipo necesita autorización previa, se definirá más adelante.</div>
+        </div>
+        <div style="padding: 14px 24px; background: #F7F9FC; border-top: 1px solid #E6EAF1; display: flex; justify-content: flex-end; gap: 10px"><button class="btn">Cancelar</button><button class="btn pri">Registrar movimiento</button></div>
+      </div>
+    </section>
+  </div>
+
+  <div style="background: #fff; border-radius: 14px; padding: 22px 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; box-shadow: 0 8px 24px rgba(20,32,46,.12); width: 1360px; box-sizing: border-box; align-self: center">
+    <div>
+      <div style="font-weight: 800; font-size: 16px; margin-bottom: 6px">Corregir un dato</div>
+      <div style="font-size: 13px; line-height: 1.55; color: #2B3748">Se usa cuando el valor guardado estaba mal escrito. No mueve ningún artículo. Pide un motivo y queda anotado como ajuste, con usuario y fecha.</div>
+    </div>
+    <div>
+      <div style="font-weight: 800; font-size: 16px; margin-bottom: 6px">Registrar un movimiento</div>
+      <div style="font-size: 13px; line-height: 1.55; color: #2B3748">Se usa cuando algo se movió en la realidad: un traslado, una salida o un retorno. Guarda origen, destino y cantidad, y de ahí cambia la ubicación o el saldo vigente.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1060}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const raw = [
+      ['12 oct', '15:55', 'Retorno', 'm-re', '+20 unidades', 'Evento externo → Prebo · Salón', 'Regresaron del evento de aniversario', '60', 'Carla R.'],
+      ['10 oct', '08:30', 'Salida', 'm-sa', '−20 unidades', 'Prebo · Salón → Evento externo', 'Apoyo a evento fuera de sede', '40', 'Luis P.'],
+      ['03 oct', '16:40', 'Traslado', 'm-tr', '+18 unidades', 'Mañongo · Almacén-Rack → Prebo · Salón', '', '60', 'Andrea M.'],
+      ['30 sep', '11:05', 'Conteo / ajuste', 'm-co', 'Ajuste +2 unidades', 'Prebo · Salón (contado: 42)', 'Conteo físico del mes', '42', 'Carla R.'],
+      ['02 sep', '10:12', 'Conteo inicial', 'm-co', '40 unidades', 'Registro del artículo en Prebo · Salón', '', '40', 'Andrea M.']
+    ];
+    const moves = raw.map(r => ({ d: r[0], h: r[1], t: r[2], tc: r[3], q: r[4], route: r[5], note: r[6], bal: r[7], who: r[8] }));
+    return { moves };
+  }
+}
+</script>
+</body>
+</html>

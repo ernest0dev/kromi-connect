@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Inventario por sede</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#14202E;font-weight:600;font-size:14px}
+.btn:hover{background:#EEF2F8}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.pri:hover{background:#0054AE}
+.btn:focus-visible,.ib:focus-visible,.tab:focus-visible,.in:focus-visible,.sel:focus-visible,.sort:focus-visible,.nv:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.nv{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:8px;color:#D5E3FA;font-weight:600;text-decoration:none}
+.nv.on{background:rgba(255,255,255,.16);color:#fff}
+.tab{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 16px;border:0;background:transparent;color:#4A5668;font-weight:600;font-size:14px;border-bottom:3px solid transparent;white-space:nowrap}
+.tab:hover{color:#14202E}
+.tab.on{color:#0054AE;border-bottom-color:#0066D2}
+.cnt{display:inline-block;min-width:22px;padding:1px 7px;border-radius:11px;background:#E6EAF1;color:#3A4658;font-size:12px;font-weight:700;text-align:center}
+.tab.on .cnt{background:#DCEBFC;color:#0054AE}
+.in{height:40px;box-sizing:border-box;border:1px solid #CBD3DF;border-radius:8px;background:#fff;padding:0 12px;font-family:inherit;font-size:14px;color:#14202E}
+.sel{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;height:40px;padding:0 12px;border:1px solid #CBD3DF;border-radius:8px;background:#fff;color:#14202E;font-size:14px;font-weight:500}
+.sel b{color:#4A5668;font-weight:600}
+.sel:hover{background:#F3F6FB}
+table{border-collapse:collapse;width:100%}
+th{height:44px;padding:0 14px;text-align:left;font-size:12px;font-weight:700;color:#4A5668;background:#F7F9FC;border-bottom:1px solid #DDE3EC;white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid #E6EAF1;vertical-align:middle}
+tbody tr:hover td{background:#F5F9FF}
+.sort{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;font-size:12px;font-weight:700;color:#4A5668}
+.sort.on{color:#0054AE}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.c-ok{background:#E2F5EA;color:#0B6B40}
+.c-bad{background:#FDE8E6;color:#A8200F}
+.c-fix{background:#FDEFD6;color:#7A4800}
+.c-off{background:#E7EAF0;color:#454F5E}
+.tg{display:inline-block;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600}
+.t-ins{background:#E3EFFC;color:#0B4A94}
+.t-mob{background:#EDE7F8;color:#4B2A8A}
+.t-dec{background:#FBE6EE;color:#8A1F4A}
+.t-eq{background:#DDF3F1;color:#0B5A56}
+.lote{border:1px solid #CBD3DF;color:#3A4658;background:#fff}
+.ind{background:#14202E;color:#fff}
+.ib{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:transparent;color:#3A4658}
+.ib:hover{background:#E6EEF9;color:#0054AE}
+.mut{color:#566274;font-size:12px}
+.pg{min-width:36px;height:36px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;font-weight:600;color:#14202E;font-family:inherit}
+.pg.on{background:#0066D2;border-color:#0066D2;color:#fff}
+</style>
+</helmet>
+<div style="display: flex; width: 100%; min-height: 1200px; box-sizing: border-box">
+  <aside style="width: 232px; flex-shrink: 0; background: #002F80; color: #fff; display: flex; flex-direction: column; padding: 20px 14px; gap: 6px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px">
+      <div style="width: 34px; height: 34px; border-radius: 9px; background: #F28D19; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #002F80">K</div>
+      <div style="font-weight: 800; font-size: 17px; letter-spacing: -0.2px">Kromi Connect</div>
+    </div>
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #9DB8E8; padding: 0 14px 6px">EVENTOS</div>
+    <a class="nv on" href="Main.dc.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+      Inventario
+    </a>
+    <div style="flex: 1"></div>
+    <div style="border-radius: 10px; background: rgba(255,255,255,.1); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="width: 34px; height: 34px; border-radius: 50%; background: #CFE3FA; color: #002F80; font-weight: 800; display: flex; align-items: center; justify-content: center">CR</div>
+        <div style="line-height: 1.25"><div style="font-weight: 700">Carla R.</div><div style="font-size: 12px; color: #BFD3F2">Rol: Eventos</div></div>
+      </div>
+      <div style="font-size: 12px; color: #BFD3F2; line-height: 1.4">Consulta y gestión del inventario. Los permisos se validan en el servidor y en la base de datos.</div>
+    </div>
+  </aside>
+
+  <main style="flex: 1; min-width: 0; padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 20px">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="color: #566274; font-size: 13px; font-weight: 500">Eventos / Inventario</div>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.5px">Inventario</h1>
+        <div style="display: flex; align-items: center; gap: 10px; color: #3A4658; font-size: 13px; flex-wrap: wrap">
+          <div style="display: flex">
+            <sc-for list="{{avatars}}" as="a" hint-placeholder-count="3">
+              <div style="width: 26px; height: 26px; border-radius: 50%; border: 2px solid #F3F5F9; margin-right: -6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #14202E; background: {{a.bg}}">{{a.t}}</div>
+            </sc-for>
+          </div>
+          <span style="margin-left: 10px">Inventario compartido por 3 personas de Eventos · última modificación hoy 14:32 por Luis P.</span>
+        </div>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <button class="btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13l-4-4"/><path d="M17 17H4l4 4"/></svg>
+          Registrar movimiento
+        </button>
+        <button class="btn pri">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Añadir artículo
+        </button>
+      </div>
+    </div>
+
+    <div role="tablist" aria-label="Sedes" style="display: flex; gap: 4px; border-bottom: 1px solid #DDE3EC; overflow-x: auto">
+      <sc-for list="{{tabs}}" as="t" hint-placeholder-count="7">
+        <button class="tab {{t.on}}" role="tab">{{t.n}} <span class="cnt">{{t.c}}</span></button>
+      </sc-for>
+    </div>
+
+    <div style="background: #fff; border: 1px solid #DDE3EC; border-radius: 12px; overflow: hidden">
+      <div style="display: flex; align-items: center; gap: 10px; padding: 16px; flex-wrap: wrap; border-bottom: 1px solid #E6EAF1">
+        <label style="position: relative; flex: 1 1 320px; min-width: 260px; display: block">
+          <span style="position: absolute; left: 12px; top: 10px; color: #566274; display: flex"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span>
+          <input class="in" style="width: 100%; padding-left: 40px" placeholder="Buscar por nombre o especificaciones" aria-label="Buscar por nombre o especificaciones">
+        </label>
+        <button class="sel"><span><b>Categoría:</b> Todas</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel"><span><b>Ubicación:</b> Todas</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel"><span><b>Condición:</b> Todas</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel"><span><b>Control:</b> Todos</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: #FAFBFD; border-bottom: 1px solid #E6EAF1; flex-wrap: wrap; gap: 8px">
+        <div class="mut" style="font-size: 13px">Mostrando 10 de 131 artículos en <b style="color: #14202E">Prebo</b> · ordenado por Artículo (A–Z)</div>
+        <div class="mut" style="font-size: 13px">Las ubicaciones del filtro cambian según la sede seleccionada</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 31%"><button class="sort on" aria-label="Ordenar por artículo, ascendente">Artículo <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg></button></th>
+            <th><button class="sort">Categoría <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button></th>
+            <th style="text-align: right"><button class="sort">Cantidad <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button></th>
+            <th><button class="sort">Ubicación actual <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button></th>
+            <th><button class="sort">Condición <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button></th>
+            <th>Control</th>
+            <th><button class="sort">Modificado <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"/></svg></button></th>
+            <th style="text-align: right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+            <tr>
+              <td>
+                <div style="font-weight: 700; font-size: 14px">{{r.name}}</div>
+                <div class="mut" style="margin-top: 2px">{{r.spec}}</div>
+              </td>
+              <td><span class="tg {{r.catClass}}">{{r.cat}}</span></td>
+              <td style="text-align: right"><span style="font-weight: 800; font-size: 16px">{{r.qty}}</span> <span class="mut">{{r.unit}}</span></td>
+              <td style="font-weight: 600">{{r.loc}}</td>
+              <td><span class="chip {{r.condClass}}"><span class="dot"></span>{{r.cond}}</span></td>
+              <td>
+                <span class="chip {{r.ctrlClass}}">{{r.ctrl}}</span>
+                <sc-if value="{{r.isInd}}" hint-placeholder-val="{{ true }}">
+                  <div class="mut" style="margin-top: 3px; font-variant-numeric: tabular-nums">{{r.code}}</div>
+                </sc-if>
+              </td>
+              <td><div style="font-size: 13px">{{r.upd}}</div><div class="mut">{{r.who}}</div></td>
+              <td style="text-align: right; white-space: nowrap">
+                <button class="ib" aria-label="Editar artículo">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg>
+                </button>
+                <button class="ib" aria-label="Registrar movimiento">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 7h13l-4-4"/><path d="M17 17H4l4 4"/></svg>
+                </button>
+                <button class="ib" aria-label="Ver actividad del artículo">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                </button>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; flex-wrap: wrap; gap: 12px">
+        <div style="display: flex; align-items: center; gap: 10px; font-size: 13px; color: #3A4658">
+          Filas por página
+          <button class="sel" style="height: 36px">10 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+        <div style="display: flex; align-items: center; gap: 6px">
+          <button class="pg" aria-label="Página anterior">‹</button>
+          <button class="pg on">1</button><button class="pg">2</button><button class="pg">3</button>
+          <span class="mut" style="padding: 0 4px">…</span>
+          <button class="pg">14</button>
+          <button class="pg" aria-label="Página siguiente">›</button>
+        </div>
+      </div>
+    </div>
+    <div class="mut" style="font-size: 12px; line-height: 1.5">Los datos de esta pantalla son ficticios. La columna Ubicación muestra solo la ubicación vigente; el historial de cada artículo se abre desde el icono de actividad, sin recargar la tabla.</div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const cat = {
+      'Insumo': 't-ins', 'Mobiliario': 't-mob', 'Decoración': 't-dec', 'Equipos': 't-eq'
+    };
+    const cond = {
+      'Disponible': 'c-ok', 'Dañado': 'c-bad', 'En reparación': 'c-fix', 'Dado de baja': 'c-off'
+    };
+    const raw = [
+      ['Cinta adhesiva doble faz', 'Rollo angosto, para pegar decoración liviana', 'Insumo', 15, 'rollos', 'Cuartico', 'Disponible', 'Lote', '', 'Hoy 14:32', 'Luis P.'],
+      ['Estructura arco desmontable', 'Para entrada de evento, 3 módulos', 'Decoración', 1, 'unidad', 'Mezzanina', 'En reparación', 'Individual', 'DEC-0007', 'Ayer 17:05', 'Carla R.'],
+      ['Globos látex surtidos', 'Bolsa mixta de colores, para arcos y mesas', 'Insumo', 8, 'bolsas', 'Mezzanina', 'Disponible', 'Lote', '', '12 oct, 11:20', 'Andrea M.'],
+      ['Guirnalda de luces cálidas', 'Para exterior, con extensión', 'Decoración', 2, 'unidades', 'Salón', 'Dañado', 'Lote', '', 'Hoy 09:48', 'Luis P.'],
+      ['Mantel rectangular blanco', 'Tela lavable, para mesa plegable', 'Decoración', 24, 'unidades', 'Salón', 'Disponible', 'Lote', '', '09 oct, 16:10', 'Andrea M.'],
+      ['Mesa alta de cóctel', 'Base negra, tope redondo', 'Mobiliario', 1, 'unidad', 'Cuartico', 'Disponible', 'Individual', 'MOB-0031', 'Hoy 10:15', 'Carla R.'],
+      ['Perchero rodante', 'Con ruedas, para eventos con invitados', 'Mobiliario', 1, 'unidad', 'Salón', 'Disponible', 'Individual', 'MOB-0012', '07 oct, 13:40', 'Luis P.'],
+      ['Servilletas blancas', 'Paquete grande, 2 capas', 'Insumo', 40, 'paquetes', 'Cuartico', 'Disponible', 'Lote', '', 'Hoy 14:32', 'Luis P.'],
+      ['Silla plegable negra', 'Para eventos en salón, apilable', 'Mobiliario', 60, 'unidades', 'Salón', 'Disponible', 'Lote', '', '12 oct, 15:55', 'Carla R.'],
+      ['Televisor de pantalla plana #02', 'Con soporte de piso', 'Equipos', 1, 'unidad', 'Mezzanina', 'Disponible', 'Individual', 'EQ-0002', '11 oct, 09:30', 'Andrea M.']
+    ];
+    const rows = raw.map(r => ({
+      name: r[0], spec: r[1], cat: r[2], catClass: cat[r[2]], qty: r[3], unit: r[4], loc: r[5],
+      cond: r[6], condClass: cond[r[6]], ctrl: r[7], ctrlClass: r[7] === 'Lote' ? 'lote' : 'ind',
+      isInd: r[7] === 'Individual', code: r[8], upd: r[9], who: r[10]
+    }));
+    const tabs = [['Prebo', 131], ['Mañongo', 122], ['Trigal Sur', 0], ['Trigal Norte', 0], ['Guataparo', 0], ['Castillito', 0], ['San Felipe', 0]]
+      .map((t, i) => ({ n: t[0], c: t[1], on: i === 0 ? 'on' : '' }));
+    const avatars = [{ t: 'CR', bg: '#CFE3FA' }, { t: 'LP', bg: '#FCE3BF' }, { t: 'AM', bg: '#D6F0DF' }];
+    return { rows, tabs, avatars };
+  }
+}
+</script>
+</body>
+</html>

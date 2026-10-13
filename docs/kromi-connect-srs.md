@@ -375,7 +375,7 @@ Los códigos persistidos son estables y usan inglés; los nombres visibles está
 |---|---|---|
 | `pending` | Acceso pendiente | Sin vistas de negocio |
 | `social-media` | Social Media | Grid, campañas y efemérides según permisos concedidos |
-| `events` | Eventos | Sin permisos de negocio asignados |
+| `events` | Eventos | Inventario: `events.inventory.read`, `.create`, `.update`, `.move`, `.locations.create` (migración `202610130001`, pendiente de aplicar) |
 | `design` | Diseño | Cola y ficha de publicaciones, carga de entregables, historial y transiciones de inicio/entrega |
 | `internal` | Interno | Sin permisos de negocio asignados |
 | `customer-support` | Atención al cliente | Sin permisos de negocio asignados |
@@ -393,7 +393,7 @@ El rol `admin` se limita al control de acceso (`can_manage_access()`); no equiva
 - `social-media.campaigns.{read,create,update,status.update,archive,evaluation.create}` para campañas.
 - `social-media.efemerides.{read,create,update,delete}` para efemérides.
 
-`customer-support`, `events` e `internal` no reciben concesiones de negocio en esta implementación. `design` sí tiene los permisos enumerados arriba; `management` no interviene en aprobaciones dentro de la app. La interfaz puede ocultar navegación sin permiso, pero servidor y RPC vuelven a validar el acceso.
+`customer-support` e `internal` no reciben concesiones de negocio en esta implementación. `design` sí tiene los permisos enumerados arriba; `management` no interviene en aprobaciones dentro de la app. La interfaz puede ocultar navegación sin permiso, pero servidor y RPC vuelven a validar el acceso.
 
 El catálogo puede conservar el código histórico `social-media.posts.delete` de migraciones previas, pero el flujo actual usa Archivo: se revocó el borrado directo para `authenticated`; las acciones de purga se ejecutan en servidor con comprobaciones de permiso.
 

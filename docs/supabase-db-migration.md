@@ -520,3 +520,11 @@ where requiere_diseno and disenador_id is null and estatus in ('EN_DISENO', 'EN_
 ```
 
 La primera consulta debe mostrar el `coalesce` con `auth.users`; la segunda debe devolver 0 tras el backfill salvo tickets sin fila `EN_DISENO` en el historial.
+
+## 15. Inventario de Eventos (`202610130001`)
+
+La migración local `202610130001_events_inventory.sql` crea `inventario_sedes`, `inventario_ubicaciones`, `inventario_categorias`, `inventario_articulos` e `inventario_movimientos` (inmutable por trigger), los permisos `events.inventory.read|create|update|move|locations.create` asignados al rol `events`, políticas RLS solo de lectura y las funciones `SECURITY DEFINER` `list_inventory_items`, `get_inventory_sede_counts`, `get_inventory_item_activity`, `create_inventory_location`, `create_inventory_item`, `update_inventory_item` y `register_inventory_movement`. Termina con `notify pgrst, 'reload schema'`. Siembra siete sedes y tres categorías; **no** siembra ubicaciones. No toca `inventario_premios`.
+
+**Prueba realizada:** PostgreSQL 16 local con esquema `auth` y roles simulados: movimientos de lote e individuales, ajustes, conflicto de versión, duplicados, inmutabilidad del historial y grants (anon no ejecuta; las funciones internas no son ejecutables por `authenticated`). No sustituye una prueba en Supabase.
+
+**Estado de despliegue:** sin aplicar. Antes de aplicar, comprobar que no existan tablas `inventario_*` distintas de `inventario_premios`. Tras aplicar, ejecutar `supabase db pull` y actualizar `supabase-schema-public.md` y su captura. Plan completo en [`design/plan-inventario-eventos.md`](./design/plan-inventario-eventos.md).
