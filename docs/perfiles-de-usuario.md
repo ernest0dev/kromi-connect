@@ -1,13 +1,13 @@
 # Perfiles de usuario
 
-Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Estado revisado contra el repositorio local al 2026-10-12; no implica consulta directa al proyecto remoto.
+Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Estado revisado contra el repositorio al 2026-10-12; no implica consulta directa al proyecto remoto. El despliegue de las migraciones `202610120001` y `202610120002` está pendiente de verificar (ver §13 y §14 de [`supabase-db-migration.md`](supabase-db-migration.md)).
 
 ## Estado de perfiles
 
 | Perfil | Rol de acceso | Estado funcional |
 |---|---|---|
 | Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
-| Diseño / Diseñador | `design` | Cola compartida implementada; queda por definir y construir el perfil completo. |
+| Diseño / Diseñador | `design` | Perfil operativo: cola global, ficha de trabajo, carga de entregables en la app e historial. Pendiente de verificar en producción. |
 | Eventos | `events` | Rol existente; perfil funcional pendiente. |
 | Interno | `internal` | Rol existente; perfil funcional pendiente. |
 | Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
@@ -24,8 +24,11 @@ Este documento separa el perfil funcional de los permisos efectivos. Los perfile
 - Crear, ver y editar publicaciones; asignar cuentas sociales permitidas, campaña y categorías; editar copy, hashtags, fechas, hora y campos de producción disponibles.
 - Reprogramar publicaciones y ver sus estados, fechas de SLA, historial y observaciones.
 - Subir y listar archivos de Brief en Drive desde Crear (después de guardar), Editar y Detalle. La carga es directa del navegador a Drive mediante sesión resumible autorizada en servidor. El MVP permite JPG/JPEG, PNG, WebP, PDF y MP4, hasta 100 MB por archivo y 10 archivos presentes o reservados por publicación. La validación es por extensión/MIME y metadatos; no escanea contenido. No incluye preview dentro de Kromi ni eliminación de archivos.
+- Escribir las **Instrucciones para Diseño** (texto libre, hasta 4000 caracteres) en Crear y Editar. Son obligatorias para solicitar a Design cuando `requiere_diseno` es verdadero y solo se editan en `PENDIENTE_BRIEF` o `EN_RODAJE`; después de solicitar, los cambios van como corrección.
 - Solicitar diseño solo tras comprobación reciente de al menos un archivo en Brief. El retorno a `PENDIENTE_BRIEF` se permite desde `SOLICITADO` antes de que Design inicie; elimina las fechas del ciclo actual, conserva el historial y al volver a solicitar calcula un ciclo nuevo.
 - Marcar si se requiere Design. Por defecto sí; el cambio está permitido en `PENDIENTE_BRIEF` o `EN_RODAJE`. Sin Design, el Brief es opcional y se omiten solicitud/entrega y SLA de diseño. Sin rodaje puede avanzar directamente de `PENDIENTE_BRIEF` a `PENDIENTE_APROBACION_GERENCIA`; con rodaje pasa por `EN_RODAJE` primero.
+- Revisar una entrega en `EN_REVISION_CM`: el modal muestra quién la entregó, si fue a tiempo y la lista de archivos de `Entregables` (miniatura y enlace a Drive). Si Drive falla o la lista llega vacía, muestra un aviso con reintento y las acciones de revisión siguen disponibles: Drive es una vista de apoyo, no una condición de avance.
+- Ver el nombre del diseñador que tomó la solicitud.
 - Revisar una entrega, enviar a corrección con comentario obligatorio, registrar aprobación externa (`APROBADO`), programar, publicar o cancelar desde cualquier estado activo con motivo obligatorio.
 - Archivar lógicamente por un mes calendario, restaurar durante el plazo y resolver manualmente fallos de limpieza de Drive desde Archivo.
 
@@ -35,9 +38,9 @@ Este documento separa el perfil funcional de los permisos efectivos. Los perfile
 |---|---|---|
 | `PENDIENTE_BRIEF` / `EN_RODAJE` | Social Media | Prepara brief y producción; solicita a Design cuando corresponde y el Brief contiene archivo validado. |
 | `SOLICITADO` | Design | Abrir la solicitud cambia a `EN_DISENO`. Social Media puede devolverla a `PENDIENTE_BRIEF` antes del inicio. |
-| `EN_DISENO` | Design | Entrega el archivo final en Drive `Entregables`; el servidor comprueba su presencia y cambia a `EN_REVISION_CM`. |
+| `EN_DISENO` | Design | Carga el archivo final a `Entregables` desde Kromi y lo entrega; el servidor exige al menos un archivo creado después del último paso a `EN_DISENO` y cambia a `EN_REVISION_CM`. |
 | `EN_REVISION_CM` | Social Media | Envía a `EN_CORRECCION` con observación, o continúa a `PENDIENTE_APROBACION_GERENCIA`, `PROGRAMADO` o `PUBLICADO`, según el caso. |
-| `EN_CORRECCION` | Design | Al abrir la corrección, vuelve a `EN_DISENO`. |
+| `EN_CORRECCION` | Design | Al reabrir, vuelve a `EN_DISENO` conservando al diseñador que tomó el ticket; para entregar de nuevo debe cargar un archivo nuevo. |
 | `PENDIENTE_APROBACION_GERENCIA` | Social Media | Registra la respuesta externa pasando a `APROBADO`; no existe interfaz de Gerencia. |
 | `APROBADO` | Social Media | Programa o marca como publicado. |
 | `PROGRAMADO` | Social Media | Confirma `PUBLICADO` cuando la publicación ya está en plataforma. |
@@ -51,34 +54,46 @@ Las acciones requieren el permiso correspondiente y alcance sobre las cuentas de
 
 ## Design / Diseñador de publicaciones
 
-**Estado:** flujo operativo inicial implementado; este registro orienta desarrollo futuro y no afirma que exista un perfil completo.
+**Estado:** perfil operativo implementado en el repositorio. Las migraciones `202610120001` y `202610120002` están pendientes de verificar en el proyecto remoto.
 
-### Puede hacer hoy
+### Puede hacer
 
-- Abrir `/design/publications` si cuenta con `design.posts.read` y ver la cola compartida de publicaciones activas que requieren diseño en `SOLICITADO`, `EN_DISENO` o `EN_CORRECCION`.
-- Consultar los metadatos del brief y listas de archivos de las carpetas `Brief` y `Entregables`, con enlace a Drive.
-- Abrir una solicitud o corrección; el estado pasa a `EN_DISENO`.
-- Subir manualmente el entregable final a `Entregables` desde Drive y entregarlo en Kromi. El servidor verifica que haya al menos un archivo antes de cambiar a `EN_REVISION_CM`.
+- Abrir `/design/publications` con `design.posts.read` y ver la cola **global**: solicitudes por tomar (`SOLICITADO`) y en curso (`EN_DISENO`, `EN_CORRECCION`) de cualquier diseñador, con quién la tomó. Solo se excluyen las publicaciones con `requiere_diseno = false`.
+- Abrir la ficha de trabajo (`/design/publications/[id]`): instrucciones de Social Media arriba, archivos de `Brief` (lectura) y `Entregables`, bloque de fechas y SLA, contenido de la publicación, comentarios de corrección e historial de la solicitud.
+- **Tomar y abrir** una solicitud o corrección (`design.posts.start`): pasa a `EN_DISENO` y, si no tenía diseñador, queda registrado quién la tomó. Ese registro se conserva tras las correcciones.
+- **Cargar entregables** desde Kromi (`design.posts.upload`) directamente a Drive `Entregables`, solo en `EN_DISENO`. Hasta 20 archivos de 500 MB cada uno. Formatos: imagen (`.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.bmp`, `.tif`, `.tiff`, `.heic`, `.heif`), video (`.mp4`, `.mov`, `.m4v`, `.mpeg`, `.mpg`, `.webm`, `.avi`), audio (`.mp3`, `.wav`, `.m4a`, `.aac`, `.ogg`, `.flac`) y documento (`.pptx`, `.pdf`). La validación es por extensión y tamaño, no por contenido.
+- **Entregar a revisión** (`design.posts.deliver`): el servidor exige al menos un archivo en `Entregables` creado después del último paso a `EN_DISENO`; en una corrección, un archivo posterior a la reapertura.
+- Ver el **historial** (`/design/publications/history`): publicaciones entregadas (de `EN_REVISION_CM` en adelante) y canceladas que llegaron a `SOLICITADO`, con diseñador, resultado de SLA y motivo de cancelación.
 
-Las acciones de inicio y entrega requieren `design.posts.start` y `design.posts.deliver`. La cola es compartida: no asigna, reclama ni filtra por `disenador_id`. La decisión `requiere_diseno = false` excluye la publicación de la cola.
+**Propiedad blanda:** cualquier usuario con `design.posts.deliver` puede entregar un ticket tomado por otro diseñador. La carga y la reanudación de una subida sí quedan limitadas a quien la inició.
 
-### No puede hacer hoy
+### No puede hacer
 
-- Crear o editar publicaciones, Brief, copy, cuentas destino o campañas.
-- Subir archivos dentro de Kromi Connect, administrar versiones o eliminar archivos de Drive.
+- Crear o editar publicaciones, Brief, instrucciones, copy, cuentas destino o campañas.
+- Eliminar archivos de Drive, administrar versiones o ver vista previa embebida.
 - Aprobar publicaciones, cambiar estados editoriales de Social Media, cancelar, archivar o restaurar.
-- Asignar solicitudes a sí mismo u otras personas, ni gestionar comentarios de respuesta.
+- Reasignar solicitudes entre diseñadores ni responder comentarios.
+- Abrir la ficha de una solicitud ya entregada o cancelada: el historial es una tabla sin detalle.
 
-### Decisiones para el futuro perfil
+### Decisiones tomadas (2026-10-12)
 
-- Cola compartida frente a asignación individual; reglas de prioridad, carga y reasignación.
-- Convenciones de entrega: tipos, cantidades, nombres, revisiones y ubicación en Drive.
-- Si se requiere carga, vista previa, versionado o respuesta a correcciones dentro de Kromi.
-- Visibilidad segura de nombres de autor/diseñador y de datos de `profiles` entre roles.
-- Tratamiento de una solicitud modificada o cancelada mientras está en trabajo.
-- Métricas de trabajo y notificaciones.
+| Tema | Decisión |
+|---|---|
+| Autoría | Se registra quién toma cada ticket al abrirlo y se conserva (P1). |
+| Entrega | Propiedad blanda: cualquier diseñador con permiso puede entregar (P2). |
+| Instrucciones | Obligatorias al solicitar; editables solo en `PENDIENTE_BRIEF` o `EN_RODAJE` (P3). |
+| Límites | 500 MB por archivo y 20 archivos en `Entregables` (P4). |
+| Reentrega | Al menos un archivo creado tras el inicio del ciclo vigente (P5). |
+| Formatos | Imagen, video, audio, `.pptx` y `.pdf`. |
 
-Resolver estas decisiones antes de ampliar la UI; pueden requerir permisos, RPC/policies y cambios de datos.
+Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
+
+### Pendiente o abierto
+
+- Reasignación entre diseñadores, versionado de entregables, vista previa embebida, métricas de carga y notificaciones: fuera del alcance actual.
+- Qué ocurre si Social Media cancela mientras Design trabaja: hoy la siguiente acción devuelve el error de estado y no hay aviso en vivo.
+- La regla de reentrega se valida solo en la acción de servidor, no en la base de datos.
+- Verificar en remoto las migraciones `202610120001` y `202610120002`, y revisar los tickets antiguos en `SOLICITADO` sin instrucciones (riesgo descrito en la §13 de `supabase-db-migration.md`).
 
 ## Perfiles por definir
 
