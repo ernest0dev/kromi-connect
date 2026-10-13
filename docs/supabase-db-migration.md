@@ -438,9 +438,26 @@ Actualiza `request_publication_to_design` para rechazar publicaciones sin Design
 
 La migración local agrega `publicaciones.instrucciones_diseno`, protege su edición y bloquea la solicitud a Design si está vacía. Registra al diseñador que abre el ticket, agrega la carpeta `carpeta` a las reservas de Drive y eleva el límite físico a 500 MB; los límites de cada flujo se aplican en sus RPC. El cupo del Brief y el de Entregables se cuentan por separado. También agrega el permiso `design.posts.upload`, la reserva de entregables y las RPC de historial, comentarios y nombres.
 
-La aplicación local incluye la cola y ficha de Design, la carga resumible directa a Drive, la regla de archivo nuevo tras corrección, el historial, instrucciones en Social Media y la revisión de entregables. `202610120001_design_profile.sql` está **pendiente de aplicar y verificar en remoto**. No se ejecutó `supabase db push` durante esta implementación.
+La aplicación incluye la cola y ficha de Design, la carga resumible directa a Drive, la regla de archivo nuevo tras corrección, el historial, instrucciones en Social Media y la revisión de entregables.
 
-Antes de aplicar, revisar el esquema vivo y confirmar la restricción `publicacion_drive_uploads_file_size_check`. Con el proyecto vinculado al ref correcto, los comandos son:
+**Estado de despliegue:** evidencia indirecta de que `202610120001_design_profile.sql` está aplicada: el esquema compartido (`supabase-schema-public.md`, commit `d15b84e`) ya lista `publicaciones.instrucciones_diseno` y `publicacion_drive_uploads.carpeta`, y el equipo probó parcialmente la implementación en el navegador. Aún **no hay comprobación explícita** de las funciones, los grants, el trigger, la restricción de tamaño ni el permiso `design.posts.upload`; ejecutar las consultas de abajo antes de darla por verificada. La captura del esquema no incluye funciones ni grants.
+
+**Cambios de comportamiento que conviene conocer**
+- `request_publication_to_design` y `transition_publicacion_status` **no se redefinen** en esta migración. Las reglas nuevas viven en el trigger `guard_publication_design_instructions` (`BEFORE UPDATE`): rechaza cambiar `instrucciones_diseno` fuera de la RPC `set_publication_design_instructions`, rechaza dejar un ticket en `SOLICITADO` sin instrucciones cuando `requiere_diseno` es verdadero y fija `disenador_id = auth.uid()` al pasar a `EN_DISENO` si estaba vacío (la autoría se conserva tras las correcciones).
+- La RPC solo permite editar instrucciones en `PENDIENTE_BRIEF` o `EN_RODAJE`, con rol `social-media` y acceso a todas las cuentas destino.
+- La regla de reentrega (P5: un archivo creado después del último paso a `EN_DISENO`) se valida **solo en la acción de servidor** `transitionPublicationAction`, no en la base de datos. `transition_publicacion_status` sigue concedida a `authenticated`, por lo que una llamada directa a la RPC la omitiría; ya ocurría con la comprobación anterior de «al menos un archivo».
+- `get_design_publication_history` devuelve entregadas (`EN_REVISION_CM` en adelante) y canceladas que llegaron a `SOLICITADO`. `design_can_see_publication` aplica la misma visibilidad a comentarios y nombres. No existe ficha de detalle para esas filas: `/design/publications/[id]` consulta solo `get_design_publication_queue`.
+- `reserve_publication_brief_upload` se redefine para contar solo `carpeta = 'BRIEF'`; el límite físico de la columna pasa a 500 MB y el de 100 MB del Brief se aplica en la RPC.
+
+**Riesgo conocido: tickets antiguos en `SOLICITADO`.** El trigger evalúa «`SOLICITADO` sin instrucciones» en *cualquier* `UPDATE`, no solo en la transición. Un ticket que ya estuviera solicitado antes de la migración, sin instrucciones, fallaría en actualizaciones posteriores (por ejemplo la sincronización del brief o cambios de fechas). Comprobar si existen y, si los hay, hacer un backfill de instrucciones o limitar la condición a `old.estatus is distinct from new.estatus` en una migración nueva:
+
+```sql
+select id, titulo from public.publicaciones
+where deleted_at is null and requiere_diseno and estatus = 'SOLICITADO'
+  and nullif(trim(instrucciones_diseno), '') is null;
+```
+
+Antes de aplicar en un entorno nuevo, revisar el esquema vivo y confirmar la restricción `publicacion_drive_uploads_file_size_check`. Con el proyecto vinculado al ref correcto, los comandos son:
 
 ```powershell
 supabase link --project-ref <project-ref>
@@ -483,3 +500,23 @@ where (role_code = 'design' and permission_code in ('design.posts.read', 'design
 ```
 
 Las pruebas de invocación de RPC con el rol `design` se hacen en una base local/de prueba. En remoto, inspeccionar grants y cuerpos sin llamar funciones mutables. Tras aplicar, ejecutar `supabase db pull` y actualizar `supabase-schema-public.md`/captura con evidencia del esquema real.
+
+## 14. Nombre visible del diseñador (`202610120002`)
+
+La migración local hace dos cosas:
+
+1. **Backfill de `disenador_id`.** Para publicaciones con `requiere_diseno` en `EN_DISENO` o `EN_CORRECCION` y `disenador_id` vacío, asigna a quien hizo el último cambio a `EN_DISENO` según `publicacion_estatus_historial`. No toca publicaciones ya asignadas ni otros estados.
+2. **Reescribe `get_publication_designer_names(uuid[])`.** El nombre pasa a `coalesce(nullif(trim(profiles.full_name), ''), nullif(trim(auth.users.email), ''))`, con `left join` para que un diseñador sin `full_name` o sin fila en `profiles` se muestre por su email. Solo devuelve filas con `disenador_id` y mantiene la visibilidad previa: Design con `design_can_see_publication`, Social Media con acceso a todas las cuentas destino. Los grants no cambian (`authenticated`, sin `public` ni `anon`).
+
+La función es `security definer` y expone el email de un diseñador a Social Media cuando el perfil no tiene nombre; es una exposición deliberada, limitada a publicaciones visibles para quien consulta.
+
+**Estado de despliegue:** sin evidencia de que esté aplicada; la captura del esquema no muestra cuerpos de funciones. Verificar con:
+
+```sql
+select pg_get_functiondef('public.get_publication_designer_names(uuid[])'::regprocedure);
+
+select count(*) from public.publicaciones
+where requiere_diseno and disenador_id is null and estatus in ('EN_DISENO', 'EN_CORRECCION');
+```
+
+La primera consulta debe mostrar el `coalesce` con `auth.users`; la segunda debe devolver 0 tras el backfill salvo tickets sin fila `EN_DISENO` en el historial.
