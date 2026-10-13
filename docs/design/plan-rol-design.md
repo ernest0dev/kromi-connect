@@ -28,7 +28,7 @@ Design deja de ser una cola de lectura con carga manual en Drive y pasa a ser un
 | Registro de autoría | Se registra quién tomó cada ticket. |
 | Jerarquía de la ficha | Arriba: instrucciones y assets. En medio: bloque de fechas de creación y entrega. Abajo: lo menos relevante (copy y datos de contexto). |
 
-### 2.2 Propuestas por defecto (confirmar antes de la Fase 1)
+### 2.2 Decisiones confirmadas (2026-10-12)
 
 | # | Propuesta | Motivo |
 |---|---|---|
@@ -46,16 +46,16 @@ Design deja de ser una cola de lectura con carga manual en Drive y pasa a ser un
 - La marca de un archivo es su `createdTime` en Drive. Editar un archivo existente en Drive no crea uno nuevo y no cuenta.
 - Si el historial no tiene fila `EN_DISENO` (datos anteriores al flujo), basta con que exista un archivo.
 
-**Registro de decisiones.** Las propuestas no son definitivas hasta que el responsable del producto las marque. La Fase 1 no se inicia mientras alguna siga "Por confirmar". Al decidir, anotar el resultado y la fecha aquí.
+**Registro de decisiones.** El responsable del producto confirmó las propuestas siguientes el 2026-10-12. La implementación debe respetar estos resultados; cualquier cambio futuro debe actualizar el registro y las maquetas afectadas.
 
 | Decisión | Estado | Resultado y fecha |
 |---|---|---|
-| P1 Auto-asignación al abrir | Por confirmar | — |
-| P2 Propiedad blanda | Por confirmar | — |
-| P3 Momento de exigir y editar instrucciones | Por confirmar | — |
-| P4 Tamaño (500 MB) y cupo (20) de `Entregables` | Por confirmar | — |
-| P5 Regla de reentrega | Por confirmar | — |
-| Lista de formatos de §6, incluido `.pdf` | Por confirmar | — |
+| P1 Auto-asignación al abrir | Confirmada | Al abrir, guardar quien tomó el ticket; conservarlo tras correcciones. 2026-10-12 |
+| P2 Propiedad blanda | Confirmada | Cualquier usuario con `design.posts.deliver` puede entregar. 2026-10-12 |
+| P3 Momento de exigir y editar instrucciones | Confirmada | Exigir al solicitar; editar solo en `PENDIENTE_BRIEF` o `EN_RODAJE`. 2026-10-12 |
+| P4 Tamaño y cupo de `Entregables` | Confirmada | 500 MB por archivo y 20 archivos por publicación. 2026-10-12 |
+| P5 Regla de reentrega | Confirmada | Exigir al menos un archivo creado después del inicio del ciclo vigente. 2026-10-12 |
+| Lista de formatos de §6, incluido `.pdf` | Confirmada | Permitir PDF junto con imágenes, video, audio y PPTX. 2026-10-12 |
 
 ## 3. Hallazgos del código que condicionan el plan
 
@@ -81,8 +81,8 @@ Design deja de ser una cola de lectura con carga manual en Drive y pasa a ser un
 1. Crear los dos usuarios en Supabase Auth y asignar `profiles.role_code = 'design'` (el acceso lo gestiona un administrador de acceso). Probable estado inicial: sin perfil o `pending`; confirmar en `202610050001_auth_roles_permissions.sql` antes de crearlos.
 2. Confirmar en el proyecto remoto, sin volver a ejecutar a ciegas, que existen `set_publication_design_requirement` y `guard_publication_design_requirement` con sus grants (pendiente señalado en `supabase-db-migration.md`).
 3. Confirmar el nombre real de la restricción `check` de tamaño en `publicacion_drive_uploads` (`select conname from pg_constraint where conrelid = 'public.publicacion_drive_uploads'::regclass;`). El nombre generado esperado es `publicacion_drive_uploads_file_size_check`.
-4. Cerrar P1–P5 y la lista de formatos en el registro de decisiones (§2.3).
-5. **Auditar las RPC ejecutables por `authenticated` con un usuario `design` real:** listarlas (`select p.proname, p.prosecdef from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'` y revisar sus grants) y llamar cada una con ese usuario esperando rechazo, salvo las que la matriz de permisos (§4, "Matriz de acciones y permisos") le concede. Las filas marcadas "por verificar" de la matriz deben quedar confirmadas aquí.
+4. Verificar que las decisiones P1–P5 y la lista de formatos constan como confirmadas en el registro (§2.3).
+5. **Auditar las RPC ejecutables por `authenticated`:** en el remoto, listar las funciones (`select p.proname, p.prosecdef from pg_proc p join pg_namespace n on n.oid = p.pronamespace where n.nspname = 'public'`) y revisar grants y cuerpos, sin invocar RPC mutables. Probar llamadas con un usuario `design` solo en una base local o de prueba, salvo las lecturas inocuas que puedan comprobarse en remoto. Las filas marcadas "por verificar" de la matriz (§4) deben quedar confirmadas y documentadas antes de desplegar.
 
 **Salida:** decisiones cerradas y usuarios listos.
 
@@ -217,7 +217,7 @@ Validación por extensión; el MIME canónico lo fija el mapa de `driveFileRules
 | Audio | `.mp3`, `.wav`, `.m4a`, `.aac`, `.ogg`, `.flac` |
 | Documento | `.pptx`, `.pdf` |
 
-`.pptx` viene de la petición del equipo. `.pdf` **no** lo pidió el equipo: se añadió por coherencia con el Brief y queda sujeto a confirmación (registro de decisiones, §2.3).
+`.pptx` viene de la petición del equipo. `.pdf` se incluye por decisión confirmada el 2026-10-12 (registro de decisiones, §2.3).
 
 Fuera de la lista inicial, a propósito:
 - `.svg`: puede contener scripts y las carpetas son públicas por enlace.
@@ -270,7 +270,7 @@ Cómo usarlas:
 
 - **Son referencia de estructura, jerarquía y estados**, no de colores de layout. El marco de las maquetas (barra lateral blanca, acentos azules) es ilustrativo y difiere de la app implementada (barra lateral azul oscuro y CTA naranja en la barra superior). La implementación debe reutilizar `SocialMediaShell` y el shell de Design con sus tokens actuales; no se debe copiar el marco de la maqueta. Las maquetas no se recolorearon a propósito.
 - Los datos son de ejemplo y "Diseñador A/B" son marcadores de posición.
-- Los textos en pantalla reflejan los valores por defecto P1–P5 aún sin confirmar (§2.2); si cambia alguno, las maquetas quedan desactualizadas en ese punto.
+- Los textos en pantalla reflejan las decisiones P1–P5 confirmadas (§2.2); si cambia alguna, las maquetas quedan desactualizadas en ese punto.
 - Los archivos referencian `./support.js`, que no se incluye en el repositorio: solo se renderizan dentro del lienzo de diseño. Para verlas, usar el enlace publicado.
 
 ## 9. Fuera de alcance
