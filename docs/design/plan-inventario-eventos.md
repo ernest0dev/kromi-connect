@@ -1,6 +1,6 @@
 # Plan de implementación: inventario compartido del rol Eventos
 
-**Estado (2026-10-13):** implementación local en `main` (commit `56cdb4d`), con corrección posterior en `202610130002_events_inventory_transfer_identity.sql`. Las migraciones `202610130001` y `202610130002` **no están aplicadas ni verificadas en Supabase remoto**. El estado de pruebas y compilación registrado corresponde al commit inicial; la migración correctiva aún requiere validación en un PostgreSQL local antes de desplegarse. No se probó la interfaz contra datos reales ni con un usuario `events` en un entorno desplegado.
+**Estado (2026-10-13):** implementación en `main` (commits `56cdb4d` y `c34bf3b`). El usuario reportó haber aplicado `202610130001` y `202610130002` en Supabase y actualizó [`supabase-schema-public.md`](../supabase-schema-public.md) y su captura. El esquema actualizado documenta las cinco tablas del inventario y sus políticas RLS de lectura. No hay en el repositorio evidencia de verificación de los cuerpos/grants de RPC ni de pruebas funcionales en remoto con usuarios `events` y otros roles. La migración correctiva requiere aún validación de atributos distintos y traslados concurrentes; el estado de pruebas y compilación registrado corresponde al commit inicial.
 **Alcance:** rol `events`, ruta `/events/inventory`, migración, Server Actions y maquetas de [`prototypes/events-inventory/`](./prototypes/events-inventory).
 **Documentos relacionados:** [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`supabase-db-migration.md`](../supabase-db-migration.md) §15.
 
@@ -83,12 +83,12 @@ Las maquetas son referencia visual; si difieren de este documento, gana el docum
 
 | Fase | Contenido | Estado |
 |---|---|---|
-| 0 | Verificar en remoto: roles y permisos existentes, que no haya tablas `inventario_*` distintas de `inventario_premios`, y `has_permission`. | **Pendiente** |
-| 1 | Aplicar ambas migraciones en un entorno de prueba y repetir las pruebas SQL con usuarios reales de `events` y `social-media`, incluyendo atributos distintos y traslados simultáneos al mismo destino. | **Pendiente** |
+| 0 | Verificar en remoto: roles y permisos existentes, que no haya tablas `inventario_*` distintas de `inventario_premios`, y `has_permission`. | Aplicación reportada; confirmar permisos/RPC y pruebas de acceso por rol. |
+| 1 | Aplicar ambas migraciones en un entorno de prueba y repetir las pruebas SQL con usuarios reales de `events` y `social-media`, incluyendo atributos distintos y traslados simultáneos al mismo destino. | Migraciones aplicadas según reporte; pruebas funcionales/RPC, atributos distintos y concurrencia pendientes. |
 | 2 | Vistas, acciones y pruebas unitarias. | Hecho (local) |
 | 3 | Revisión con el equipo de Eventos: lista de unidades, formato de código, ubicaciones por sede. | **Pendiente** |
 | 4 | Importación del Excel actual (§8). | **Pendiente** |
-| 5 | Aplicar en producción, `supabase db pull`, actualizar `supabase-schema-public.md` y su captura. | **Pendiente** |
+| 5 | Aplicar en producción, `supabase db pull`, actualizar `supabase-schema-public.md` y su captura. | Aplicación y actualización del esquema reportadas; conciliar con `supabase db pull` y confirmar estado productivo. |
 
 ### Verificación SQL sugerida tras aplicar
 

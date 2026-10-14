@@ -310,6 +310,93 @@
 | `completed_at`   | `timestamptz` | Nullable    |
 | `carpeta`        | `text`        |             |
 
+## Table `inventario_sedes`
+
+### Columns
+
+| Name         | Type          | Constraints |
+| ------------ | ------------- | ----------- |
+| `id`         | `uuid`        | Primary     |
+| `codigo`     | `text`        | Unique      |
+| `nombre`     | `text`        | Unique      |
+| `orden`      | `int4`        |             |
+| `activa`     | `bool`        |             |
+| `created_at` | `timestamptz` |             |
+
+## Table `inventario_ubicaciones`
+
+### Columns
+
+| Name         | Type          | Constraints |
+| ------------ | ------------- | ----------- |
+| `id`         | `uuid`        | Primary     |
+| `sede_id`    | `uuid`        |             |
+| `nombre`     | `text`        |             |
+| `activa`     | `bool`        |             |
+| `created_at` | `timestamptz` |             |
+| `created_by` | `uuid`        | Nullable    |
+
+## Table `inventario_categorias`
+
+### Columns
+
+| Name         | Type          | Constraints |
+| ------------ | ------------- | ----------- |
+| `id`         | `uuid`        | Primary     |
+| `nombre`     | `text`        | Unique      |
+| `activa`     | `bool`        |             |
+| `created_at` | `timestamptz` |             |
+
+## Table `inventario_articulos`
+
+### Columns
+
+| Name               | Type          | Constraints |
+| ------------------ | ------------- | ----------- |
+| `id`               | `uuid`        | Primary     |
+| `categoria_id`     | `uuid`        |             |
+| `nombre`           | `text`        |             |
+| `especificaciones` | `text`        | Nullable    |
+| `atributos`        | `jsonb`       |             |
+| `tipo_control`     | `text`        |             |
+| `codigo`           | `text`        | Nullable    |
+| `cantidad`         | `numeric`     |             |
+| `unidad_medida`    | `text`        |             |
+| `sede_id`          | `uuid`        |             |
+| `ubicacion_id`     | `uuid`        |             |
+| `condicion`        | `text`        |             |
+| `version`          | `int4`        |             |
+| `creado_en`        | `timestamptz` |             |
+| `creado_por`       | `uuid`        | Nullable    |
+| `modificado_en`    | `timestamptz` |             |
+| `modificado_por`   | `uuid`        | Nullable    |
+
+## Table `inventario_movimientos`
+
+### Columns
+
+| Name                    | Type          | Constraints |
+| ----------------------- | ------------- | ----------- |
+| `id`                    | `uuid`        | Primary     |
+| `articulo_id`           | `uuid`        |             |
+| `tipo`                  | `text`        |             |
+| `cantidad`              | `numeric`     |             |
+| `origen_sede_id`        | `uuid`        | Nullable    |
+| `origen_ubicacion_id`   | `uuid`        | Nullable    |
+| `destino_sede_id`       | `uuid`        | Nullable    |
+| `destino_ubicacion_id`  | `uuid`        | Nullable    |
+| `destino_articulo_id`   | `uuid`        | Nullable    |
+| `origen_externo`        | `text`        | Nullable    |
+| `destino_externo`       | `text`        | Nullable    |
+| `fecha_hora`            | `timestamptz` |             |
+| `registrado_por`        | `uuid`        | Nullable    |
+| `registrado_en`         | `timestamptz` |             |
+| `estado`                | `text`        |             |
+| `observacion`           | `text`        | Nullable    |
+| `saldo_resultante`      | `numeric`     |             |
+| `saldo_destino`         | `numeric`     | Nullable    |
+| `corrige_movimiento_id` | `uuid`        | Nullable    |
+
 ## Custom Types / Enums
 
 ### `formato_enum`
@@ -430,3 +517,33 @@
 | Policy                      | Command | Roles         | Action     | USING                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | WITH CHECK |
 | --------------------------- | ------- | ------------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | `publication_comments_read` | SELECT  | authenticated | PERMISSIVE | `((( SELECT has_permission('social-media.posts.read'::text) AS has_permission) AND (EXISTS ( SELECT 1    FROM (publicacion_canales pc      JOIN user_social_accounts usa ON ((usa.social_account_id = pc.social_account_id)))   WHERE ((pc.publicacion_id = publicacion_comentarios.publicacion_id) AND (usa.user_id = ( SELECT auth.uid() AS uid)))))) OR (( SELECT has_permission('design.posts.read'::text) AS has_permission) AND (EXISTS ( SELECT 1    FROM publicaciones p   WHERE ((p.id = publicacion_comentarios.publicacion_id) AND (p.deleted_at IS NULL) AND (p.estatus = ANY (ARRAY['SOLICITADO'::estatus_enum, 'EN_DISENO'::estatus_enum, 'EN_CORRECCION'::estatus_enum])))))))` | —          |
+
+### `inventario_sedes`
+
+| Policy                                 | Command | Roles         | Action     | USING                                                                       | WITH CHECK |
+| -------------------------------------- | ------- | ------------- | ---------- | --------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_inventory_sedes` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.inventory.read'::text) AS has_permission)` | —          |
+
+### `inventario_ubicaciones`
+
+| Policy                                     | Command | Roles         | Action     | USING                                                                       | WITH CHECK |
+| ------------------------------------------ | ------- | ------------- | ---------- | --------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_inventory_locations` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.inventory.read'::text) AS has_permission)` | —          |
+
+### `inventario_categorias`
+
+| Policy                                      | Command | Roles         | Action     | USING                                                                       | WITH CHECK |
+| ------------------------------------------- | ------- | ------------- | ---------- | --------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_inventory_categories` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.inventory.read'::text) AS has_permission)` | —          |
+
+### `inventario_articulos`
+
+| Policy                                 | Command | Roles         | Action     | USING                                                                       | WITH CHECK |
+| -------------------------------------- | ------- | ------------- | ---------- | --------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_inventory_items` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.inventory.read'::text) AS has_permission)` | —          |
+
+### `inventario_movimientos`
+
+| Policy                                     | Command | Roles         | Action     | USING                                                                       | WITH CHECK |
+| ------------------------------------------ | ------- | ------------- | ---------- | --------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_inventory_movements` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.inventory.read'::text) AS has_permission)` | —          |
