@@ -1,28 +1,34 @@
 # Perfil Eventos: programación y planificación de eventos
 
-**Estado (2026-10-15):** especificación previa al diseño de UI. **No hay código ni migración todavía.** Lo que pidió el equipo está en §2.1; todo lo demás es propuesta y está marcado como tal. Las decisiones que cambian el modelo están en §12.
-**Alcance:** rol `events`, nuevo módulo de programación junto al [inventario](./plan-inventario-eventos.md): calendario, listado, ficha del evento, estados, materiales, patrocinio y presupuesto.
+**Estado (2026-10-15):** plan con decisiones del equipo incorporadas; **no hay código ni migración todavía**. Es el segundo módulo del perfil `events`, junto al [inventario](./plan-inventario-eventos.md) ya implementado. Alcance: un **plan y una implementación básica** que escalará con las observaciones de las personas usuarias; lo que no está en la primera entrega queda en §13.
+**Alcance:** rol `events`, rutas `/events/calendar`, `/events/list` y `/events/archive`; calendario, listado, ficha, estados, materiales, patrocinio y presupuesto.
+**Propuesta de UI:** lienzo de diseño "Eventos · Programación" (ver §9); las pantallas se describen en §9.
 **Documentos relacionados:** [`plan-inventario-eventos.md`](./plan-inventario-eventos.md), [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`supabase-db-migration.md`](../supabase-db-migration.md).
 
 ## 1. Resultado esperado
 
-1. Eventos planifica cada evento con fecha, hora, duración, tienda, presupuesto, materiales y demás datos de la §3, y lo hace avanzar por los estados **En planificación → Programado → En curso → Terminado**.
+1. Eventos planifica cada evento con fecha, hora, duración, **una o varias tiendas**, presupuesto, materiales y demás datos de la §3, y lo hace avanzar por **En planificación → Programado → En curso → Terminado**. Los dos últimos pasos ocurren solos según la hora.
 2. Ve todos sus eventos en un **calendario** (mensual y semanal) y en un **listado** filtrable. El calendario es la orientación gráfica; el listado sirve para buscar y ordenar.
-3. Cada cambio de estado y cada reprogramación quedan con usuario, fecha y motivo.
-4. Al cerrar un evento registra asistencia, gasto real y notas, para que el siguiente se planifique con datos.
+3. Cada cambio de estado hecho por una persona y cada reprogramación quedan con usuario, fecha y motivo; los cambios automáticos quedan marcados como "Sistema".
+4. Después del evento registra asistencia, gasto real y notas, para que el siguiente se planifique con datos.
 5. Los materiales necesarios pueden apuntar a artículos del inventario ya existente, sin descontarlos (§10).
+6. Vive dentro del perfil `events`: misma sesión, mismo menú lateral (grupo "Eventos": Calendario, Eventos, Inventario) y mismas reglas de acceso.
 
 ## 2. Punto de partida
 
-### 2.1 Pedido del equipo (2026-10-14)
+### 2.1 Pedido y decisiones del equipo
 
-| Tema | Detalle |
-|---|---|
-| Datos del evento | Fecha, hora, duración, tienda, presupuesto, material necesario "etc." |
-| Clasificación | Con patrocinio o sin él; degustación, impulso u otro; propio de Kromi o de un proveedor; con inscripción o sin ella. |
-| Estados | En planificación, Programado, En curso, Terminado. |
-| Calendario | Orientación gráfica de los eventos; diseño parecido al de social-media, con diferencias propias del rol. |
-| Orden de trabajo | Primero desarrollar el perfil (este documento); después el diseño de la UI. |
+| Tema | Detalle | Fecha |
+|---|---|---|
+| Datos del evento | Fecha, hora, duración, tienda, presupuesto, material necesario "etc." | 2026-10-14 |
+| Clasificación | Con patrocinio o sin él; degustación, impulso u otro; propio de Kromi o de un proveedor; con inscripción o sin ella. | 2026-10-14 |
+| Estados | En planificación, Programado, En curso, Terminado. | 2026-10-14 |
+| Calendario | Orientación gráfica de los eventos; diseño parecido al de social-media, con diferencias propias del rol. | 2026-10-14 |
+| **Varias tiendas** | **Un evento puede ocurrir en varias tiendas a la vez.** | 2026-10-15 |
+| **Estados automáticos** | **"En curso" y "Terminado" se marcan solos por la hora.** | 2026-10-15 |
+| **Visibilidad** | **Por ahora solo el rol `events` ve y gestiona los eventos.** | 2026-10-15 |
+| **Integración** | **Es un aspecto más del perfil `events`, como el inventario: mismo rol, mismo shell y misma documentación de perfil.** | 2026-10-15 |
+| **Alcance** | **Plan e implementación básica; escalará según observaciones de usuarios finales.** | 2026-10-15 |
 
 ### 2.2 Qué se reutiliza de social-media (verificado en el repo)
 
@@ -34,14 +40,14 @@
 | Estados con una etiqueta y una familia de color | `grid/utils/constants.ts` (`ESTATUS_STYLE`: gris pendiente, azul en proceso, naranja atención, verde terminado) | Misma lógica semántica; los colores concretos se fijan en el diseño. |
 | Historial de cambios de estado con motivo | Tabla `publicacion_estatus_historial`, RPC `transition_publicacion_status` | Tabla `evento_historial` y RPC equivalente. |
 | Indicador derivado de plazo | `grid/utils/sla.ts` (`calcularSlaState`) | Indicadores derivados de preparación y atraso (§4.3). |
-| Capas de contexto en el calendario | Efemérides y campañas en `GridCell` | Opcional para Eventos (§12, D6). |
+| Capas de contexto en el calendario | Efemérides y campañas en `GridCell` | Fase posterior (§11, fase 5). |
 | Archivar en lugar de borrar | Archivo de publicaciones y campañas | `archivado_en` y vista de archivados. |
 | Control de versión y conflicto | Inventario (`version`, `CONFLICTO_VERSION`) | Igual en `eventos`. |
 
 ### 2.3 Hallazgos del código que condicionan el diseño
 
 - `src/app/(dashboard)/events/layout.tsx` exige `events.inventory.read` para **todo** `/events/*`. Con el nuevo módulo debe aceptar cualquiera de los permisos del rol (inventario o programación), y la navegación (`shell.tsx`) debe mostrar cada entrada solo si hay permiso.
-- El rol `events` entra hoy a `/events/inventory` (`auth.ts`, `login/page.tsx`, `access-pending/page.tsx`). La pantalla inicial pasa a ser el calendario (§12, D8).
+- El rol `events` entra hoy a `/events/inventory` (`auth.ts`, `login/page.tsx`, `access-pending/page.tsx`). La pantalla inicial pasa a ser el calendario (§7).
 - `sede_enum` solo conoce Prebo y Mañongo. Las tiendas de Eventos son las **siete** de `inventario_sedes` (catálogo que puede crecer), la misma que usa el inventario.
 - Las acciones de efemérides y campañas usan la service role (`getSupabaseAdmin`) y algunas tablas auxiliares (por ejemplo `campana_efemerides`) tienen una política "permitir todo a autenticados". El inventario usa el cliente autenticado con RPC `SECURITY DEFINER`; **este módulo debe seguir el patrón del inventario**, no el de campañas.
 - `GridView.tsx` tiene 1358 líneas. No se debe copiar: el calendario de Eventos se arma con componentes pequeños (cabecera, cuadrícula, celda, tarjeta, ficha) como los del inventario.
@@ -73,11 +79,13 @@ Los grupos marcados **(pedido)** salen de §2.1; el resto es propuesta.
 
 | Campo | Tipo | Regla |
 |---|---|---|
-| Tienda | una tienda de `inventario_sedes` | Obligatorio. Ver D1 sobre eventos en varias tiendas. |
-| Zona dentro de la tienda | texto corto | Opcional (ej. "Pasillo central", "Entrada"). Texto libre, no el catálogo de ubicaciones del inventario. |
-| Inicio | fecha y hora, America/Caracas | Obligatorio. |
-| Duración | minutos (la interfaz permite horas y minutos) | Obligatoria, mayor que 0. |
+| Tiendas | una o varias de `inventario_sedes` (tabla `evento_sedes`) | Al menos una. Opción "Todas las tiendas" en el formulario. |
+| Zona dentro de la tienda | texto corto, **por tienda** | Opcional (ej. "Pasillo central", "Entrada"). Texto libre, no el catálogo de ubicaciones del inventario. |
+| Inicio | fecha y hora, America/Caracas | Obligatorio para programar. |
+| Duración | minutos (la interfaz permite horas y minutos) | Obligatoria para programar, mayor que 0. |
 | Fin | fecha y hora | Se guarda `inicio` y `fin`; la duración se calcula (`fin − inicio`). Si el evento cruza medianoche o dura varios días, `fin` cae en otro día. |
+
+El horario es **único para todas las tiendas** del evento. Si una tienda tuviera horario distinto, se crea otro evento (observación a revisar con el uso).
 
 Se guardan `inicio` y `fin` y no una columna generada: sumar un intervalo a un `timestamptz` no es inmutable en PostgreSQL y no se puede usar en una columna generada.
 
@@ -90,7 +98,7 @@ Se guardan `inicio` y `fin` y no una columna generada: sumar un intervalo a un `
 | Fecha límite de inscripción | fecha y hora | Opcional; no puede ser posterior al inicio. |
 | Cómo inscribirse | texto (enlace o instrucciones) | Opcional. |
 
-En la primera versión la app **no gestiona inscritos**: solo documenta cómo se inscriben. Registrar personas inscritas es otra decisión (D5).
+En la primera versión la app **no gestiona inscritos**: solo documenta cómo se inscriben. Registrar personas inscritas queda fuera de la primera entrega (D5, §13).
 
 ### 3.5 Patrocinio
 
@@ -110,7 +118,7 @@ Un evento puede tener varios patrocinadores (tabla `evento_patrocinadores`):
 | Campo | Regla |
 |---|---|
 | Presupuesto estimado | Decimal ≥ 0, 2 decimales. Opcional al planificar; recomendado antes de Programado. |
-| Moneda | Una por evento. Valores y por defecto en D4. |
+| Moneda | Una por evento. `USD` o `VES`, por defecto `USD` (D4, por confirmar). |
 | Gasto real | Se captura al cerrar (§4). Opcional. |
 
 El desglose por rubros queda para una fase posterior.
@@ -129,7 +137,7 @@ Lista de materiales por evento (`evento_materiales`):
 
 ### 3.8 Cierre
 
-Se registran al pasar a Terminado: asistentes reales (entero ≥ 0), gasto real, notas de cierre (qué funcionó, qué no). Todos opcionales. También se puede anotar `asistentes_esperados` al planificar.
+Como el evento pasa a Terminado solo, el cierre se registra **después**, desde la ficha del evento terminado: asistentes reales (entero ≥ 0), gasto real y notas de cierre (qué funcionó, qué no). Todos opcionales. En un evento terminado esos tres campos son lo único editable. También se puede anotar `asistentes_esperados` al planificar.
 
 ### 3.9 Preparación (tareas)
 
@@ -139,50 +147,59 @@ Lista de tareas opcional (`evento_tareas`): texto, responsable, fecha límite, c
 
 ### 4.1 Valores
 
-| Código | Etiqueta | Significado |
+| Código | Etiqueta | Cómo se llega |
 |---|---|---|
-| `EN_PLANIFICACION` | En planificación | Borrador de trabajo. Puede tener datos incompletos. |
-| `PROGRAMADO` | Programado | Fecha, lugar y responsable confirmados. |
-| `EN_CURSO` | En curso | Está ocurriendo. |
-| `TERMINADO` | Terminado | Ocurrió. Solo se editan los datos de cierre. |
-| `CANCELADO` | Cancelado | **Propuesta, no figura en el pedido**, pero hace falta para eventos que no ocurren. Exige motivo. |
+| `EN_PLANIFICACION` | En planificación | Al crear. Borrador de trabajo; puede tener datos incompletos. |
+| `PROGRAMADO` | Programado | Una persona lo programa (§4.2). |
+| `EN_CURSO` | En curso | **Automático** al llegar `inicio`. |
+| `TERMINADO` | Terminado | **Automático** al llegar `fin`. Estado final. |
+| `CANCELADO` | Cancelado | Una persona, con motivo. **Propuesta, no figura en el pedido**, pero hace falta para eventos que no ocurren. |
 
 ### 4.2 Transiciones
 
-| Desde | Hacia | Condiciones |
-|---|---|---|
-| (nuevo) | En planificación | Nombre, tipo, origen y tienda. Fecha y duración pueden quedar vacías mientras sea borrador (D2). |
-| En planificación | Programado | Inicio, fin, tienda, responsable, tipo y origen completos; proveedor si el origen es proveedor; si hay inscripción, la fecha límite no supera el inicio. Aviso si hay cruce con otro evento (§5). |
-| Programado | En planificación | Motivo obligatorio. |
-| Programado | En curso | Cualquier momento; si es antes del inicio, la interfaz pide confirmar. |
-| En curso | Terminado | Abre el formulario de cierre (opcional). |
-| En planificación, Programado, En curso | Cancelado | Motivo obligatorio. |
-| Cancelado | En planificación | Motivo obligatorio (corregir una cancelación errónea). |
-| Terminado | — | Estado final. |
+| Desde | Hacia | Quién | Condiciones |
+|---|---|---|---|
+| (nuevo) | En planificación | Persona | Nombre, tipo, origen y al menos una tienda. La fecha puede quedar vacía. |
+| En planificación | Programado | Persona | Inicio y fin en el futuro, al menos una tienda, responsable, tipo y origen completos; proveedor si el origen es proveedor; si hay inscripción, la fecha límite no supera el inicio. Aviso si hay cruce en alguna tienda (§5). |
+| Programado | En planificación | Persona | Motivo obligatorio. |
+| Programado | En curso | **Sistema** | `ahora ≥ inicio`. |
+| En curso | Terminado | **Sistema** | `ahora ≥ fin`. |
+| En planificación, Programado, En curso | Cancelado | Persona | Motivo obligatorio. |
+| Cancelado | En planificación | Persona | Motivo obligatorio (corregir una cancelación errónea). |
+| En curso | Terminado | Persona ("Terminar ahora") | Para eventos que acaban antes de lo previsto; el `fin` no cambia. |
+| Terminado | — | — | Final. Solo se editan los datos de cierre. |
 
-Las transiciones son **manuales** en la primera versión; ver D3 para cambios automáticos por hora.
+Un evento **en planificación nunca avanza solo**, aunque su fecha ya haya pasado: aparece como "Fecha vencida" (§4.3) hasta que alguien lo programe, lo reprograme o lo cancele.
 
-### 4.3 Indicadores derivados (no se guardan)
+### 4.3 Cómo se aplican los cambios automáticos
 
-Como el indicador SLA de Grid, se calculan al leer, con la hora de Caracas:
+El estado automático debe ser correcto aunque no corra ninguna tarea programada. Por eso:
+
+1. `sync_event_statuses()` es una función idempotente que pasa a En curso los Programados con `inicio ≤ now()` y a Terminado los En curso (y los Programados ya vencidos) con `fin ≤ now()`, y escribe una fila en `evento_historial` con actor "Sistema".
+2. **Toda lectura** (`list_events`, `get_event`) la ejecuta primero. Así quien abre el calendario siempre ve el estado correcto, sin depender de un cron.
+3. Opcional: una ruta `/api/cron/sync-eventos`, protegida con `CRON_SECRET` como `/api/cron/purge-publicaciones`, llama a la misma función para dejar el historial al día aunque nadie abra la app. `vercel.json` hoy solo tiene un cron diario; una frecuencia mayor depende del plan de Vercel y no está verificada. Es opcional porque el punto 2 ya garantiza la corrección.
+4. Cada cambio automático incrementa `version`. Si alguien tenía el evento abierto para editarlo, verá el aviso de conflicto y cargará la versión actual.
+
+### 4.4 Indicadores derivados (no se guardan)
 
 | Indicador | Condición |
 |---|---|
-| Debió iniciar | Programado y ya pasó `inicio`. |
-| Debió terminar | En curso y ya pasó `fin`. |
 | Próximo | Programado que empieza en las próximas 48 h. |
-| Incompleto | En planificación a menos de 7 días del inicio y sin alguno de: responsable, presupuesto, materiales. (Umbral por confirmar.) |
+| Fecha vencida | En planificación con `inicio` ya pasado. |
+| Incompleto | En planificación a menos de 7 días del inicio y sin responsable, presupuesto o materiales. (Umbral por confirmar.) |
 | Materiales pendientes | Hay materiales en `PENDIENTE` y el evento empieza en menos de 3 días. (Umbral por confirmar.) |
+| Cierre pendiente | Terminado sin asistentes reales, gasto real ni notas. |
 
 ## 5. Reglas de negocio
 
-1. **Cruce de eventos:** dos eventos de la misma tienda con horarios solapados disparan el aviso `POSIBLE_CRUCE` al crear, mover o programar. Es una advertencia con "Continuar de todos modos", no un bloqueo (mismo patrón que `POSIBLE_DUPLICADO` en el inventario). Los cancelados no cuentan.
-2. **Reprogramar un evento Programado** (cambiar inicio, fin o tienda) exige un motivo y queda en el historial. En planificación se cambia sin motivo. Un evento en curso o terminado no se reprograma.
+1. **Cruce de eventos:** dos eventos que comparten **al menos una tienda** con horarios solapados disparan el aviso `POSIBLE_CRUCE`, que indica en qué tiendas ocurre. Es una advertencia con "Continuar de todos modos", no un bloqueo (mismo patrón que `POSIBLE_DUPLICADO` en el inventario). Los cancelados y terminados no cuentan.
+2. **Reprogramar** un evento Programado o En curso (cambiar inicio, fin o tiendas) exige un motivo y queda en el historial. En planificación se cambia sin motivo. En un evento En curso solo se puede ampliar el `fin`; acortarlo se hace con "Terminar ahora". Un evento terminado no se reprograma.
 3. **Cancelar** y **volver a planificación** exigen motivo.
-4. **Fechas pasadas:** se puede crear un evento con inicio pasado solo en estado Terminado o En curso (registro retroactivo); Programado exige inicio futuro.
-5. **Conflicto de edición:** como en el inventario, cada cambio comprueba `version`; si otra persona modificó el evento, la interfaz ofrece cargar la versión actual.
+4. **Programar** exige que el evento sea futuro. Para registrar un evento que ya ocurrió y no se planificó, queda como observación a revisar con el uso (§13).
+5. **Conflicto de edición:** como en el inventario, cada cambio comprueba `version`; si otra persona (o el sistema) modificó el evento, la interfaz ofrece cargar la versión actual.
 6. **Archivar:** solo eventos Terminados o Cancelados. Se ocultan del calendario y se ven en el archivo; no se borran.
 7. **Presupuesto y patrocinio** se capturan en la moneda del evento; no hay conversión automática.
+8. **Quitar una tienda** de un evento Programado o En curso se trata como reprogramación (motivo obligatorio). El evento no puede quedar sin tiendas.
 
 ## 6. Modelo de datos propuesto
 
@@ -190,17 +207,18 @@ Migración propuesta: `202610150001_events_schedule.sql` (nombre provisional). E
 
 | Tabla | Contenido |
 |---|---|
-| `eventos` | Los campos de §3.1 a §3.4, §3.6 y §3.8: `nombre`, `descripcion`, `tipo`, `tipo_otro`, `origen`, `proveedor_nombre`, `sede_id` (FK a `inventario_sedes`), `zona`, `inicio`, `fin`, `estatus`, `responsable_id`, `campana_id` (opcional), `presupuesto_estimado`, `moneda`, `gasto_real`, `requiere_inscripcion`, `inscripcion_cupo`, `inscripcion_limite`, `inscripcion_info`, `asistentes_esperados`, `asistentes_reales`, `notas_cierre`, `version`, `creado_en/por`, `modificado_en/por`, `archivado_en`. |
+| `eventos` | §3.1, §3.2, §3.3 (horario), §3.4, §3.6 y §3.8: `nombre`, `descripcion`, `tipo`, `tipo_otro`, `origen`, `proveedor_nombre`, `inicio`, `fin`, `estatus`, `responsable_id`, `campana_id` (opcional), `presupuesto_estimado`, `moneda`, `gasto_real`, `requiere_inscripcion`, `inscripcion_cupo`, `inscripcion_limite`, `inscripcion_info`, `asistentes_esperados`, `asistentes_reales`, `notas_cierre`, `version`, `creado_en/por`, `modificado_en/por`, `archivado_en`. |
+| `evento_sedes` | `evento_id`, `sede_id` (FK a `inventario_sedes`), `zona`. Clave primaria `(evento_id, sede_id)`; al menos una fila por evento, validado en las RPC. |
 | `evento_patrocinadores` | §3.5. |
 | `evento_materiales` | §3.7, con `articulo_id` opcional. |
-| `evento_tareas` | §3.9 (fase 2). |
-| `evento_historial` | Una fila por cambio de estado o reprogramación: `evento_id`, `tipo` (`ESTATUS` o `REPROGRAMACION`), valores anterior y nuevo, `motivo`, `cambiado_por`, `cambiado_en`. Inmutable por trigger, como `inventario_movimientos`. |
+| `evento_tareas` | §3.9 (fase posterior). |
+| `evento_historial` | Una fila por cambio de estado o reprogramación: `evento_id`, `tipo` (`ESTATUS` o `REPROGRAMACION`), valores anterior y nuevo, `motivo`, `cambiado_por` (nulo = Sistema), `cambiado_en`. Inmutable por trigger, como `inventario_movimientos`. |
 
-Restricciones principales (`CHECK`): `fin > inicio` cuando ambos existen; estados válidos; `tipo_otro` solo con `OTRO`; `proveedor_nombre` obligatorio si `origen = 'PROVEEDOR'`; cupo e inscripción solo con `requiere_inscripcion`; montos ≥ 0; las reglas de completitud de Programado se validan en la RPC, no en `CHECK`, porque el borrador puede estar incompleto.
+Restricciones principales (`CHECK`): `fin > inicio` cuando ambos existen; estados válidos; `tipo_otro` solo con `OTRO`; `proveedor_nombre` obligatorio si `origen = 'PROVEEDOR'`; cupo e inscripción solo con `requiere_inscripcion`; montos ≥ 0. Las reglas de completitud para Programado se validan en la RPC, no en `CHECK`, porque el borrador puede estar incompleto. Si `estatus` es distinto de `EN_PLANIFICACION`, `inicio` y `fin` no pueden ser nulos.
 
-Índices: `(sede_id, inicio)`, `(estatus, inicio)`, `(responsable_id)`; el aviso de cruce usa un rango `tstzrange(inicio, fin)` por tienda.
+Índices: `(estatus, inicio)`, `(estatus, fin)` para la sincronización, `(responsable_id)` y `evento_sedes (sede_id, evento_id)`. El aviso de cruce compara rangos `tstzrange(inicio, fin)` entre eventos que comparten tienda.
 
-Catálogos: los valores de tipo, origen y estado son enumeraciones de texto con `CHECK` (no `ENUM` de PostgreSQL) para poder ampliarlos con una migración sin recrear tipos. Qué se prefiera en el repo se confirma en la fase 0.
+Catálogos: tipo, origen y estado son texto con `CHECK` (no `ENUM` de PostgreSQL) para poder ampliarlos con una migración sin recrear tipos. Se confirma contra la convención del repo en la fase 0.
 
 ## 7. Permisos
 
@@ -210,11 +228,13 @@ Nombres propuestos, siguiendo `social-media.campaigns.*` y `events.inventory.*`:
 |---|---|---|
 | `events.schedule.read` | Sí | Ver calendario, listado, ficha e historial. |
 | `events.schedule.create` | Sí | Crear eventos. |
-| `events.schedule.update` | Sí | Editar datos, materiales, patrocinadores y reprogramar. |
-| `events.schedule.status.update` | Sí | Cambiar estado y registrar cierre. |
+| `events.schedule.update` | Sí | Editar datos, materiales, patrocinadores, reprogramar y registrar el cierre. |
+| `events.schedule.status.update` | Sí | Programar, volver a planificación, cancelar y "Terminar ahora". |
 | `events.schedule.archive` | Sí | Archivar y restaurar. |
 
-Otros roles: ninguno por defecto. Lectura para Social Media y Gerencia es la decisión D6. El presupuesto y el gasto se muestran a todo el que tenga `read` salvo que D7 indique lo contrario.
+**Ningún otro rol recibe estos permisos por ahora** (decisión del 2026-10-15). RLS solo permite SELECT a quien tenga `events.schedule.read`; Social Media, Gerencia y los demás no ven eventos. El presupuesto y el gasto se muestran a todo el que tenga `read`.
+
+**Integración con el perfil:** `events/layout.tsx` hoy exige `events.inventory.read`. Debe aceptar **cualquiera** de los permisos del rol y `shell.tsx` debe mostrar cada entrada del menú solo si hay permiso. Cada página sigue comprobando su propio permiso. La pantalla inicial del rol pasa a `/events/calendar` si tiene `events.schedule.read`, y a `/events/inventory` si solo tiene inventario (`auth.ts`, `login/page.tsx`, `access-pending/page.tsx`).
 
 ## 8. Funciones (acciones de servidor y RPC)
 
@@ -222,75 +242,91 @@ Todas comprueban el permiso con `authorizeAction`, validan en el servidor, llama
 
 | Función | Acción de servidor | Hace |
 |---|---|---|
-| `list_events(p_desde, p_hasta, p_sede_id, p_estatus, p_tipo, p_origen, p_responsable_id, p_search, p_archivados, p_limit, p_offset)` | `getEventsAction` | Eventos que **intersectan** el rango (para el calendario) o listado paginado. |
-| `get_event(p_evento_id)` | `getEventAction` | Ficha completa con patrocinadores, materiales, tareas e indicadores. |
+| `sync_event_statuses()` | (interna) | Aplica los cambios automáticos de §4.3. No es ejecutable por `authenticated`; la llaman las RPC de lectura y la ruta de cron. |
+| `list_events(p_desde, p_hasta, p_sede_id, p_estatus, p_tipo, p_origen, p_responsable_id, p_search, p_archivados, p_limit, p_offset)` | `getEventsAction` | Eventos que **intersectan** el rango (calendario) o listado paginado. `p_sede_id` coincide con cualquiera de las tiendas del evento. |
+| `get_event(p_evento_id)` | `getEventAction` | Ficha completa con tiendas, patrocinadores, materiales e indicadores. |
 | `get_event_history(p_evento_id)` | `getEventHistoryAction` | Historial. |
 | `create_event(...)` | `createEventAction` | Crea en planificación; devuelve aviso de cruce si aplica. |
-| `update_event(p_evento_id, p_expected_version, ...)` | `updateEventAction` | Edita datos; si está Programado y cambia fecha o tienda, exige motivo. |
+| `update_event(p_evento_id, p_expected_version, ...)` | `updateEventAction` | Edita datos y tiendas; si está Programado o En curso y cambia fecha o tiendas, exige motivo. |
 | `reschedule_event(p_evento_id, p_expected_version, p_inicio, p_fin, p_motivo)` | `rescheduleEventAction` | Mover desde el calendario (arrastre) o desde la ficha. |
-| `transition_event_status(p_evento_id, p_expected_version, p_estatus, p_motivo, p_cierre)` | `transitionEventStatusAction` | Valida §4.2 y escribe el historial. |
-| `save_event_sponsors(p_evento_id, p_expected_version, p_items)` | `saveEventSponsorsAction` | Reemplaza la lista de patrocinadores. |
-| `save_event_materials(p_evento_id, p_expected_version, p_items)` | `saveEventMaterialsAction` | Reemplaza la lista de materiales. |
+| `transition_event_status(p_evento_id, p_expected_version, p_estatus, p_motivo)` | `transitionEventStatusAction` | Transiciones manuales de §4.2. |
+| `save_event_closure(p_evento_id, p_expected_version, ...)` | `saveEventClosureAction` | Asistentes reales, gasto real y notas de un evento terminado. |
+| `save_event_sponsors(...)`, `save_event_materials(...)` | `saveEventSponsorsAction`, `saveEventMaterialsAction` | Reemplazan la lista, con comprobación de versión. |
 | `archive_event` / `restore_event` | `archiveEventAction`, `restoreEventAction` | Archivo. |
 
 Errores con código estable para la interfaz: `POSIBLE_CRUCE`, `CONFLICTO_VERSION`, `FALTAN_DATOS` (con la lista de campos que faltan para programar).
 
-## 9. Vistas (qué debe resolver el diseño)
+## 9. Vistas cliente (propuesta de UI)
 
-La interfaz se diseña después de esta especificación. Lo que cada vista necesita:
+La propuesta visual está en el lienzo de diseño "Eventos · Programación". Hereda el lenguaje de social-media (paleta de marca, calendario por celdas, paneles laterales) y del inventario (paneles, filtros en la URL, estados vacío/error/carga/conflicto).
 
-| Vista | Ruta propuesta | Contenido |
+| Vista | Ruta | Contenido |
 |---|---|---|
-| Calendario | `/events/calendar` | Mes y semana. Navegación por mes, "Hoy", filtros por tienda, estado, tipo y origen. Evento con hora, tienda, estado e indicador. Eventos de varios días se ven continuos. Crear desde un día o una franja. Mover por arrastre con motivo cuando ya está Programado. |
-| Listado | `/events/list` | Tabla/tarjetas con búsqueda, filtros, orden y paginación en la URL, como el inventario. |
-| Ficha del evento | Panel lateral desde cualquier vista | Datos, estado con acciones, materiales, patrocinio, presupuesto, historial. |
-| Formulario | Panel lateral | Crear y editar, con avisos de cruce y de conflicto. |
-| Cierre | Paso al terminar | Asistentes reales, gasto real, notas. |
-| Archivo | `/events/archive` | Eventos archivados y restaurar. |
+| Calendario mensual | `/events/calendar` | Cuadrícula por semanas desde el lunes. Cada evento es una barra con hora, nombre y estado; los de varios días se ven continuos. Filtros por tienda, estado, tipo y origen; "Hoy"; alta rápida desde un día; arrastre para mover (con motivo si ya está Programado). Los cambios automáticos de estado se reflejan al abrir. |
+| Calendario semanal | `/events/calendar?vista=semana` | Eje horario de 7 días; la altura del bloque es la duración. Es la diferencia clave con Grid. |
+| Listado | `/events/list` | Tabla y tarjetas móviles con búsqueda, filtros, orden y paginación en la URL. |
+| Ficha del evento | Panel lateral | Estado y acciones, horario y tiendas, clasificación, presupuesto, materiales, patrocinio, inscripción, historial y cierre. |
+| Formulario | Panel lateral | Crear y editar; selector múltiple de tiendas con "Todas"; avisos de cruce y de conflicto. |
+| Archivo | `/events/archive` | Eventos archivados; restaurar. |
+| Estados de la interfaz | Todas | Vacío, sin resultados, error con reintento, carga, conflicto y móvil. |
 
-**Diferencias con el calendario de social-media:** la hora y la duración son parte esencial (vista semanal con eje horario, que Grid no tiene); un evento puede abarcar varios días; la tienda es una dimensión principal de filtro y color (siete tiendas); el estado tiene cinco valores propios; no hay cuentas ni formatos; el cruce de horarios por tienda es una regla visible.
+**Diferencias con el calendario de social-media:** la hora y la duración son esenciales (vista semanal con eje horario, que Grid no tiene); un evento abarca varios días y varias tiendas; la tienda es una dimensión principal de filtro; el estado tiene cinco valores y cambia solo con la hora; no hay cuentas ni formatos; el cruce de horarios por tienda es una regla visible.
 
 ## 10. Relación con otros módulos
 
 | Módulo | Relación propuesta |
 |---|---|
 | Inventario | `evento_materiales.articulo_id` apunta a un artículo existente para que Eventos vea qué hay y dónde. **No reserva ni descuenta stock** en esta fase; las salidas siguen registrándose como movimientos del inventario. Reservas y movimiento automático al iniciar o terminar el evento son una fase posterior (D9). |
-| Campañas | `campana_id` opcional hacia una campaña (por ejemplo de tipo `EVENTO`). Social Media ya ve campañas en su calendario; el enlace permite mostrar el evento ahí si se decide (D6). |
-| Social Media | Hoy no hay relación. Opciones: capa de solo lectura de eventos en el Grid, o pedir publicaciones promocionales desde un evento. Fuera de la primera entrega (D6). |
+| Campañas | `campana_id` opcional hacia una campaña (por ejemplo de tipo `EVENTO`). Social Media ya ve campañas en su calendario; hoy los eventos no se muestran en social-media (D6): solo el rol `events` los ve. |
+| Social Media | Hoy no hay relación. Por decisión (D6) Social Media no ve eventos. Una capa de solo lectura en Grid o pedir publicaciones promocionales desde un evento serían mejoras futuras, según observaciones. |
 | Terceros | Proveedor y patrocinador son texto libre en la primera versión; enlazar con el directorio `terceros` es una mejora posterior. |
 
 ## 11. Fases
 
+La primera entrega es la **implementación básica**: fases 0 a 3. Las fases 4 y 5 se priorizan con las observaciones de las personas usuarias.
+
 | Fase | Contenido | Depende de |
 |---|---|---|
-| 0 | Verificar en remoto: `inventario_sedes` con las siete tiendas, permisos y RPC del inventario, convención de enums/CHECK. Resolver D1–D4 y D8. | Respuestas del equipo |
-| 1 | Migración: tablas, restricciones, permisos `events.schedule.*`, RLS de lectura, RPC e historial inmutable. Pruebas SQL locales con PostgreSQL. | Fase 0 |
+| 0 | Verificar en remoto: `inventario_sedes` con las siete tiendas, permisos y RPC del inventario, convención de enums/CHECK. Confirmar la moneda (D4). | Respuestas del equipo |
+| 1 | Migración: tablas, restricciones, permisos `events.schedule.*`, RLS de lectura, RPC, sincronización de estados e historial inmutable. Pruebas SQL locales con PostgreSQL, incluida la sincronización por hora y el cruce entre tiendas. | Fase 0 |
 | 2 | Tipos, `src/lib/events.ts` (validadores, formato en America/Caracas, consulta en URL), acciones de servidor y pruebas unitarias. | Fase 1 |
-| 3 | Diseño de UI (siguiente entregable) y luego vistas: calendario, listado, ficha, formulario y cierre. Ajuste de `layout.tsx`, `shell.tsx` y redirección por rol. | Fase 2 y diseño |
-| 4 | Materiales con enlace a inventario, patrocinadores, tareas de preparación e indicadores. | Fase 3 |
-| 5 | Archivo, capas opcionales (campañas/efemérides), capa para Social Media si se aprueba. | Decisiones D6 |
+| 3 | Vistas: calendario mensual y semanal, listado, ficha, formulario con varias tiendas y cierre. Ajuste de `layout.tsx`, `shell.tsx` y redirección por rol. | Fase 2 y propuesta de UI |
+| 4 | Materiales con enlace a inventario, patrocinadores, indicadores y archivo. | Fase 3 |
+| 5 | Ruta de cron opcional, tareas de preparación, capas de campañas/efemérides en el calendario y lo que surja de las observaciones. | Uso real |
 | 6 | Documentación (SRS §7, perfiles, esquema), aplicar en remoto y `supabase db pull`. | Todas |
 
 Hasta que las migraciones se apliquen y verifiquen en Supabase remoto, el módulo no se considera disponible.
 
-## 12. Decisiones pendientes
+## 12. Decisiones
 
-Cada una tiene un valor por defecto con el que se puede avanzar; cambiarlo después de la fase 1 cuesta una migración.
+### 12.1 Confirmadas (2026-10-15)
 
-| # | Pregunta | Por defecto propuesto |
+| # | Decisión |
+|---|---|
+| D1 | Un evento puede ocurrir en **varias tiendas** a la vez (`evento_sedes`). |
+| D3 | "En curso" y "Terminado" **cambian solos por la hora** (§4.3). |
+| D6/D7 | Solo el rol `events` ve y gestiona eventos, incluido el presupuesto. |
+| D12 | El módulo es parte del perfil `events`; implementación básica que escala con las observaciones. |
+
+### 12.2 Adoptadas por defecto (revisables con el uso)
+
+| # | Tema | Valor adoptado |
 |---|---|---|
-| D1 | ¿Un evento puede ocurrir en **varias tiendas** a la vez (por ejemplo un aniversario de cadena)? | Una tienda por evento. Si hace falta, se usa una tabla `evento_sedes` desde el inicio; es más barato decidirlo ahora que migrar después. |
-| D2 | ¿Se puede guardar un borrador **sin fecha**? | Sí en planificación; la fecha es obligatoria para Programado. Los borradores sin fecha no salen en el calendario, solo en el listado. |
-| D3 | ¿"En curso" y "Terminado" cambian solos por la hora o los marca una persona? | Manual con avisos ("Debió iniciar"). El cambio automático requeriría una tarea programada en Supabase que hoy no está verificada. |
-| D4 | Moneda del presupuesto: ¿USD, VES o ambas? | Una moneda por evento, elegible entre `USD` y `VES`; por defecto `USD`. Confirmar con el equipo. |
-| D5 | ¿La app registra **personas inscritas** o solo describe cómo inscribirse? | Solo describir (enlace o instrucciones, cupo y fecha límite). |
-| D6 | ¿Quién más ve los eventos: Social Media (para promoción), Gerencia? ¿Eventos ve efemérides y campañas en su calendario? | Solo Eventos ve eventos. Efemérides y campañas como capa opcional de solo lectura, después de la primera entrega. |
-| D7 | ¿El presupuesto y el gasto son visibles para todos los usuarios de Eventos o solo para algunos? | Visibles para todo `events` con `read`. |
-| D8 | ¿Cuál es la pantalla inicial del rol: calendario o inventario? | Calendario. |
-| D9 | ¿Los materiales deben **reservar** o mover inventario? | No en esta fase; solo enlace informativo. |
-| D10 | ¿Se necesitan tareas de preparación con responsable y fecha, o basta la lista de materiales? | Tareas en fase 4, no en la primera entrega. |
-| D11 | ¿Se confirma `CANCELADO` como quinto estado? | Sí. |
+| D2 | Borrador sin fecha | Permitido en planificación; no aparece en el calendario, sí en el listado. |
+| D5 | Inscritos | La app solo describe cómo inscribirse (enlace o instrucciones, cupo, fecha límite); no registra personas. |
+| D8 | Pantalla inicial del rol | Calendario. |
+| D9 | Materiales | Enlace informativo al inventario; sin reserva ni descuento. |
+| D10 | Tareas de preparación | Fase posterior. |
+| D11 | Estado `CANCELADO` | Se incluye. |
+
+### 12.3 Por confirmar
+
+| # | Pregunta | Por defecto |
+|---|---|---|
+| D4 | Moneda del presupuesto: ¿USD, VES o ambas? | Una moneda por evento, `USD` o `VES`; por defecto `USD`. |
+| D13 | Umbrales de los indicadores "Incompleto" (7 días) y "Materiales pendientes" (3 días). | Los indicados en §4.4. |
+| D14 | ¿Frecuencia del cron opcional, según el plan de Vercel? | Sin cron en la primera entrega. |
 
 ## 13. Fuera de alcance
 
-Gestión de inscritos y asistencia por persona, desglose del presupuesto por rubros, aprobaciones de presupuesto por Gerencia, reservas de inventario, notificaciones y recordatorios, eventos recurrentes, exportación a calendarios externos (Google, iCal), fotos y adjuntos, y reportes comparativos entre eventos.
+Registrar un evento ya ocurrido que no se planificó, horarios distintos por tienda dentro de un mismo evento, gestión de inscritos y asistencia por persona, desglose del presupuesto por rubros, aprobaciones de presupuesto por Gerencia, reservas de inventario, notificaciones y recordatorios, eventos recurrentes, exportación a calendarios externos (Google, iCal), fotos y adjuntos, y reportes comparativos entre eventos.

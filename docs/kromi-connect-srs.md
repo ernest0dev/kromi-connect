@@ -375,7 +375,7 @@ Los códigos persistidos son estables y usan inglés; los nombres visibles está
 |---|---|---|
 | `pending` | Acceso pendiente | Sin vistas de negocio |
 | `social-media` | Social Media | Grid, campañas y efemérides según permisos concedidos |
-| `events` | Eventos | Inventario: `events.inventory.read`, `.create`, `.update`, `.move`, `.locations.create` (migración `202610130001`, pendiente de aplicar) |
+| `events` | Eventos | Inventario: `events.inventory.read`, `.create`, `.update`, `.move`, `.locations.create` (migraciones `202610130001` y `202610130002`). Programación de eventos (planificada, sin implementar): `events.schedule.read`, `.create`, `.update`, `.status.update`, `.archive`; ver `docs/design/plan-eventos-programacion.md` |
 | `design` | Diseño | Cola y ficha de publicaciones, carga de entregables, historial y transiciones de inicio/entrega |
 | `internal` | Interno | Sin permisos de negocio asignados |
 | `customer-support` | Atención al cliente | Sin permisos de negocio asignados |
