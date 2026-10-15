@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Estados de eventos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#14202E;font-weight:600;font-size:13px;box-sizing:border-box}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.sec{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0054AE}
+.card{background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+.nd{flex:1;min-width:0;border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;box-sizing:border-box}
+.ar{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:150px;flex-shrink:0;text-align:center;font-size:12px;font-weight:700}
+.mut{color:#566274;font-size:12px;line-height:1.45}
+.in{height:40px;box-sizing:border-box;border:1px solid #AEB9C9;border-radius:8px;background:#fff;padding:0 12px;font-family:inherit;font-size:14px;width:100%}
+.sk{background:linear-gradient(90deg,#E9EDF3,#F3F6FA,#E9EDF3);border-radius:6px}
+.note{display:flex;gap:10px;border:1px solid;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1180px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 22px">
+  <div>
+    <div class="sec">Estados</div>
+    <h1 style="margin: 6px 0 4px; font-size: 28px; font-weight: 800; letter-spacing: -0.4px">Ciclo de vida del evento y estados de la interfaz</h1>
+    <div style="color: #3A4658">Las personas programan y cancelan; <b>el sistema</b> mueve el evento a En curso y a Terminado según la hora, aunque nadie tenga la app abierta.</div>
+  </div>
+
+  <div class="card" style="gap: 16px">
+    <div class="sec">Quién mueve cada estado</div>
+    <div style="display: flex; align-items: stretch">
+      <div class="nd" style="background:#EEF0F4;border:1px solid #CBD0D9"><span class="chip" style="background:#fff;color:#454F5E"><span class="dot"></span>En planificación</span><span class="mut">Borrador. Puede no tener fecha. Nunca avanza solo: si la fecha pasa, avisa "Fecha vencida".</span></div>
+      <div class="ar" style="color:#0B4A94"><span>Persona · Programar</span><svg width="110" height="14" viewBox="0 0 110 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h104M98 2l8 5-8 5"/></svg><span style="font-weight:500;color:#566274">Pide fecha, tienda y responsable</span></div>
+      <div class="nd" style="background:#E3EFFC;border:1px solid #B9D3F4"><span class="chip" style="background:#fff;color:#0B4A94"><span class="dot"></span>Programado</span><span class="mut">Confirmado. Aparece en el calendario y avisa si se cruza con otro evento de la misma tienda.</span></div>
+      <div class="ar" style="color:#7A4800"><span style="display:flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Sistema · al inicio</span><svg width="110" height="14" viewBox="0 0 110 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h104M98 2l8 5-8 5"/></svg><span style="font-weight:500;color:#566274">ahora ≥ inicio</span></div>
+      <div class="nd" style="background:#FDEFD6;border:1px solid #F1CC8E"><span class="chip" style="background:#fff;color:#7A4800"><span class="dot" style="background:#F28D19"></span>En curso</span><span class="mut">Está ocurriendo. Solo se puede ampliar el fin o terminar antes con "Terminar ahora".</span></div>
+      <div class="ar" style="color:#7A4800"><span style="display:flex;align-items:center;gap:5px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Sistema · al fin</span><svg width="110" height="14" viewBox="0 0 110 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7h104M98 2l8 5-8 5"/></svg><span style="font-weight:500;color:#566274">ahora ≥ fin</span></div>
+      <div class="nd" style="background:#E2F5EA;border:1px solid #A9DDC2"><span class="chip" style="background:#fff;color:#0B6B40"><span class="dot"></span>Terminado</span><span class="mut">Final. Solo se editan asistentes reales, gasto real y notas de cierre.</span></div>
+    </div>
+    <div style="display: flex; gap: 14px; align-items: stretch">
+      <div class="note" style="flex:1;background:#F1F2F5;border-color:#CBD0D9;color:#3A4658"><span class="chip" style="background:#fff;color:#6B7482;flex-shrink:0"><span class="dot"></span>Cancelado</span><div>Una persona puede cancelar desde En planificación, Programado o En curso, <b>siempre con motivo</b>. Se puede devolver a planificación, también con motivo. El cancelado se ve tachado y gris en el calendario.</div></div>
+      <div class="note" style="flex:1;background:#EEF5FE;border-color:#BBD6F7;color:#12365F"><svg style="flex-shrink:0;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><div>Los cambios automáticos se aplican al abrir cualquier pantalla y quedan en el historial como <b>Sistema</b>. Si alguien tenía el evento abierto para editarlo, verá el aviso de conflicto (abajo).</div></div>
+    </div>
+  </div>
+
+  <div class="card" style="gap: 12px">
+    <div class="sec">Indicadores que se calculan al leer (no son estados)</div>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap">
+      <span class="chip" style="background:#E3EFFC;color:#0B4A94">Próximo · empieza en menos de 48 h</span>
+      <span class="chip" style="background:#FDEFD6;color:#7A4800">Fecha vencida · sigue en planificación</span>
+      <span class="chip" style="background:#FDEFD6;color:#7A4800">Incompleto · faltan responsable, presupuesto o materiales</span>
+      <span class="chip" style="background:#FDEFD6;color:#7A4800">Materiales pendientes · a menos de 3 días</span>
+      <span class="chip" style="background:#E2F5EA;color:#0B6B40">Cierre pendiente · terminado sin datos de cierre</span>
+      <span class="chip" style="background:#FDE8E6;color:#A8200F">Cruce de horario · misma tienda</span>
+    </div>
+    <div class="mut">Los umbrales de "Incompleto" (7 días) y "Materiales pendientes" (3 días) son provisionales y se ajustan con el uso.</div>
+  </div>
+
+  <div class="sec" style="margin-top: 2px">Estados de la interfaz</div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+    <div class="card" style="min-height: 300px">
+      <div style="font-weight: 800">Sin eventos este mes</div>
+      <div style="flex: 1; border: 2px dashed #CBD3DF; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; text-align: center">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#566274" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        <div style="font-weight: 700">Noviembre 2026 no tiene eventos</div>
+        <div class="mut">Crea el primero o haz clic en un día del calendario.</div>
+        <button class="btn pri">Nuevo evento</button>
+      </div>
+    </div>
+    <div class="card" style="min-height: 300px">
+      <div style="font-weight: 800">Los filtros no encuentran nada</div>
+      <div style="flex: 1; border: 1px solid #E6EAF1; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 18px; text-align: center">
+        <div style="font-weight: 700">Ningún evento coincide con los filtros</div>
+        <div class="mut">Tienda: San Felipe · Estado: En curso · Tipo: Degustación</div>
+        <button class="btn">Limpiar filtros</button>
+      </div>
+    </div>
+    <div class="card" style="min-height: 300px">
+      <div style="font-weight: 800">Cargando</div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 10px; opacity: .8" aria-busy="true">
+        <div class="sk" style="height: 18px; width: 60%"></div>
+        <div class="sk" style="height: 26px"></div><div class="sk" style="height: 26px; width: 85%"></div><div class="sk" style="height: 26px; width: 70%"></div><div class="sk" style="height: 26px"></div>
+        <div class="mut">La cuadrícula conserva su tamaño y se atenúa mientras llegan los datos.</div>
+      </div>
+    </div>
+    <div class="card" style="min-height: 300px">
+      <div style="font-weight: 800">Error al cargar</div>
+      <div class="note" role="alert" style="background:#FDE8E6;border-color:#F2B5AD;color:#7B1A0D"><svg style="flex-shrink:0;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg><div>No se pudieron cargar los eventos. Revisa tu conexión e inténtalo de nuevo.</div></div>
+      <div><button class="btn">Reintentar</button></div>
+      <div class="mut">El mensaje no revela detalles técnicos; el detalle queda en el registro del servidor.</div>
+    </div>
+    <div class="card" style="min-height: 300px">
+      <div style="font-weight: 800">Conflicto: el estado cambió solo</div>
+      <div class="note" role="alert" style="background:#FDF1DA;border-color:#EFCB8A;color:#5E3800"><svg style="flex-shrink:0;margin-top:2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg><div>Mientras editabas, este evento pasó de <b>Programado</b> a <b>En curso</b> (Sistema, 10:00). Tus cambios no se guardaron.</div></div>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap"><button class="btn">Cargar versión actual</button><button class="btn pri">Guardar mis cambios</button></div>
+      <div class="mut">Guardar mis cambios solo está disponible si siguen siendo válidos para el estado actual.</div>
+    </div>
+    <div class="card" style="min-height: 300px">
+      <div style="font-weight: 800">Mover un evento programado</div>
+      <div class="mut">Al soltar "Impulso de lácteos" en otro día se pide el motivo; hora y duración se conservan.</div>
+      <div style="border: 1px solid #DDE3EC; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px">
+        <div style="font-weight: 700">Sáb 17 oct → Dom 18 oct · 10:00–14:00</div>
+        <label for="mo" style="font-size: 13px; font-weight: 600">Motivo de la reprogramación</label>
+        <input id="mo" class="in" value="El proveedor entrega el domingo">
+        <div style="display: flex; gap: 8px; justify-content: flex-end"><button class="btn">Cancelar</button><button class="btn pri">Reprogramar</button></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

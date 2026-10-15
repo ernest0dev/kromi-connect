@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Decisiones de diseño de eventos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+.sec{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0054AE}
+.card{background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:18px 20px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box}
+.card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px;line-height:1.45}
+.pill{display:inline-block;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:700}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 900px; box-sizing: border-box; padding: 36px 40px; display: flex; flex-direction: column; gap: 22px">
+  <div>
+    <div class="sec">Decisiones</div>
+    <h1 style="margin: 6px 0 4px; font-size: 28px; font-weight: 800; letter-spacing: -0.4px">Cómo se resolvió la interfaz de programación de eventos</h1>
+    <div style="color: #3A4658">Basada en el plan <b>docs/design/plan-eventos-programacion.md</b>. Si una maqueta y el plan difieren, gana el plan.</div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px">
+    <div class="card">
+      <div class="sec">Qué se heredó</div>
+      <ul>
+        <li>De <b>social-media</b>: calendario por celdas con semana desde el lunes, "hoy" resaltado, alta rápida por día, arrastre para mover y colores por familia de estado.</li>
+        <li>Del <b>inventario</b>: panel lateral para formularios y detalle, filtros y paginación en la URL, tarjetas en móvil y los mismos estados de carga, vacío, error y conflicto.</li>
+        <li>Mismo menú lateral del rol: el grupo Eventos suma Calendario y Eventos junto a Inventario.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="sec">Qué cambia respecto a Grid</div>
+      <ul>
+        <li><b>Hora y duración</b> mandan: vista semanal con eje horario, donde la altura del bloque es la duración.</li>
+        <li><b>Varios días y varias tiendas</b>: la barra se alarga entre celdas y la tienda es filtro principal, no un dato secundario.</li>
+        <li><b>Cinco estados propios</b>; En curso y Terminado cambian solos. La persona nunca los marca.</li>
+        <li>No hay cuentas, formatos ni arrastre de estados: solo se arrastra la fecha.</li>
+        <li><b>Cruce de horario</b> visible en la barra, la ficha y el formulario.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="sec">Color y estado</div>
+      <ul>
+        <li><span class="pill" style="background:#EEF0F4;color:#454F5E">Gris</span> En planificación · <span class="pill" style="background:#E3EFFC;color:#0B4A94">Azul</span> Programado.</li>
+        <li><span class="pill" style="background:#FDEFD6;color:#7A4800">Naranja</span> En curso, con punto: "ocurre ahora". Es distinto al naranja de "requiere atención" de Grid; se acompaña siempre de texto.</li>
+        <li><span class="pill" style="background:#E2F5EA;color:#0B6B40">Verde</span> Terminado · <span class="pill" style="background:#F1F2F5;color:#6B7482">Gris tachado</span> Cancelado.</li>
+        <li>El estado nunca se comunica solo con color: lleva etiqueta y, en el calendario, borde y texto.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px">
+    <div class="card">
+      <div class="sec">Supuestos de la maqueta</div>
+      <ul>
+        <li>Los eventos, nombres, tiendas, montos y personas son <b>datos de ejemplo</b> para mostrar los casos (cruce, varios días, varias tiendas, cancelado).</li>
+        <li>Moneda en USD solo como ejemplo: la moneda está por confirmar.</li>
+        <li>El calendario y la lista muestran lo que el plan define; no hay bandeja de aprobaciones ni capas de campañas o efemérides.</li>
+        <li>Sábado 17 oct tiene dos eventos en Prebo que se solapan a propósito para mostrar el aviso.</li>
+        <li>Alta rápida: clic en un día vacío abre el formulario con esa fecha.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="sec">Pendiente de confirmar con el equipo</div>
+      <ul>
+        <li><b>Moneda</b> del presupuesto: USD, VES o ambas.</li>
+        <li>Umbrales de "Incompleto" (7 días) y "Materiales pendientes" (3 días).</li>
+        <li>Si hace falta registrar un evento ya ocurrido que no se planificó.</li>
+        <li>Si una tienda necesita un horario distinto dentro del mismo evento (hoy sería otro evento).</li>
+        <li>Si Eventos quiere ver efemérides y campañas como capa en el calendario (fase posterior).</li>
+        <li>Frecuencia del cron opcional de sincronización, según el plan de hosting.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sec">Accesibilidad y teclado</div>
+    <ul>
+      <li>Cada evento es un enlace real (Tab y Enter); el calendario se recorre por eventos, no por celdas vacías. Crear un evento también está en el botón "Nuevo evento", sin depender del clic en el día.</li>
+      <li>Mover por arrastre tiene alternativa: <b>Reprogramar</b> en la ficha, con el mismo motivo obligatorio.</li>
+      <li>Los paneles son modales con foco inicial, Escape para cerrar y retorno del foco al botón que los abrió, como en el inventario.</li>
+      <li>Los avisos de cruce y de conflicto usan <b>role="alert"</b>; los botones de ícono llevan etiqueta.</li>
+    </ul>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

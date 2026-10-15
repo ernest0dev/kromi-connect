@@ -1,8 +1,8 @@
 # Perfil Eventos: programación y planificación de eventos
 
-**Estado (2026-10-15):** plan con decisiones del equipo incorporadas; **no hay código ni migración todavía**. Es el segundo módulo del perfil `events`, junto al [inventario](./plan-inventario-eventos.md) ya implementado. Alcance: un **plan y una implementación básica** que escalará con las observaciones de las personas usuarias; lo que no está en la primera entrega queda en §13.
+**Estado (2026-10-15):** plan con decisiones del equipo incorporadas; **la migración está redactada como propuesta (`supabase/migrations/202610150001_events_schedule.sql`, probada en PostgreSQL local, sin aplicar en Supabase remoto) y todavía no hay código de la aplicación**. Es el segundo módulo del perfil `events`, junto al [inventario](./plan-inventario-eventos.md) ya implementado. Alcance: un **plan y una implementación básica** que escalará con las observaciones de las personas usuarias; lo que no está en la primera entrega queda en §13.
 **Alcance:** rol `events`, rutas `/events/calendar`, `/events/list` y `/events/archive`; calendario, listado, ficha, estados, materiales, patrocinio y presupuesto.
-**Propuesta de UI:** lienzo de diseño "Eventos · Programación" (ver §9); las pantallas se describen en §9.
+**Propuesta de UI:** lienzo de diseño "Eventos · Programación", copiado en [`prototypes/events-schedule/`](./prototypes/events-schedule) (ver §9).
 **Documentos relacionados:** [`plan-inventario-eventos.md`](./plan-inventario-eventos.md), [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`supabase-db-migration.md`](../supabase-db-migration.md).
 
 ## 1. Resultado esperado
@@ -203,7 +203,7 @@ El estado automático debe ser correcto aunque no corra ninguna tarea programada
 
 ## 6. Modelo de datos propuesto
 
-Migración propuesta: `202610150001_events_schedule.sql` (nombre provisional). Escritura solo por RPC `SECURITY DEFINER` con `search_path=''`; RLS de solo lectura; sin grants de escritura a `anon` ni `authenticated`, igual que el inventario.
+Migración propuesta: [`supabase/migrations/202610150001_events_schedule.sql`](../../supabase/migrations/202610150001_events_schedule.sql) (sin aplicar; el nombre es provisional). Escritura solo por RPC `SECURITY DEFINER` con `search_path=''`; RLS de solo lectura; sin grants de escritura a `anon` ni `authenticated`, igual que el inventario.
 
 | Tabla | Contenido |
 |---|---|
@@ -254,7 +254,17 @@ Todas comprueban el permiso con `authorizeAction`, validan en el servidor, llama
 | `save_event_sponsors(...)`, `save_event_materials(...)` | `saveEventSponsorsAction`, `saveEventMaterialsAction` | Reemplazan la lista, con comprobación de versión. |
 | `archive_event` / `restore_event` | `archiveEventAction`, `restoreEventAction` | Archivo. |
 
-Errores con código estable para la interfaz: `POSIBLE_CRUCE`, `CONFLICTO_VERSION`, `FALTAN_DATOS` (con la lista de campos que faltan para programar).
+Errores con código estable para la interfaz: `POSIBLE_CRUCE` (la lista de cruces va en `detail`), `CONFLICTO_VERSION`, `MOTIVO_REQUERIDO` y `FALTAN_DATOS` (con la lista de campos que faltan para programar, en `detail`).
+
+**Cómo quedó en la propuesta de migración** (§6 y §8 son la intención; esto es lo redactado):
+
+- `create_event(p_datos jsonb, p_confirmar_cruce)` y `update_event(p_evento_id, p_expected_version, p_datos jsonb, p_motivo, p_confirmar_cruce)` reciben los datos del formulario en un solo `jsonb` (incluida la lista `sedes: [{sede_id, zona}]`); `events_normalize` valida y normaliza. `reschedule_event`, `transition_event_status` y `save_event_closure` reciben parámetros sueltos.
+- Se añade `check_event_overlap(...)`, que el formulario usa para avisar del cruce antes de guardar.
+- `evento_historial.anterior` y `nuevo` son `jsonb` (`{"estatus": ...}` o `{"inicio", "fin", "sedes": [nombres]}`).
+- `CANCELADO` puede no tener fechas; los demás estados distintos de planificación sí.
+- `evento_tareas` no está en la migración (fase 5). Los indicadores de §4.4 salen de `list_events` y `get_event` (`indicadores`), con los umbrales de 7 y 3 días escritos en `events_flags`.
+- `sync_event_statuses()` no es ejecutable por `authenticated`; la llaman las demás funciones y, si se activa, la ruta de cron con la clave de servicio.
+- Probada en PostgreSQL 16 local con un esquema `auth` simulado: creación con varias tiendas, cruce y no cruce de eventos seguidos, estados automáticos por hora (incluido Programado vencido que pasa directo a Terminado), versión, reprogramación con motivo, cierre, archivo, permisos y historial inmutable. **No** se probó contra Supabase remoto ni con concurrencia real.
 
 ## 9. Vistas cliente (propuesta de UI)
 
@@ -269,6 +279,21 @@ La propuesta visual está en el lienzo de diseño "Eventos · Programación". He
 | Formulario | Panel lateral | Crear y editar; selector múltiple de tiendas con "Todas"; avisos de cruce y de conflicto. |
 | Archivo | `/events/archive` | Eventos archivados; restaurar. |
 | Estados de la interfaz | Todas | Vacío, sin resultados, error con reintento, carga, conflicto y móvil. |
+
+**Mapa de maquetas** (`docs/design/prototypes/events-schedule/`, ocho pantallas, un archivo cada una, y `canvas.json` con su posición):
+
+| Maqueta | Vista |
+|---|---|
+| `Main.dc.html` | Calendario mensual |
+| `Movil.dc.html` | Agenda móvil |
+| `Semana.dc.html` | Calendario semanal con eje horario |
+| `Lista.dc.html` | Listado |
+| `Ficha.dc.html` | Ficha del evento |
+| `Formulario.dc.html` | Crear y editar con varias tiendas |
+| `Estados.dc.html` | Estados automáticos y estados de la interfaz |
+| `Decisiones.dc.html` | Decisiones de diseño y pendientes |
+
+Las maquetas son referencia visual; si difieren de este documento, gana el documento. Los datos son de ejemplo.
 
 **Diferencias con el calendario de social-media:** la hora y la duración son esenciales (vista semanal con eje horario, que Grid no tiene); un evento abarca varios días y varias tiendas; la tienda es una dimensión principal de filtro; el estado tiene cinco valores y cambia solo con la hora; no hay cuentas ni formatos; el cruce de horarios por tienda es una regla visible.
 

@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Listado de eventos</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#14202E;font-weight:600;font-size:14px;text-decoration:none;box-sizing:border-box}
+.btn:hover{background:#EEF2F8}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn:focus-visible,.nv:focus-visible,.sel:focus-visible,.in:focus-visible,.ib:focus-visible,.pg:focus-visible,.sort:focus-visible,.ev:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.nv{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:8px;color:#D5E3FA;font-weight:600;text-decoration:none}
+.nv.on{background:rgba(255,255,255,.16);color:#fff}
+.in{height:40px;box-sizing:border-box;border:1px solid #CBD3DF;border-radius:8px;background:#fff;padding:0 12px 0 38px;font-family:inherit;font-size:14px;color:#14202E;width:100%}
+.sel{display:inline-flex;align-items:center;justify-content:space-between;gap:10px;height:40px;padding:0 12px;border:1px solid #CBD3DF;border-radius:8px;background:#fff;color:#14202E;font-size:14px;font-weight:500}
+.sel b{color:#4A5668;font-weight:600}
+.ib{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:transparent;color:#3A4658}
+.ib:hover{background:#E6EEF9;color:#0054AE}
+table{border-collapse:collapse;width:100%}
+th{height:44px;padding:0 14px;text-align:left;font-size:12px;font-weight:700;color:#4A5668;background:#F7F9FC;border-bottom:1px solid #DDE3EC;white-space:nowrap}
+td{padding:10px 14px;border-bottom:1px solid #E6EAF1;vertical-align:middle}
+tbody tr:hover td{background:#F5F9FF}
+.sort{display:inline-flex;align-items:center;gap:6px;border:0;background:transparent;padding:0;font-size:12px;font-weight:700;color:#4A5668}
+.sort.on{color:#0054AE}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 10px;border-radius:12px;font-size:12px;font-weight:600;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.s-PL{background:#EEF0F4;color:#454F5E}
+.s-PR{background:#E3EFFC;color:#0B4A94}
+.s-CU{background:#FDEFD6;color:#7A4800}
+.s-TE{background:#E2F5EA;color:#0B6B40}
+.s-CA{background:#F1F2F5;color:#6B7482}
+.st{display:inline-block;padding:2px 8px;border-radius:6px;border:1px solid #CBD3DF;background:#fff;color:#3A4658;font-size:12px;font-weight:600;white-space:nowrap}
+.tg{display:inline-block;padding:3px 9px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.t-deg{background:#FBE6EE;color:#8A1F4A}
+.t-imp{background:#E3EFFC;color:#0B4A94}
+.t-otr{background:#EDE7F8;color:#4B2A8A}
+.mut{color:#566274;font-size:12px}
+.pg{min-width:36px;height:36px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;font-weight:600;color:#14202E;font-family:inherit}
+.pg.on{background:#0066D2;border-color:#0066D2;color:#fff}
+</style>
+</helmet>
+<div style="display: flex; width: 100%; min-height: 1000px; box-sizing: border-box">
+  <aside style="width: 232px; flex-shrink: 0; background: #002F80; color: #fff; display: flex; flex-direction: column; padding: 20px 14px; gap: 6px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px">
+      <div style="width: 34px; height: 34px; border-radius: 9px; background: #F28D19; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #002F80">K</div>
+      <div style="font-weight: 800; font-size: 17px; letter-spacing: -0.2px">Kromi Connect</div>
+    </div>
+    <div style="font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #9DB8E8; padding: 0 14px 6px">EVENTOS</div>
+    <a class="nv" href="Main.dc.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+      Calendario
+    </a>
+    <a class="nv on" href="Lista.dc.html">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+      Eventos
+    </a>
+    <a class="nv" href="#">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/><path d="M12 13v8"/></svg>
+      Inventario
+    </a>
+    <div style="flex: 1"></div>
+    <div style="border-radius: 10px; background: rgba(255,255,255,.1); padding: 12px; display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; align-items: center; gap: 10px">
+        <div style="width: 34px; height: 34px; border-radius: 50%; background: #CFE3FA; color: #002F80; font-weight: 800; display: flex; align-items: center; justify-content: center">CR</div>
+        <div style="line-height: 1.25"><div style="font-weight: 700">Carla R.</div><div style="font-size: 12px; color: #BFD3F2">Rol: Eventos</div></div>
+      </div>
+      <div style="font-size: 12px; color: #BFD3F2; line-height: 1.4">Solo el rol Eventos ve y gestiona los eventos. Los permisos se validan en el servidor y en la base de datos.</div>
+    </div>
+  </aside>
+
+  <main style="flex: 1; min-width: 0; padding: 28px 32px 32px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <div style="color: #566274; font-size: 13px; font-weight: 500">Eventos / Listado</div>
+        <h1 style="margin: 0; font-size: 30px; font-weight: 800; letter-spacing: -0.5px">Eventos</h1>
+        <div style="color: #3A4658; font-size: 13px">48 eventos · ordenados por fecha · la búsqueda y los filtros viven en la URL, así se puede compartir la vista</div>
+      </div>
+      <div style="display: flex; gap: 10px">
+        <a class="btn" href="#">Ver archivo</a>
+        <button class="btn pri">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          Nuevo evento
+        </button>
+      </div>
+    </div>
+
+    <div style="background: #fff; border: 1px solid #DDE3EC; border-radius: 12px; overflow: hidden">
+      <div role="search" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 16px; border-bottom: 1px solid #E6EAF1">
+        <div style="position: relative; flex: 1 1 280px; min-width: 240px">
+          <svg style="position: absolute; left: 12px; top: 11px; color: #566274" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <input class="in" type="search" aria-label="Buscar evento" placeholder="Buscar por nombre, proveedor o responsable">
+        </div>
+        <button class="sel" style="min-width: 160px"><span><b>Tiendas:</b> todas</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel" style="min-width: 150px"><span><b>Estado:</b> todos</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel" style="min-width: 140px"><span><b>Tipo:</b> todos</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel" style="min-width: 150px"><span><b>Origen:</b> todos</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+        <button class="sel" style="min-width: 150px"><span><b>Desde:</b> 1 oct</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></button>
+      </div>
+
+      <table>
+        <caption style="position: absolute; left: -9999px">Eventos programados y en planificación</caption>
+        <thead>
+          <tr>
+            <th scope="col"><button class="sort">Evento</button></th>
+            <th scope="col"><button class="sort on">Fecha y hora <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 15l-6-6-6 6"/></svg></button></th>
+            <th scope="col">Tiendas</th>
+            <th scope="col"><button class="sort">Estado</button></th>
+            <th scope="col"><button class="sort">Responsable</button></th>
+            <th scope="col" style="text-align: right"><button class="sort">Presupuesto</button></th>
+            <th scope="col">Materiales</th>
+            <th scope="col" style="text-align: right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="9">
+            <tr>
+              <td style="max-width: 330px">
+                <a class="ev" href="Ficha.dc.html" style="color: #14202E; text-decoration: none; font-weight: 700; font-size: 14px">{{r.name}}</a>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 5px">
+                  <span class="tg {{r.tipoCls}}">{{r.tipo}}</span>
+                  <span class="st">{{r.origen}}</span>
+                  <sc-if value="{{r.patro}}" hint-placeholder-val="{{false}}"><span class="st">Patrocinio</span></sc-if>
+                  <sc-if value="{{r.insc}}" hint-placeholder-val="{{false}}"><span class="st">Inscripción</span></sc-if>
+                </div>
+              </td>
+              <td style="white-space: nowrap">
+                <div style="font-weight: 600">{{r.fecha}}</div>
+                <div class="mut">{{r.hora}} · {{r.dur}}</div>
+              </td>
+              <td style="max-width: 190px"><span style="font-weight: 600">{{r.tiendas}}</span><div class="mut">{{r.tiendasMas}}</div></td>
+              <td>
+                <span class="chip {{r.sCls}}"><span class="dot"></span>{{r.estado}}</span>
+                <sc-if value="{{r.aviso}}" hint-placeholder-val="{{false}}"><div style="margin-top: 4px; font-size: 12px; font-weight: 600; color: {{r.avisoColor}}">{{r.aviso}}</div></sc-if>
+              </td>
+              <td style="white-space: nowrap">{{r.resp}}</td>
+              <td style="text-align: right; white-space: nowrap; font-weight: 700">{{r.pres}}</td>
+              <td style="white-space: nowrap"><span style="font-weight: 700">{{r.mat}}</span> <span class="mut">listos</span></td>
+              <td style="text-align: right; white-space: nowrap">
+                <a class="ib" href="Formulario.dc.html" aria-label="Editar {{r.name}}" title="Editar"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></a>
+                <a class="ib" href="Ficha.dc.html" aria-label="Ver ficha de {{r.name}}" title="Ver ficha"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></a>
+              </td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 12px 16px; border-top: 1px solid #E6EAF1">
+        <div class="mut">Mostrando <b style="color:#14202E">1–10</b> de <b style="color:#14202E">48</b></div>
+        <div style="display: flex; align-items: center; gap: 10px">
+          <span class="mut">Filas</span>
+          <button class="sel" style="height: 36px; min-width: 70px"><span>10</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="pg" aria-label="Página anterior">‹</button>
+          <button class="pg on" aria-current="page">1</button>
+          <button class="pg">2</button>
+          <button class="pg">3</button>
+          <button class="pg">4</button>
+          <button class="pg">5</button>
+          <button class="pg" aria-label="Página siguiente">›</button>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const E = {
+      PL: ['En planificación', 's-PL'], PR: ['Programado', 's-PR'], CU: ['En curso', 's-CU'], TE: ['Terminado', 's-TE'], CA: ['Cancelado', 's-CA']
+    };
+    const T = { 'Degustación': 't-deg', 'Impulso': 't-imp', 'Otro': 't-otr' };
+    // nombre, tipo, origen, patrocinio, inscripción, fecha, hora, duración, tiendas, más, estado, aviso, responsable, presupuesto, materiales
+    const raw = [
+      ['Degustación de quesos', 'Degustación', 'Proveedor', 1, 0, 'Sáb 3 oct', '10:00–13:00', '3 h', 'Prebo', '', 'TE', 'Cierre pendiente', 'Carla R.', 'USD 180', '4/4'],
+      ['Degustación de carnes premium', 'Degustación', 'Propio', 1, 0, 'Sáb 10 oct', '11:00–15:00', '4 h', 'Prebo', '+ Mañongo', 'TE', '', 'Luis P.', 'USD 650', '6/6'],
+      ['Semana de la panadería', 'Otro', 'Propio', 0, 0, 'Mié 14 oct → Dom 18 oct', '10:00 → 20:00', '5 días', 'Todas las tiendas', '7 tiendas', 'CU', '', 'Carla R.', 'USD 1.200', '9/10'],
+      ['Degustación de chocolates', 'Degustación', 'Proveedor', 1, 0, 'Jue 15 oct', '16:00–19:00', '3 h', 'Guataparo', '', 'CU', '', 'Andrea M.', 'USD 240', '5/5'],
+      ['Impulso de lácteos', 'Impulso', 'Proveedor', 1, 0, 'Sáb 17 oct', '10:00–14:00', '4 h', 'Prebo', '+ Trigal Norte', 'PR', 'Cruce de horario', 'Luis P.', 'USD 300', '2/4'],
+      ['Degustación de panadería', 'Degustación', 'Propio', 0, 1, 'Sáb 17 oct', '12:00–15:00', '3 h', 'Prebo', '', 'PR', 'Cruce de horario', 'Andrea M.', 'USD 150', '3/3'],
+      ['Impulso de limpieza', 'Impulso', 'Proveedor', 1, 0, 'Mié 21 oct', '10:00–13:00', '3 h', 'Trigal Sur', '', 'PR', 'Próximo', 'Carla R.', 'USD 200', '1/3'],
+      ['Degustación de vinos', 'Degustación', 'Proveedor', 1, 1, 'Vie 23 oct', '17:00–20:00', '3 h', 'Castillito', '', 'PR', '', 'Luis P.', 'USD 420', '0/6'],
+      ['Impulso de Halloween', 'Impulso', 'Propio', 0, 0, 'Sáb 24 oct', '11:00–16:00', '5 h', 'San Felipe', '', 'PL', 'Incompleto', 'Andrea M.', '—', '0/5'],
+      ['Impulso de bebidas', 'Impulso', 'Proveedor', 0, 0, 'Lun 19 oct', '15:00–18:00', '3 h', 'Trigal Sur', '', 'CA', '', 'Carla R.', 'USD 160', '—']
+    ];
+    const rows = raw.map(r => ({
+      name: r[0], tipo: r[1], tipoCls: T[r[1]], origen: r[2], patro: !!r[3], insc: !!r[4],
+      fecha: r[5], hora: r[6], dur: r[7], tiendas: r[8], tiendasMas: r[9],
+      estado: E[r[10]][0], sCls: E[r[10]][1], aviso: r[11],
+      avisoColor: r[11] === 'Cruce de horario' ? '#A8200F' : (r[11] === 'Próximo' ? '#0B4A94' : '#7A4800'),
+      resp: r[12], pres: r[13], mat: r[14]
+    }));
+    return { rows };
+  }
+}
+</script>
+</body>
+</html>

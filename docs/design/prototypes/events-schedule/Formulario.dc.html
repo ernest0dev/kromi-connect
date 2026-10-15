@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Crear o editar evento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#14202E;font-weight:600;font-size:14px;box-sizing:border-box}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.sm{height:32px;padding:0 10px;font-size:13px}
+.btn:focus-visible,.in:focus-visible,.ib:focus-visible,.sw:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.ib{width:40px;height:40px;display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;border-radius:8px;background:transparent;color:#3A4658}
+.in{height:40px;box-sizing:border-box;border:1px solid #AEB9C9;border-radius:8px;background:#fff;padding:0 12px;font-family:inherit;font-size:14px;color:#14202E;width:100%}
+textarea.in{height:auto;padding:10px 12px;resize:none;line-height:1.45}
+.lb{font-size:13px;font-weight:600;color:#14202E;display:block;margin-bottom:6px}
+.hint{font-size:12px;color:#566274;margin-top:5px;line-height:1.4}
+.sec{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#0054AE;padding-top:4px}
+.sw{display:flex;flex-direction:column;gap:2px;text-align:left;padding:10px 12px;border:1px solid #AEB9C9;border-radius:10px;background:#fff;font-size:14px;font-weight:700;color:#14202E}
+.sw span{font-size:12px;font-weight:400;color:#566274}
+.sw.on{border-color:#0066D2;background:#E3EFFC;box-shadow:inset 0 0 0 1px #0066D2}
+.tgl{display:inline-flex;align-items:center;gap:10px;font-weight:600}
+.tk{width:40px;height:24px;border-radius:12px;background:#CBD3DF;position:relative;display:inline-block}
+.tk i{position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff}
+.tk.on{background:#0066D2}
+.tk.on i{left:19px}
+.store{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:17px;border:1px solid #AEB9C9;background:#fff;font-weight:600;font-size:13px}
+.store.on{background:#E3EFFC;border-color:#0066D2;color:#0B4A94}
+.mut{color:#566274;font-size:12px}
+</style>
+</helmet>
+<div style="position: relative; display: flex; width: 100%; min-height: 1480px; box-sizing: border-box; overflow: hidden">
+  <aside style="width: 232px; flex-shrink: 0; background: #002F80; color: #fff; padding: 20px 14px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 10px; padding: 4px 8px 22px">
+      <div style="width: 34px; height: 34px; border-radius: 9px; background: #F28D19; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #002F80">K</div>
+      <div style="font-weight: 800; font-size: 17px">Kromi Connect</div>
+    </div>
+  </aside>
+  <main style="flex: 1; padding: 28px 32px; display: flex; flex-direction: column; gap: 14px">
+    <div style="font-size: 30px; font-weight: 800">Calendario de eventos</div>
+    <div style="height: 520px; border-radius: 12px; background: #fff; border: 1px solid #DDE3EC; background-image: repeating-linear-gradient(to bottom, #E6EAF1 0, #E6EAF1 1px, transparent 1px, transparent 104px), repeating-linear-gradient(to right, #E6EAF1 0, #E6EAF1 1px, transparent 1px, transparent 160px)"></div>
+  </main>
+  <div aria-hidden="true" style="position: absolute; inset: 0; background: rgba(20,32,46,.45)"></div>
+
+  <section role="dialog" aria-label="Crear evento" style="position: absolute; top: 0; right: 0; bottom: 0; width: 640px; background: #fff; box-shadow: -8px 0 32px rgba(20,32,46,.25); display: flex; flex-direction: column">
+    <header style="padding: 20px 24px 16px; border-bottom: 1px solid #E6EAF1; display: flex; align-items: flex-start; justify-content: space-between; gap: 16px">
+      <div>
+        <h2 style="margin: 0; font-size: 24px; font-weight: 800; letter-spacing: -0.3px">Nuevo evento</h2>
+        <div class="mut" style="margin-top: 6px; font-size: 13px">Se crea <b>En planificación</b>. Para programarlo hacen falta fecha, duración, tienda y responsable.</div>
+      </div>
+      <button class="ib" aria-label="Cerrar formulario"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </header>
+
+    <form style="flex: 1; min-height: 0; overflow: hidden; padding: 18px 24px; display: flex; flex-direction: column; gap: 16px" onsubmit="return false">
+      <div role="alert" style="display: flex; gap: 12px; border: 1px solid #EFCB8A; background: #FDF1DA; color: #5E3800; border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 1.45">
+        <svg style="flex-shrink: 0; margin-top: 2px" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l10 18H2L12 3z"/><path d="M12 10v5M12 18h.01"/></svg>
+        <div style="flex: 1"><b>Posible cruce en Prebo.</b> Ya hay un evento ese día de 10:00 a 14:00 (Impulso de lácteos). Revisa el horario o guarda de todos modos.
+          <div style="margin-top: 8px"><button type="button" class="btn sm">Guardar de todos modos</button></div>
+        </div>
+      </div>
+
+      <div class="sec">Datos generales</div>
+      <div>
+        <label class="lb" for="n">Nombre del evento</label>
+        <input id="n" class="in" value="Degustación de panadería">
+      </div>
+      <div>
+        <label class="lb" for="d">Descripción u objetivo (opcional)</label>
+        <textarea id="d" class="in" rows="2">Probar los panes de la semana y recoger opiniones de clientes.</textarea>
+      </div>
+      <div>
+        <span class="lb" id="tipo">Tipo</span>
+        <div role="radiogroup" aria-labelledby="tipo" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+          <button type="button" role="radio" aria-checked="true" class="sw on">Degustación<span>Se prueba un producto</span></button>
+          <button type="button" role="radio" aria-checked="false" class="sw">Impulso<span>Promoción en tienda</span></button>
+          <button type="button" role="radio" aria-checked="false" class="sw">Otro<span>Se indica cuál</span></button>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div>
+          <span class="lb" id="orig">Origen</span>
+          <div role="radiogroup" aria-labelledby="orig" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+            <button type="button" role="radio" aria-checked="true" class="sw on">Propio<span>De Kromi</span></button>
+            <button type="button" role="radio" aria-checked="false" class="sw">Proveedor<span>Pide el nombre</span></button>
+          </div>
+        </div>
+        <div>
+          <label class="lb" for="r">Responsable</label>
+          <select id="r" class="in"><option>Andrea M.</option></select>
+          <div class="hint">Por defecto, quien crea el evento.</div>
+        </div>
+      </div>
+
+      <div class="sec">Cuándo</div>
+      <div style="display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 12px">
+        <div><label class="lb" for="f">Fecha</label><input id="f" class="in" value="17/10/2026"></div>
+        <div><label class="lb" for="h">Hora de inicio</label><input id="h" class="in" value="12:00"></div>
+        <div>
+          <label class="lb" for="du">Duración</label>
+          <div style="display: flex; gap: 6px"><input id="du" class="in" value="3" style="width: 58px"><span style="align-self: center; font-size: 13px">h</span><input class="in" aria-label="Minutos" value="0" style="width: 58px"><span style="align-self: center; font-size: 13px">min</span></div>
+        </div>
+      </div>
+      <div class="hint" style="margin-top: -8px">Termina el sáb 17 oct a las <b>15:00</b>. Si dura más de un día, el fin cae en otra fecha. Hora de Caracas.</div>
+
+      <div class="sec">Dónde</div>
+      <div>
+        <span class="lb" id="tt">Tiendas · 1 de 7</span>
+        <div role="group" aria-labelledby="tt" style="display: flex; flex-wrap: wrap; gap: 8px">
+          <button type="button" class="store on"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L20 7"/></svg>Prebo</button>
+          <button type="button" class="store">Mañongo</button>
+          <button type="button" class="store">Trigal Sur</button>
+          <button type="button" class="store">Trigal Norte</button>
+          <button type="button" class="store">Guataparo</button>
+          <button type="button" class="store">Castillito</button>
+          <button type="button" class="store">San Felipe</button>
+          <button type="button" class="btn sm" style="margin-left: 4px">Todas las tiendas</button>
+        </div>
+        <div class="hint">Un evento puede ocurrir en varias tiendas a la vez, con el mismo horario.</div>
+      </div>
+      <div style="display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: center">
+        <div style="font-weight: 700; font-size: 13px">Prebo</div>
+        <div><label class="lb" for="z" style="position:absolute;left:-9999px">Zona en Prebo</label><input id="z" class="in" placeholder="Zona en la tienda (opcional), ej. pasillo central" value="Panadería"></div>
+      </div>
+
+      <div class="sec">Presupuesto, patrocinio e inscripción</div>
+      <div style="display: grid; grid-template-columns: 1fr 120px 1fr; gap: 12px">
+        <div><label class="lb" for="p">Presupuesto estimado</label><input id="p" class="in" value="150"></div>
+        <div><label class="lb" for="m">Moneda</label><select id="m" class="in"><option>USD</option></select></div>
+        <div><label class="lb" for="a">Asistentes esperados</label><input id="a" class="in" value="60"></div>
+      </div>
+      <div style="display: flex; gap: 28px; flex-wrap: wrap">
+        <span class="tgl"><span class="tk"><i></i></span>Tiene patrocinio</span>
+        <span class="tgl"><span class="tk on"><i></i></span>Requiere inscripción</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 120px 1fr; gap: 12px">
+        <div><label class="lb" for="c">Cupo</label><input id="c" class="in" value="40"></div>
+        <div><label class="lb" for="i">Cómo inscribirse</label><input id="i" class="in" placeholder="Enlace o instrucciones" value="En caja, con la cédula"></div>
+      </div>
+      <div class="hint" style="margin-top: -8px">Los patrocinadores y los materiales se agregan desde la ficha, una vez creado el evento.</div>
+    </form>
+
+    <footer style="border-top: 1px solid #E6EAF1; background: #F7F9FC; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+      <div class="mut">Quedará a nombre de Carla R.</div>
+      <div style="display: flex; gap: 10px">
+        <button class="btn">Cancelar</button>
+        <button class="btn">Guardar borrador</button>
+        <button class="btn pri">Guardar y programar</button>
+      </div>
+    </footer>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

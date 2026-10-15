@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Agenda de eventos móvil</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'Plus Jakarta Sans',system-ui,sans-serif;color:#14202E;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:11px;font-size:11px;font-weight:700;white-space:nowrap}
+.dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.ev{display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:12px 14px;border-left-width:4px}
+.ev:focus-visible,.dy:focus-visible,.fab:focus-visible,.ib:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.dy{display:flex;flex-direction:column;align-items:center;gap:2px;width:44px;height:58px;justify-content:center;border-radius:12px;border:0;background:transparent;font-weight:700;color:#3A4658}
+.dy.on{background:#0066D2;color:#fff}
+.mut{color:#566274;font-size:12px}
+.ib{width:44px;height:44px;display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:10px;background:transparent;color:#fff}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #F3F5F9; display: flex; flex-direction: column">
+  <header style="background: #002F80; color: #fff; padding: 12px 8px 14px 16px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <div style="display: flex; align-items: center; gap: 10px"><div style="width: 30px; height: 30px; border-radius: 8px; background: #F28D19; color: #002F80; font-weight: 800; display: flex; align-items: center; justify-content: center">K</div><b style="font-size: 16px">Eventos</b></div>
+      <button class="ib" aria-label="Abrir menú"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+    </div>
+    <div style="display: flex; align-items: center; justify-content: space-between; padding-right: 8px">
+      <div style="font-size: 22px; font-weight: 800; letter-spacing: -0.3px">Octubre 2026</div>
+      <div style="display: flex; gap: 4px"><button class="ib" aria-label="Semana anterior"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button><button class="ib" aria-label="Semana siguiente"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg></button></div>
+    </div>
+  </header>
+
+  <div style="background: #fff; border-bottom: 1px solid #DDE3EC; padding: 8px 6px; display: flex; justify-content: space-between">
+    <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+      <button class="dy {{d.cls}}" aria-label="{{d.label}}"><span style="font-size: 11px">{{d.dow}}</span><span style="font-size: 17px">{{d.num}}</span><span style="width: 5px; height: 5px; border-radius: 50%; background: {{d.dot}}"></span></button>
+    </sc-for>
+  </div>
+
+  <div style="display: flex; gap: 8px; padding: 10px 14px; overflow: hidden">
+    <button style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #CBD3DF; background: #fff; font-weight: 600; font-size: 13px">Tiendas: todas</button>
+    <button style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #CBD3DF; background: #fff; font-weight: 600; font-size: 13px">Estado</button>
+    <button style="height: 34px; padding: 0 12px; border-radius: 17px; border: 1px solid #CBD3DF; background: #fff; font-weight: 600; font-size: 13px">Tipo</button>
+  </div>
+
+  <div style="flex: 1; min-height: 0; overflow: hidden; padding: 2px 14px 90px; display: flex; flex-direction: column; gap: 10px">
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .06em; color: #0054AE">HOY · JUEVES 15</div>
+    <a class="ev" href="Ficha.dc.html" style="border-left-color: #F28D19">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><b style="font-size: 15px">Degustación de chocolates</b><span class="chip" style="background:#FDEFD6;color:#7A4800"><span class="dot" style="background:#F28D19"></span>En curso</span></div>
+      <div class="mut" style="margin-top: 4px">16:00–19:00 · Guataparo</div>
+      <div class="mut">Termina solo a las 19:00</div>
+    </a>
+    <a class="ev" href="Ficha.dc.html" style="border-left-color: #F28D19">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><b style="font-size: 15px">Semana de la panadería</b><span class="chip" style="background:#FDEFD6;color:#7A4800"><span class="dot" style="background:#F28D19"></span>En curso</span></div>
+      <div class="mut" style="margin-top: 4px">Hasta dom 18, 20:00 · Todas las tiendas</div>
+    </a>
+    <div style="font-size: 12px; font-weight: 800; letter-spacing: .06em; color: #0054AE; margin-top: 4px">SÁBADO 17</div>
+    <a class="ev" href="Ficha.dc.html" style="border-left-color: #0066D2">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><b style="font-size: 15px">Impulso de lácteos</b><span class="chip" style="background:#E3EFFC;color:#0B4A94"><span class="dot"></span>Programado</span></div>
+      <div class="mut" style="margin-top: 4px">10:00–14:00 · Prebo, Trigal Norte</div>
+      <div style="margin-top: 6px; font-size: 12px; font-weight: 700; color: #A8200F">Cruce de horario en Prebo</div>
+    </a>
+    <a class="ev" href="Ficha.dc.html" style="border-left-color: #0066D2">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><b style="font-size: 15px">Degustación de panadería</b><span class="chip" style="background:#E3EFFC;color:#0B4A94"><span class="dot"></span>Programado</span></div>
+      <div class="mut" style="margin-top: 4px">12:00–15:00 · Prebo</div>
+    </a>
+  </div>
+
+  <a class="fab" href="Formulario.dc.html" aria-label="Nuevo evento" style="position: absolute; right: 18px; bottom: 22px; height: 56px; padding: 0 20px; border-radius: 28px; background: #0066D2; color: #fff; display: flex; align-items: center; gap: 8px; font-weight: 700; text-decoration: none; box-shadow: 0 6px 18px rgba(0,102,210,.4)">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nuevo evento
+  </a>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const dows = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    const full = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
+    const dots = { 0: '', 1: '#00AF65', 2: '#F28D19', 3: '#F28D19', 4: '#0066D2', 5: '#0066D2', 6: '#F28D19' };
+    const week = dows.map((d, i) => ({
+      dow: d, num: 12 + i, cls: i === 3 ? 'on' : '',
+      dot: dots[i] ? (i === 3 ? '#fff' : dots[i]) : 'transparent',
+      label: full[i] + ' ' + (12 + i) + ' de octubre'
+    }));
+    return { week };
+  }
+}
+</script>
+</body>
+</html>
