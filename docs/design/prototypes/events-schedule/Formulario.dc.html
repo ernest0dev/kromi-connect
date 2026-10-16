@@ -135,14 +135,20 @@ textarea.in{height:auto;padding:10px 12px;resize:none;line-height:1.45}
         <div><label class="lb" for="a">Asistentes esperados</label><input id="a" class="in" value="60"></div>
       </div>
       <div style="display: flex; gap: 28px; flex-wrap: wrap">
-        <span class="tgl"><span class="tk"><i></i></span>Tiene patrocinio</span>
         <span class="tgl"><span class="tk on"><i></i></span>Requiere inscripción</span>
       </div>
       <div style="display: grid; grid-template-columns: 120px 1fr; gap: 12px">
         <div><label class="lb" for="c">Cupo</label><input id="c" class="in" value="40"></div>
         <div><label class="lb" for="i">Cómo inscribirse</label><input id="i" class="in" placeholder="Enlace o instrucciones" value="En caja, con la cédula"></div>
       </div>
-      <div class="hint" style="margin-top: -8px">Los patrocinadores y los materiales se agregan desde la ficha, una vez creado el evento.</div>
+      <div class="sec">Patrocinadores · texto libre</div>
+      <label class="lb" for="patrocinadores">Nombres, aportes y detalles (opcional)</label>
+      <textarea id="patrocinadores" class="in" rows="3" maxlength="2000" placeholder="Ej. Proveedor: aporta productos para degustación"></textarea>
+
+      <div class="sec">Materiales · texto libre</div>
+      <label class="lb" for="materiales">Materiales necesarios (opcional)</label>
+      <textarea id="materiales" class="in" rows="4" maxlength="2000" placeholder="Escribe materiales, cantidades y notas en texto libre"></textarea>
+      <div class="hint">Estos datos se guardan en el evento. No crean listas ni reservan artículos del inventario.</div>
     </form>
 
     <footer style="border-top: 1px solid #E6EAF1; background: #F7F9FC; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px">

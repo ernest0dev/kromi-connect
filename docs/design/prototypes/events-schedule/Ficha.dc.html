@@ -90,24 +90,18 @@ button{font-family:inherit;cursor:pointer}
 
       <div style="display: flex; flex-direction: column; gap: 10px">
         <div class="sec">Presupuesto y patrocinio</div>
-        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
           <div class="card"><div class="lbl">Estimado</div><div class="val" style="font-size:18px">USD 300</div></div>
           <div class="card"><div class="lbl">Gasto real</div><div class="val" style="font-size:18px;color:#566274">—</div><div class="mut">Se registra al terminar</div></div>
-          <div class="card"><div class="lbl">Patrocinio</div><div class="val">1 patrocinador</div><div class="mut">[Marca] · en especie</div></div>
         </div>
+        <div class="card"><div class="lbl">Patrocinadores · texto libre</div><div class="val" style="white-space:pre-wrap">[Proveedor] aporta productos para degustación.</div></div>
         <div class="mut">Inscripción: <b style="color:#14202E">no requiere</b> · Asistentes esperados: <b style="color:#14202E">80</b></div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px">
-        <div style="display: flex; align-items: center; justify-content: space-between"><div class="sec">Materiales · 2 de 4 listos</div><span class="mut">Los del inventario no se descuentan</span></div>
-        <div style="display: flex; flex-direction: column; gap: 8px">
-          <sc-for list="{{mats}}" as="m" hint-placeholder-count="4">
-            <div class="card" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px">
-              <div style="min-width: 0"><div class="val">{{m.n}}</div><div class="mut">{{m.q}}<span style="color:#0054AE;font-weight:700">{{m.inv}}</span></div></div>
-              <span class="chip" style="background: {{m.bg}}; color: {{m.fg}}">{{m.s}}</span>
-            </div>
-          </sc-for>
-        </div>
+        <div class="sec">Materiales · texto libre</div>
+        <div class="card"><div class="val" style="white-space:pre-wrap">2 mesas, manteles y material para degustación. Coordinar traslado con Eventos.</div></div>
+        <div class="mut">La aplicación no registra preparación ni descuenta inventario.</div>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px">

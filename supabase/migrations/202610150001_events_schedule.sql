@@ -1,14 +1,14 @@
 -- Programación y planificación de eventos del rol Eventos.
 --
--- PROPUESTA: este archivo NO se ha aplicado en Supabase remoto. Revísalo, aplícalo y verifica
--- con `supabase db pull` antes de considerar disponible el módulo (plan §11, fases 0 y 1).
+-- Migración del módulo de programación de eventos. Aplicar completa desde SQL Editor de Supabase
+-- (o con Supabase CLI) antes de usar las rutas de la aplicación. Después, verificar el esquema.
 --
 -- Diseño: docs/design/plan-eventos-programacion.md y docs/design/prototypes/events-schedule/.
 -- Sigue el patrón del inventario (202610130001): RLS solo de lectura, escritura únicamente por
 -- funciones SECURITY DEFINER con search_path vacío, control de versión y historial inmutable.
 --
 -- Depende de: public.profiles, public.has_permission, public.app_permissions,
--- public.role_permissions, public.inventario_sedes, public.inventario_articulos y public.campanas.
+-- public.role_permissions, public.inventario_sedes y public.campanas.
 --
 -- Decisiones fijadas en esta propuesta:
 --   * Un evento ocurre en una o varias tiendas (evento_sedes) con un único horario.
@@ -17,9 +17,10 @@
 --     toda escritura la ejecutan primero, así que el estado es correcto sin cron.
 --   * Cancelado es una propuesta del plan (D11); puede ocurrir sin fechas.
 --   * Tipo, origen y estado son texto con CHECK (no ENUM) para ampliarlos con una migración.
---   * Moneda: USD o VES, una por evento (D4, por confirmar).
---   * Umbrales de indicadores: 7 días (Incompleto) y 3 días (Materiales pendientes) (D13).
---   * Fuera de esta migración: evento_tareas (fase 5), inscritos, reservas de inventario.
+--   * Moneda: USD para esta entrega.
+--   * Materiales y patrocinadores: texto libre guardado en eventos, sin tablas de listas.
+--   * Umbrales aceptados: 7 días (Incompleto) y 3 días (materiales sin declarar).
+--   * Fuera de esta migración: evento_tareas, inscritos, reservas de inventario.
 
 begin;
 
@@ -42,7 +43,9 @@ create table if not exists public.eventos (
   responsable_id uuid references auth.users(id) on delete set null,
   campana_id uuid references public.campanas(id) on delete set null,
   presupuesto_estimado numeric(14, 2) check (presupuesto_estimado is null or presupuesto_estimado >= 0),
-  moneda text not null default 'USD' check (moneda in ('USD', 'VES')),
+  moneda text not null default 'USD' check (moneda = 'USD'),
+  patrocinadores text check (patrocinadores is null or length(patrocinadores) <= 2000),
+  materiales text check (materiales is null or length(materiales) <= 2000),
   gasto_real numeric(14, 2) check (gasto_real is null or gasto_real >= 0),
   requiere_inscripcion boolean not null default false,
   inscripcion_cupo integer check (inscripcion_cupo is null or inscripcion_cupo >= 1),
@@ -87,34 +90,6 @@ create table if not exists public.evento_sedes (
   primary key (evento_id, sede_id)
 );
 create index if not exists evento_sedes_sede_idx on public.evento_sedes (sede_id, evento_id);
-
-create table if not exists public.evento_patrocinadores (
-  id uuid primary key default gen_random_uuid(),
-  evento_id uuid not null references public.eventos(id) on delete cascade,
-  nombre text not null check (length(trim(nombre)) between 1 and 120),
-  tipo_aporte text not null check (tipo_aporte in ('DINERO', 'ESPECIE', 'OTRO')),
-  -- En la moneda del evento.
-  monto numeric(14, 2) check (monto is null or monto >= 0),
-  detalle text check (detalle is null or length(detalle) <= 200),
-  orden integer not null default 0
-);
-create index if not exists evento_patrocinadores_evento_idx on public.evento_patrocinadores (evento_id);
-
-create table if not exists public.evento_materiales (
-  id uuid primary key default gen_random_uuid(),
-  evento_id uuid not null references public.eventos(id) on delete cascade,
-  material text not null check (length(trim(material)) between 1 and 160),
-  cantidad numeric(12, 2) not null check (cantidad > 0),
-  unidad text not null default 'unidades' check (length(trim(unidad)) between 1 and 30),
-  -- Enlace informativo: no reserva ni descuenta existencias (D9).
-  articulo_id uuid references public.inventario_articulos(id) on delete set null,
-  estado text not null default 'PENDIENTE' check (estado in ('PENDIENTE', 'LISTO')),
-  nota text check (nota is null or length(nota) <= 300),
-  orden integer not null default 0
-);
-create index if not exists evento_materiales_evento_idx on public.evento_materiales (evento_id);
-create index if not exists evento_materiales_articulo_idx
-  on public.evento_materiales (articulo_id) where articulo_id is not null;
 
 -- Historial: una fila por cambio de estado o reprogramación. Solo se agregan filas.
 create table if not exists public.evento_historial (
@@ -184,20 +159,14 @@ on conflict do nothing;
 
 alter table public.eventos enable row level security;
 alter table public.evento_sedes enable row level security;
-alter table public.evento_patrocinadores enable row level security;
-alter table public.evento_materiales enable row level security;
 alter table public.evento_historial enable row level security;
 
 revoke all on public.eventos from anon, authenticated;
 revoke all on public.evento_sedes from anon, authenticated;
-revoke all on public.evento_patrocinadores from anon, authenticated;
-revoke all on public.evento_materiales from anon, authenticated;
 revoke all on public.evento_historial from anon, authenticated;
 
 grant select on public.eventos to authenticated;
 grant select on public.evento_sedes to authenticated;
-grant select on public.evento_patrocinadores to authenticated;
-grant select on public.evento_materiales to authenticated;
 grant select on public.evento_historial to authenticated;
 
 drop policy if exists "app_permissions_read_events" on public.eventos;
@@ -208,16 +177,6 @@ create policy "app_permissions_read_events"
 drop policy if exists "app_permissions_read_event_sedes" on public.evento_sedes;
 create policy "app_permissions_read_event_sedes"
   on public.evento_sedes for select to authenticated
-  using ((select public.has_permission('events.schedule.read')));
-
-drop policy if exists "app_permissions_read_event_sponsors" on public.evento_patrocinadores;
-create policy "app_permissions_read_event_sponsors"
-  on public.evento_patrocinadores for select to authenticated
-  using ((select public.has_permission('events.schedule.read')));
-
-drop policy if exists "app_permissions_read_event_materials" on public.evento_materiales;
-create policy "app_permissions_read_event_materials"
-  on public.evento_materiales for select to authenticated
   using ((select public.has_permission('events.schedule.read')));
 
 drop policy if exists "app_permissions_read_event_history" on public.evento_historial;
@@ -405,6 +364,8 @@ declare
   v_campana uuid;
   v_presupuesto numeric;
   v_moneda text;
+  v_patrocinadores text;
+  v_materiales text;
   v_requiere boolean;
   v_cupo integer;
   v_limite timestamptz;
@@ -433,6 +394,8 @@ begin
     v_campana := nullif(trim(p_datos->>'campana_id'), '')::uuid;
     v_presupuesto := nullif(trim(p_datos->>'presupuesto_estimado'), '')::numeric;
     v_moneda := coalesce(nullif(trim(p_datos->>'moneda'), ''), 'USD');
+    v_patrocinadores := nullif(trim(p_datos->>'patrocinadores'), '');
+    v_materiales := nullif(trim(p_datos->>'materiales'), '');
     v_requiere := coalesce(nullif(trim(p_datos->>'requiere_inscripcion'), '')::boolean, false);
     v_cupo := nullif(trim(p_datos->>'inscripcion_cupo'), '')::integer;
     v_limite := nullif(trim(p_datos->>'inscripcion_limite'), '')::timestamptz;
@@ -478,8 +441,14 @@ begin
     raise exception 'El fin debe ser posterior al inicio.';
   end if;
 
-  if v_moneda not in ('USD', 'VES') then
-    raise exception 'La moneda no es válida.';
+  if v_moneda <> 'USD' then
+    raise exception 'La moneda para esta entrega debe ser USD.';
+  end if;
+  if v_patrocinadores is not null and length(v_patrocinadores) > 2000 then
+    raise exception 'El texto de patrocinadores no puede superar 2000 caracteres.';
+  end if;
+  if v_materiales is not null and length(v_materiales) > 2000 then
+    raise exception 'El texto de materiales no puede superar 2000 caracteres.';
   end if;
   if v_presupuesto is not null then
     if v_presupuesto < 0 or v_presupuesto >= 1000000000000 then
@@ -552,6 +521,7 @@ begin
     'origen', v_origen, 'proveedor_nombre', v_proveedor, 'inicio', v_inicio, 'fin', v_fin,
     'responsable_id', v_responsable, 'campana_id', v_campana,
     'presupuesto_estimado', v_presupuesto, 'moneda', v_moneda,
+    'patrocinadores', v_patrocinadores, 'materiales', v_materiales,
     'requiere_inscripcion', v_requiere, 'inscripcion_cupo', v_cupo,
     'inscripcion_limite', v_limite, 'inscripcion_info', v_info,
     'asistentes_esperados', v_esperados, 'sedes', v_sedes
@@ -590,12 +560,10 @@ $$;
 revoke all on function public.events_assert_ready(uuid, timestamptz, timestamptz, boolean)
   from public, anon, authenticated;
 
--- Indicadores derivados (no se guardan). Umbrales provisionales: 7 y 3 días (D13).
-create or replace function public.events_flags(
-  e public.eventos,
-  p_materiales_total bigint,
-  p_materiales_pendientes bigint
-)
+-- Indicadores derivados. Los umbrales de 7 y 3 días fueron aceptados para esta entrega.
+-- Con materiales en texto libre no se puede medir avance; el indicador solo detecta
+-- que no se declaró ningún material cuando faltan menos de 3 días.
+create or replace function public.events_flags(e public.eventos)
 returns jsonb
 language sql
 stable
@@ -609,20 +577,58 @@ as $$
     'incompleto',
       e.estatus = 'EN_PLANIFICACION' and e.inicio is not null
       and e.inicio > now() and e.inicio < now() + interval '7 days'
-      and (e.responsable_id is null or e.presupuesto_estimado is null or p_materiales_total = 0),
-    'materiales_pendientes',
-      e.estatus in ('EN_PLANIFICACION', 'PROGRAMADO') and p_materiales_pendientes > 0
+      and (e.responsable_id is null or e.presupuesto_estimado is null or nullif(trim(e.materiales), '') is null),
+    'materiales_sin_declarar',
+      e.estatus in ('EN_PLANIFICACION', 'PROGRAMADO') and nullif(trim(e.materiales), '') is null
       and e.inicio is not null and e.inicio > now() and e.inicio < now() + interval '3 days',
     'cierre_pendiente',
       e.estatus = 'TERMINADO' and e.asistentes_reales is null
       and e.gasto_real is null and e.notas_cierre is null
   );
 $$;
-revoke all on function public.events_flags(public.eventos, bigint, bigint) from public, anon, authenticated;
+revoke all on function public.events_flags(public.eventos) from public, anon, authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Lectura
 -- ---------------------------------------------------------------------------
+
+-- Nombres de responsables disponibles para el formulario. profiles solo es legible
+-- por su propio usuario, por eso esta lista se expone detrás del permiso Events.
+create or replace function public.list_event_responsables()
+returns table (user_id uuid, full_name text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.events_require('events.schedule.read');
+  return query
+  select p.user_id, p.full_name
+  from public.profiles p
+  where p.role_code = 'events'
+  order by lower(coalesce(p.full_name, '')), p.user_id;
+end;
+$$;
+revoke all on function public.list_event_responsables() from public, anon;
+grant execute on function public.list_event_responsables() to authenticated;
+
+create or replace function public.list_event_campaigns()
+returns table (id uuid, nombre text)
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.events_require('events.schedule.read');
+  return query
+  select c.id, c.nombre
+  from public.campanas c
+  where c.activo
+  order by lower(c.nombre), c.id;
+end;
+$$;
+revoke all on function public.list_event_campaigns() from public, anon;
+grant execute on function public.list_event_campaigns() to authenticated;
 
 -- Calendario (p_desde/p_hasta: eventos que intersectan el rango) o listado paginado.
 -- Sin rango también devuelve los borradores sin fecha.
@@ -658,8 +664,7 @@ returns table (
   version integer,
   archivado_en timestamptz,
   con_patrocinio boolean,
-  materiales_total bigint,
-  materiales_pendientes bigint,
+  tiene_materiales boolean,
   sedes jsonb,
   hay_cruce boolean,
   indicadores jsonb,
@@ -688,22 +693,18 @@ begin
     e.id, e.nombre, e.tipo, e.tipo_otro, e.origen, e.proveedor_nombre, e.inicio, e.fin, e.estatus,
     e.responsable_id, pr.full_name, e.presupuesto_estimado, e.moneda, e.requiere_inscripcion,
     e.version, e.archivado_en,
-    exists (select 1 from public.evento_patrocinadores sp where sp.evento_id = e.id),
-    m.total, m.pendientes,
+    nullif(trim(e.patrocinadores), '') is not null,
+    nullif(trim(e.materiales), '') is not null,
     coalesce(sd.sedes, '[]'::jsonb),
     (
       e.archivado_en is null
       and e.estatus in ('EN_PLANIFICACION', 'PROGRAMADO', 'EN_CURSO')
       and exists (select 1 from public.events_find_overlaps(e.id, e.inicio, e.fin, sd.ids))
     ),
-    public.events_flags(e, m.total, m.pendientes),
+    public.events_flags(e),
     count(*) over ()
   from public.eventos e
   left join public.profiles pr on pr.user_id = e.responsable_id
-  cross join lateral (
-    select count(*) as total, count(*) filter (where mt.estado = 'PENDIENTE') as pendientes
-    from public.evento_materiales mt where mt.evento_id = e.id
-  ) m
   cross join lateral (
     select jsonb_agg(jsonb_build_object('sede_id', s.id, 'nombre', s.nombre, 'zona', es.zona)
                      order by s.orden, s.nombre) as sedes,
@@ -725,6 +726,8 @@ begin
       or e.nombre ilike v_pattern
       or coalesce(e.proveedor_nombre, '') ilike v_pattern
       or coalesce(e.descripcion, '') ilike v_pattern
+      or coalesce(e.patrocinadores, '') ilike v_pattern
+      or coalesce(e.materiales, '') ilike v_pattern
     )
   order by
     case when not v_desc then e.inicio end asc nulls last,
@@ -776,8 +779,8 @@ returns table (
   modificado_por uuid,
   modificado_por_nombre text,
   sedes jsonb,
-  patrocinadores jsonb,
-  materiales jsonb,
+  patrocinadores text,
+  materiales text,
   cruces jsonb,
   indicadores jsonb
 )
@@ -798,21 +801,8 @@ begin
     e.asistentes_esperados, e.asistentes_reales, e.notas_cierre, e.archivado_en, e.version,
     e.creado_en, e.creado_por, pc.full_name, e.modificado_en, e.modificado_por, pm.full_name,
     coalesce(sd.sedes, '[]'::jsonb),
-    coalesce((
-      select jsonb_agg(jsonb_build_object(
-               'id', sp.id, 'nombre', sp.nombre, 'tipo_aporte', sp.tipo_aporte,
-               'monto', sp.monto, 'detalle', sp.detalle) order by sp.orden, sp.nombre)
-      from public.evento_patrocinadores sp where sp.evento_id = e.id
-    ), '[]'::jsonb),
-    coalesce((
-      select jsonb_agg(jsonb_build_object(
-               'id', mt.id, 'material', mt.material, 'cantidad', mt.cantidad, 'unidad', mt.unidad,
-               'articulo_id', mt.articulo_id, 'articulo_nombre', ia.nombre,
-               'estado', mt.estado, 'nota', mt.nota) order by mt.orden, mt.material)
-      from public.evento_materiales mt
-      left join public.inventario_articulos ia on ia.id = mt.articulo_id
-      where mt.evento_id = e.id
-    ), '[]'::jsonb),
+    e.patrocinadores,
+    e.materiales,
     case
       when e.archivado_en is null and e.estatus in ('EN_PLANIFICACION', 'PROGRAMADO', 'EN_CURSO') then
         coalesce((
@@ -823,11 +813,7 @@ begin
         ), '[]'::jsonb)
       else '[]'::jsonb
     end,
-    public.events_flags(
-      e,
-      (select count(*) from public.evento_materiales mt where mt.evento_id = e.id),
-      (select count(*) from public.evento_materiales mt where mt.evento_id = e.id and mt.estado = 'PENDIENTE')
-    )
+    public.events_flags(e)
   from public.eventos e
   left join public.profiles pr on pr.user_id = e.responsable_id
   left join public.profiles pc on pc.user_id = e.creado_por
@@ -947,14 +933,15 @@ begin
 
   insert into public.eventos (
     nombre, descripcion, tipo, tipo_otro, origen, proveedor_nombre, inicio, fin, responsable_id,
-    campana_id, presupuesto_estimado, moneda, requiere_inscripcion, inscripcion_cupo,
+    campana_id, presupuesto_estimado, moneda, patrocinadores, materiales, requiere_inscripcion, inscripcion_cupo,
     inscripcion_limite, inscripcion_info, asistentes_esperados, creado_por, modificado_por
   )
   values (
     v_n->>'nombre', v_n->>'descripcion', v_n->>'tipo', v_n->>'tipo_otro', v_n->>'origen',
     v_n->>'proveedor_nombre', (v_n->>'inicio')::timestamptz, (v_n->>'fin')::timestamptz,
     coalesce((v_n->>'responsable_id')::uuid, v_actor), (v_n->>'campana_id')::uuid,
-    (v_n->>'presupuesto_estimado')::numeric, v_n->>'moneda', (v_n->>'requiere_inscripcion')::boolean,
+    (v_n->>'presupuesto_estimado')::numeric, v_n->>'moneda', v_n->>'patrocinadores', v_n->>'materiales',
+    (v_n->>'requiere_inscripcion')::boolean,
     (v_n->>'inscripcion_cupo')::integer, (v_n->>'inscripcion_limite')::timestamptz,
     v_n->>'inscripcion_info', (v_n->>'asistentes_esperados')::integer, v_actor, v_actor
   )
@@ -1075,6 +1062,8 @@ begin
       campana_id = (v_n->>'campana_id')::uuid,
       presupuesto_estimado = (v_n->>'presupuesto_estimado')::numeric,
       moneda = v_n->>'moneda',
+      patrocinadores = v_n->>'patrocinadores',
+      materiales = v_n->>'materiales',
       requiere_inscripcion = (v_n->>'requiere_inscripcion')::boolean,
       inscripcion_cupo = (v_n->>'inscripcion_cupo')::integer,
       inscripcion_limite = (v_n->>'inscripcion_limite')::timestamptz,
@@ -1342,130 +1331,6 @@ end;
 $$;
 revoke all on function public.save_event_closure(uuid, integer, integer, numeric, text) from public, anon;
 grant execute on function public.save_event_closure(uuid, integer, integer, numeric, text) to authenticated;
-
--- Reemplaza la lista de patrocinadores: [{nombre, tipo_aporte, monto, detalle}].
-create or replace function public.save_event_sponsors(
-  p_evento_id uuid,
-  p_expected_version integer,
-  p_items jsonb
-)
-returns integer
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_actor uuid := (select auth.uid());
-  v_ev public.eventos;
-  v_version integer;
-begin
-  perform public.events_require('events.schedule.update');
-  perform public.sync_event_statuses();
-
-  if jsonb_typeof(coalesce(p_items, '[]'::jsonb)) <> 'array' or jsonb_array_length(coalesce(p_items, '[]'::jsonb)) > 50 then
-    raise exception 'La lista de patrocinadores no es válida (máximo 50).';
-  end if;
-
-  select e.* into v_ev from public.eventos e where e.id = p_evento_id for update;
-  if not found then
-    raise exception 'El evento no existe.';
-  end if;
-  if p_expected_version is distinct from v_ev.version then
-    raise exception 'CONFLICTO_VERSION';
-  end if;
-  if v_ev.archivado_en is not null or v_ev.estatus in ('TERMINADO', 'CANCELADO') then
-    raise exception 'Este evento ya no admite cambios en sus patrocinadores.';
-  end if;
-
-  delete from public.evento_patrocinadores sp where sp.evento_id = p_evento_id;
-  begin
-    insert into public.evento_patrocinadores (evento_id, nombre, tipo_aporte, monto, detalle, orden)
-    select p_evento_id,
-           nullif(trim(x.item->>'nombre'), ''),
-           coalesce(nullif(trim(x.item->>'tipo_aporte'), ''), 'DINERO'),
-           round(nullif(trim(x.item->>'monto'), '')::numeric, 2),
-           nullif(trim(x.item->>'detalle'), ''),
-           x.ord::integer
-    from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) with ordinality as x(item, ord);
-  exception
-    when not_null_violation or check_violation or invalid_text_representation or numeric_value_out_of_range then
-      raise exception 'Revisa los patrocinadores: nombre obligatorio, tipo de aporte válido y monto positivo.';
-  end;
-
-  update public.eventos e
-  set version = e.version + 1, modificado_en = now(), modificado_por = v_actor
-  where e.id = p_evento_id
-  returning e.version into v_version;
-
-  return v_version;
-end;
-$$;
-revoke all on function public.save_event_sponsors(uuid, integer, jsonb) from public, anon;
-grant execute on function public.save_event_sponsors(uuid, integer, jsonb) to authenticated;
-
--- Reemplaza la lista de materiales: [{material, cantidad, unidad, articulo_id, estado, nota}].
--- El artículo del inventario es solo informativo: no reserva ni descuenta existencias.
-create or replace function public.save_event_materials(
-  p_evento_id uuid,
-  p_expected_version integer,
-  p_items jsonb
-)
-returns integer
-language plpgsql
-security definer
-set search_path = ''
-as $$
-declare
-  v_actor uuid := (select auth.uid());
-  v_ev public.eventos;
-  v_version integer;
-begin
-  perform public.events_require('events.schedule.update');
-  perform public.sync_event_statuses();
-
-  if jsonb_typeof(coalesce(p_items, '[]'::jsonb)) <> 'array' or jsonb_array_length(coalesce(p_items, '[]'::jsonb)) > 100 then
-    raise exception 'La lista de materiales no es válida (máximo 100).';
-  end if;
-
-  select e.* into v_ev from public.eventos e where e.id = p_evento_id for update;
-  if not found then
-    raise exception 'El evento no existe.';
-  end if;
-  if p_expected_version is distinct from v_ev.version then
-    raise exception 'CONFLICTO_VERSION';
-  end if;
-  if v_ev.archivado_en is not null or v_ev.estatus in ('TERMINADO', 'CANCELADO') then
-    raise exception 'Este evento ya no admite cambios en sus materiales.';
-  end if;
-
-  delete from public.evento_materiales mt where mt.evento_id = p_evento_id;
-  begin
-    insert into public.evento_materiales (evento_id, material, cantidad, unidad, articulo_id, estado, nota, orden)
-    select p_evento_id,
-           nullif(trim(x.item->>'material'), ''),
-           nullif(trim(x.item->>'cantidad'), '')::numeric,
-           coalesce(nullif(trim(x.item->>'unidad'), ''), 'unidades'),
-           nullif(trim(x.item->>'articulo_id'), '')::uuid,
-           coalesce(nullif(trim(x.item->>'estado'), ''), 'PENDIENTE'),
-           nullif(trim(x.item->>'nota'), ''),
-           x.ord::integer
-    from jsonb_array_elements(coalesce(p_items, '[]'::jsonb)) with ordinality as x(item, ord);
-  exception
-    when not_null_violation or check_violation or foreign_key_violation
-      or invalid_text_representation or numeric_value_out_of_range then
-      raise exception 'Revisa los materiales: nombre y cantidad positiva obligatorios, estado válido y artículo existente.';
-  end;
-
-  update public.eventos e
-  set version = e.version + 1, modificado_en = now(), modificado_por = v_actor
-  where e.id = p_evento_id
-  returning e.version into v_version;
-
-  return v_version;
-end;
-$$;
-revoke all on function public.save_event_materials(uuid, integer, jsonb) from public, anon;
-grant execute on function public.save_event_materials(uuid, integer, jsonb) to authenticated;
 
 -- Archivo: solo eventos Terminados o Cancelados. No se borra nada.
 create or replace function public.archive_event(p_evento_id uuid, p_expected_version integer)

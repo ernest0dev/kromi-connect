@@ -5,3 +5,4 @@ export * from './modules/posts';
 export * from './modules/thirdParties';
 export * from './modules/customerSupport';
 export * from './modules/inventory';
+export * from './modules/events';

@@ -656,6 +656,84 @@ export interface Database {
         Args: { p_articulo_id: string; p_tipo?: string | null; p_limit?: number; p_offset?: number };
         Returns: InventarioActividadRow[];
       };
+      list_event_responsables: {
+        Args: Record<PropertyKey, never>;
+        Returns: { user_id: string; full_name: string | null }[];
+      };
+      list_event_campaigns: {
+        Args: Record<PropertyKey, never>;
+        Returns: { id: string; nombre: string }[];
+      };
+      list_events: {
+        Args: {
+          p_desde?: string | null; p_hasta?: string | null; p_sede_id?: string | null;
+          p_estatus?: string | null; p_tipo?: string | null; p_origen?: string | null;
+          p_responsable_id?: string | null; p_search?: string | null; p_archivados?: boolean;
+          p_dir?: string; p_limit?: number; p_offset?: number;
+        };
+        Returns: {
+          id: string; nombre: string; tipo: string; tipo_otro: string | null; origen: string;
+          proveedor_nombre: string | null; inicio: string | null; fin: string | null; estatus: string;
+          responsable_id: string | null; responsable_nombre: string | null; presupuesto_estimado: number | null;
+          moneda: string; requiere_inscripcion: boolean; version: number; archivado_en: string | null;
+          con_patrocinio: boolean; tiene_materiales: boolean; sedes: Json; hay_cruce: boolean;
+          indicadores: Json; total_count: number;
+        }[];
+      };
+      get_event: {
+        Args: { p_evento_id: string };
+        Returns: {
+          id: string; nombre: string; descripcion: string | null; tipo: string; tipo_otro: string | null;
+          origen: string; proveedor_nombre: string | null; inicio: string | null; fin: string | null; estatus: string;
+          responsable_id: string | null; responsable_nombre: string | null; campana_id: string | null;
+          presupuesto_estimado: number | null; moneda: string; gasto_real: number | null;
+          requiere_inscripcion: boolean; inscripcion_cupo: number | null; inscripcion_limite: string | null;
+          inscripcion_info: string | null; asistentes_esperados: number | null; asistentes_reales: number | null;
+          notas_cierre: string | null; archivado_en: string | null; version: number; creado_en: string;
+          creado_por: string | null; creado_por_nombre: string | null; modificado_en: string;
+          modificado_por: string | null; modificado_por_nombre: string | null; sedes: Json;
+          patrocinadores: string | null; materiales: string | null; cruces: Json; indicadores: Json;
+        }[];
+      };
+      get_event_history: {
+        Args: { p_evento_id: string; p_limit?: number; p_offset?: number };
+        Returns: {
+          id: string; tipo: string; anterior: Json; nuevo: Json; motivo: string | null;
+          cambiado_por: string | null; cambiado_por_nombre: string | null; cambiado_en: string; total_count: number;
+        }[];
+      };
+      check_event_overlap: {
+        Args: { p_evento_id: string | null; p_inicio: string; p_fin: string; p_sede_ids: string[] };
+        Returns: { evento_id: string; nombre: string; estatus: string; inicio: string; fin: string; sede_id: string; sede_nombre: string }[];
+      };
+      create_event: {
+        Args: { p_datos: Json; p_confirmar_cruce?: boolean };
+        Returns: string;
+      };
+      update_event: {
+        Args: { p_evento_id: string; p_expected_version: number; p_datos: Json; p_motivo?: string | null; p_confirmar_cruce?: boolean };
+        Returns: number;
+      };
+      reschedule_event: {
+        Args: { p_evento_id: string; p_expected_version: number; p_inicio: string; p_fin: string; p_motivo?: string | null; p_confirmar_cruce?: boolean };
+        Returns: number;
+      };
+      transition_event_status: {
+        Args: { p_evento_id: string; p_expected_version: number; p_estatus: string; p_motivo?: string | null; p_confirmar_cruce?: boolean };
+        Returns: number;
+      };
+      save_event_closure: {
+        Args: { p_evento_id: string; p_expected_version: number; p_asistentes_reales: number | null; p_gasto_real: number | null; p_notas_cierre: string | null };
+        Returns: number;
+      };
+      archive_event: {
+        Args: { p_evento_id: string; p_expected_version: number };
+        Returns: number;
+      };
+      restore_event: {
+        Args: { p_evento_id: string; p_expected_version: number };
+        Returns: number;
+      };
       create_inventory_location: {
         Args: { p_sede_id: string; p_nombre: string };
         Returns: string;

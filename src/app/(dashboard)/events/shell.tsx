@@ -1,14 +1,16 @@
 'use client';
 
-import { Package } from 'lucide-react';
+import { CalendarDays, Package } from 'lucide-react';
 import { useRegisterShellSlots } from '../components/ShellSlot';
 import type { NavGroup } from '../components/SocialMediaShell';
 
-const navGroups: NavGroup[] = [
-  { label: 'Eventos', items: [{ href: '/events/inventory', label: 'Inventario', icon: Package }] },
-];
-
-export function EventsLayoutClient({ children }: { children: React.ReactNode }) {
+export function EventsLayoutClient({ children, inventory, schedule }: { children: React.ReactNode; inventory: boolean; schedule: boolean }) {
+  const navGroups: NavGroup[] = [{ label: 'Eventos', items: [
+    ...(schedule ? [
+      { href: '/events/calendar', label: 'Calendario', icon: CalendarDays },
+    ] : []),
+    ...(inventory ? [{ href: '/events/inventory', label: 'Inventario', icon: Package }] : []),
+  ] }];
   useRegisterShellSlots(null, navGroups);
   return <div className="min-h-full">{children}</div>;
 }

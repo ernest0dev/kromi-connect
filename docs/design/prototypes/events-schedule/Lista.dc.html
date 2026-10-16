@@ -114,7 +114,7 @@ tbody tr:hover td{background:#F5F9FF}
             <th scope="col"><button class="sort">Estado</button></th>
             <th scope="col"><button class="sort">Responsable</button></th>
             <th scope="col" style="text-align: right"><button class="sort">Presupuesto</button></th>
-            <th scope="col">Materiales</th>
+            <th scope="col">Materiales declarados</th>
             <th scope="col" style="text-align: right">Acciones</th>
           </tr>
         </thead>
@@ -176,17 +176,17 @@ class Component extends DCLogic {
       PL: ['En planificación', 's-PL'], PR: ['Programado', 's-PR'], CU: ['En curso', 's-CU'], TE: ['Terminado', 's-TE'], CA: ['Cancelado', 's-CA']
     };
     const T = { 'Degustación': 't-deg', 'Impulso': 't-imp', 'Otro': 't-otr' };
-    // nombre, tipo, origen, patrocinio, inscripción, fecha, hora, duración, tiendas, más, estado, aviso, responsable, presupuesto, materiales
+    // nombre, tipo, origen, patrocinio declarado, inscripción, fecha, hora, duración, tiendas, más, estado, aviso, responsable, presupuesto, materiales declarados
     const raw = [
-      ['Degustación de quesos', 'Degustación', 'Proveedor', 1, 0, 'Sáb 3 oct', '10:00–13:00', '3 h', 'Prebo', '', 'TE', 'Cierre pendiente', 'Carla R.', 'USD 180', '4/4'],
-      ['Degustación de carnes premium', 'Degustación', 'Propio', 1, 0, 'Sáb 10 oct', '11:00–15:00', '4 h', 'Prebo', '+ Mañongo', 'TE', '', 'Luis P.', 'USD 650', '6/6'],
-      ['Semana de la panadería', 'Otro', 'Propio', 0, 0, 'Mié 14 oct → Dom 18 oct', '10:00 → 20:00', '5 días', 'Todas las tiendas', '7 tiendas', 'CU', '', 'Carla R.', 'USD 1.200', '9/10'],
-      ['Degustación de chocolates', 'Degustación', 'Proveedor', 1, 0, 'Jue 15 oct', '16:00–19:00', '3 h', 'Guataparo', '', 'CU', '', 'Andrea M.', 'USD 240', '5/5'],
-      ['Impulso de lácteos', 'Impulso', 'Proveedor', 1, 0, 'Sáb 17 oct', '10:00–14:00', '4 h', 'Prebo', '+ Trigal Norte', 'PR', 'Cruce de horario', 'Luis P.', 'USD 300', '2/4'],
-      ['Degustación de panadería', 'Degustación', 'Propio', 0, 1, 'Sáb 17 oct', '12:00–15:00', '3 h', 'Prebo', '', 'PR', 'Cruce de horario', 'Andrea M.', 'USD 150', '3/3'],
-      ['Impulso de limpieza', 'Impulso', 'Proveedor', 1, 0, 'Mié 21 oct', '10:00–13:00', '3 h', 'Trigal Sur', '', 'PR', 'Próximo', 'Carla R.', 'USD 200', '1/3'],
-      ['Degustación de vinos', 'Degustación', 'Proveedor', 1, 1, 'Vie 23 oct', '17:00–20:00', '3 h', 'Castillito', '', 'PR', '', 'Luis P.', 'USD 420', '0/6'],
-      ['Impulso de Halloween', 'Impulso', 'Propio', 0, 0, 'Sáb 24 oct', '11:00–16:00', '5 h', 'San Felipe', '', 'PL', 'Incompleto', 'Andrea M.', '—', '0/5'],
+      ['Degustación de quesos', 'Degustación', 'Proveedor', 1, 0, 'Sáb 3 oct', '10:00–13:00', '3 h', 'Prebo', '', 'TE', 'Cierre pendiente', 'Carla R.', 'USD 180', 'Sí'],
+      ['Degustación de carnes premium', 'Degustación', 'Propio', 1, 0, 'Sáb 10 oct', '11:00–15:00', '4 h', 'Prebo', '+ Mañongo', 'TE', '', 'Luis P.', 'USD 650', 'Sí'],
+      ['Semana de la panadería', 'Otro', 'Propio', 0, 0, 'Mié 14 oct → Dom 18 oct', '10:00 → 20:00', '5 días', 'Todas las tiendas', '7 tiendas', 'CU', '', 'Carla R.', 'USD 1.200', 'Sí'],
+      ['Degustación de chocolates', 'Degustación', 'Proveedor', 1, 0, 'Jue 15 oct', '16:00–19:00', '3 h', 'Guataparo', '', 'CU', '', 'Andrea M.', 'USD 240', 'Sí'],
+      ['Impulso de lácteos', 'Impulso', 'Proveedor', 1, 0, 'Sáb 17 oct', '10:00–14:00', '4 h', 'Prebo', '+ Trigal Norte', 'PR', 'Cruce de horario', 'Luis P.', 'USD 300', 'Sí'],
+      ['Degustación de panadería', 'Degustación', 'Propio', 0, 1, 'Sáb 17 oct', '12:00–15:00', '3 h', 'Prebo', '', 'PR', 'Cruce de horario', 'Andrea M.', 'USD 150', 'Sí'],
+      ['Impulso de limpieza', 'Impulso', 'Proveedor', 1, 0, 'Mié 21 oct', '10:00–13:00', '3 h', 'Trigal Sur', '', 'PR', 'Próximo', 'Carla R.', 'USD 200', 'Sí'],
+      ['Degustación de vinos', 'Degustación', 'Proveedor', 1, 1, 'Vie 23 oct', '17:00–20:00', '3 h', 'Castillito', '', 'PR', '', 'Luis P.', 'USD 420', 'Sí'],
+      ['Impulso de Halloween', 'Impulso', 'Propio', 0, 0, 'Sáb 24 oct', '11:00–16:00', '5 h', 'San Felipe', '', 'PL', 'Incompleto', 'Andrea M.', '—', '—'],
       ['Impulso de bebidas', 'Impulso', 'Proveedor', 0, 0, 'Lun 19 oct', '15:00–18:00', '3 h', 'Trigal Sur', '', 'CA', '', 'Carla R.', 'USD 160', '—']
     ];
     const rows = raw.map(r => ({
