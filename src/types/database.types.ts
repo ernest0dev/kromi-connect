@@ -658,7 +658,7 @@ export interface Database {
       };
       list_event_responsables: {
         Args: Record<PropertyKey, never>;
-        Returns: { user_id: string; full_name: string | null }[];
+        Returns: { user_id: string; full_name: string | null; email: string | null }[];
       };
       list_event_campaigns: {
         Args: Record<PropertyKey, never>;

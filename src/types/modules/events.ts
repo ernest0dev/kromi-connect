@@ -32,5 +32,5 @@ export interface EventoHistorial {
 
 export interface EventoPermisos { create: boolean; update: boolean; status: boolean; archive: boolean }
 export interface EventoSedeCatalogo { id: string; codigo: string; nombre: string; orden: number }
-export interface EventoResponsable { user_id: string; full_name: string | null }
+export interface EventoResponsable { user_id: string; full_name: string | null; email: string | null }
 
