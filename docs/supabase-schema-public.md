@@ -1,56 +1,3 @@
-## Programación de Eventos (`202610150001_events_schedule.sql`)
-
-> Esta sección describe los objetos de la migración local. La captura y el esquema siguientes se generaron antes de incorporar Programación, por lo que no son una introspección actual del proyecto remoto. El usuario reportó aplicada la migración; regenerar este documento y `supabase-schema-public.png` después de conciliar el proyecto mediante `supabase db pull`.
-
-### Table `eventos`
-
-| Name | Type | Constraints / use |
-|---|---|---|
-| `id` | `uuid` | Primary key |
-| `nombre` | `text` | Required, 1–160 chars |
-| `descripcion` | `text` | Nullable, max 2000 |
-| `tipo`, `tipo_otro` | `text` | `DEGUSTACION`, `IMPULSO`, `OTRO`; detalle solo con `OTRO` |
-| `origen`, `proveedor_nombre` | `text` | `PROPIO` o `PROVEEDOR`; nombre requerido para proveedor |
-| `inicio`, `fin` | `timestamptz` | Nullable en planificación; fin posterior a inicio |
-| `estatus` | `text` | Planificación, programado, en curso, terminado o cancelado |
-| `responsable_id` | `uuid` | Nullable, referencia a `auth.users` |
-| `campana_id` | `uuid` | Nullable, referencia a `campanas` |
-| `presupuesto_estimado`, `gasto_real` | `numeric(14,2)` | Nullable, no negativos; USD |
-| `moneda` | `text` | Requerido, default y check `USD` |
-| `patrocinadores`, `materiales` | `text` | Nullable, campos libres, max 2000 |
-| `requiere_inscripcion` | `boolean` | Requerido, default false |
-| `inscripcion_cupo` | `integer` | Nullable, mínimo 1 |
-| `inscripcion_limite` | `timestamptz` | Nullable |
-| `inscripcion_info` | `text` | Nullable, máximo 500 |
-| `asistentes_esperados`, `asistentes_reales` | `integer` | Nullable, no negativos |
-| `notas_cierre` | `text` | Nullable, máximo 2000 |
-| `archivado_en` | `timestamptz` | Nullable, solo si terminado o cancelado |
-| `archivado_por`, `creado_por`, `modificado_por` | `uuid` | Nullable, referencias a `auth.users` |
-| `version` | `int4` | Requerido, default 1 |
-| `creado_en`, `modificado_en` | `timestamptz` | Requeridos, default `now()` |
-
-### Table `evento_sedes`
-
-| Name | Type | Constraints / use |
-|---|---|---|
-| `evento_id` | `uuid` | Parte de PK compuesta; FK a `eventos` con cascade delete |
-| `sede_id` | `uuid` | Parte de PK compuesta; FK a `inventario_sedes` |
-| `zona` | `text` | Nullable, texto libre por sede, máximo 80 |
-
-### Table `evento_historial`
-
-| Name | Type | Constraints / use |
-|---|---|---|
-| `id` | `uuid` | Primary key |
-| `evento_id` | `uuid` | FK a `eventos` con cascade delete |
-| `tipo` | `text` | `ESTATUS` o `REPROGRAMACION` |
-| `anterior`, `nuevo` | `jsonb` | Valores anterior y nuevo |
-| `motivo` | `text` | Nullable, máximo 300 |
-| `cambiado_por` | `uuid` | Nullable; `NULL` identifica cambio automático del sistema |
-| `cambiado_en` | `timestamptz` | Requerido, default `now()` |
-
-Las tres tablas tienen RLS y policy de lectura que requiere `events.schedule.read`; las escrituras usan RPC protegidas. La definición de RPC, grants y políticas debe validarse contra Supabase remoto; consultar [`supabase-db-migration.md` §16](supabase-db-migration.md#16-programación-de-eventos-202610150001).
-
 ## Table `campanas`
 
 ### Columns
@@ -450,6 +397,81 @@ Las tres tablas tienen RLS y policy de lectura que requiere `events.schedule.rea
 | `saldo_destino`         | `numeric`     | Nullable    |
 | `corrige_movimiento_id` | `uuid`        | Nullable    |
 
+## Table `inventory_import_batches`
+
+### Columns
+
+| Name            | Type          | Constraints |
+| --------------- | ------------- | ----------- |
+| `batch_key`     | `text`        | Primary     |
+| `source_name`   | `text`        |             |
+| `imported_at`   | `timestamptz` |             |
+| `imported_rows` | `int4`        |             |
+| `source_rows`   | `int4`        |             |
+
+## Table `eventos`
+
+### Columns
+
+| Name                   | Type          | Constraints |
+| ---------------------- | ------------- | ----------- |
+| `id`                   | `uuid`        | Primary     |
+| `nombre`               | `text`        |             |
+| `descripcion`          | `text`        | Nullable    |
+| `tipo`                 | `text`        |             |
+| `tipo_otro`            | `text`        | Nullable    |
+| `origen`               | `text`        |             |
+| `proveedor_nombre`     | `text`        | Nullable    |
+| `inicio`               | `timestamptz` | Nullable    |
+| `fin`                  | `timestamptz` | Nullable    |
+| `estatus`              | `text`        |             |
+| `responsable_id`       | `uuid`        | Nullable    |
+| `campana_id`           | `uuid`        | Nullable    |
+| `presupuesto_estimado` | `numeric`     | Nullable    |
+| `moneda`               | `text`        |             |
+| `patrocinadores`       | `text`        | Nullable    |
+| `materiales`           | `text`        | Nullable    |
+| `gasto_real`           | `numeric`     | Nullable    |
+| `requiere_inscripcion` | `bool`        |             |
+| `inscripcion_cupo`     | `int4`        | Nullable    |
+| `inscripcion_limite`   | `timestamptz` | Nullable    |
+| `inscripcion_info`     | `text`        | Nullable    |
+| `asistentes_esperados` | `int4`        | Nullable    |
+| `asistentes_reales`    | `int4`        | Nullable    |
+| `notas_cierre`         | `text`        | Nullable    |
+| `archivado_en`         | `timestamptz` | Nullable    |
+| `archivado_por`        | `uuid`        | Nullable    |
+| `version`              | `int4`        |             |
+| `creado_en`            | `timestamptz` |             |
+| `creado_por`           | `uuid`        | Nullable    |
+| `modificado_en`        | `timestamptz` |             |
+| `modificado_por`       | `uuid`        | Nullable    |
+
+## Table `evento_sedes`
+
+### Columns
+
+| Name        | Type   | Constraints |
+| ----------- | ------ | ----------- |
+| `evento_id` | `uuid` | Primary     |
+| `sede_id`   | `uuid` | Primary     |
+| `zona`      | `text` | Nullable    |
+
+## Table `evento_historial`
+
+### Columns
+
+| Name           | Type          | Constraints |
+| -------------- | ------------- | ----------- |
+| `id`           | `uuid`        | Primary     |
+| `evento_id`    | `uuid`        |             |
+| `tipo`         | `text`        |             |
+| `anterior`     | `jsonb`       |             |
+| `nuevo`        | `jsonb`       |             |
+| `motivo`       | `text`        | Nullable    |
+| `cambiado_por` | `uuid`        | Nullable    |
+| `cambiado_en`  | `timestamptz` |             |
+
 ## Custom Types / Enums
 
 ### `formato_enum`
@@ -600,3 +622,21 @@ Las tres tablas tienen RLS y policy de lectura que requiere `events.schedule.rea
 | Policy                                     | Command | Roles         | Action     | USING                                                                       | WITH CHECK |
 | ------------------------------------------ | ------- | ------------- | ---------- | --------------------------------------------------------------------------- | ---------- |
 | `app_permissions_read_inventory_movements` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.inventory.read'::text) AS has_permission)` | —          |
+
+### `eventos`
+
+| Policy                        | Command | Roles         | Action     | USING                                                                      | WITH CHECK |
+| ----------------------------- | ------- | ------------- | ---------- | -------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_events` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.schedule.read'::text) AS has_permission)` | —          |
+
+### `evento_sedes`
+
+| Policy                             | Command | Roles         | Action     | USING                                                                      | WITH CHECK |
+| ---------------------------------- | ------- | ------------- | ---------- | -------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_event_sedes` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.schedule.read'::text) AS has_permission)` | —          |
+
+### `evento_historial`
+
+| Policy                               | Command | Roles         | Action     | USING                                                                      | WITH CHECK |
+| ------------------------------------ | ------- | ------------- | ---------- | -------------------------------------------------------------------------- | ---------- |
+| `app_permissions_read_event_history` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.schedule.read'::text) AS has_permission)` | —          |
