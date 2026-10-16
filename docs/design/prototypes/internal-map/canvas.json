@@ -1,0 +1,46 @@
+{
+  "v": 3,
+  "title": "Interno · Mapa de tiendas",
+  "launch": {
+    "view": "canvas"
+  },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": {
+      "x": 0,
+      "y": 0,
+      "w": 1440,
+      "h": 860,
+      "title": "1 · Mapa de tiendas (escritorio)"
+    },
+    "Movil.dc.html": {
+      "x": 1520,
+      "y": 0,
+      "w": 390,
+      "h": 1500,
+      "title": "1b · Mapa en móvil"
+    },
+    "Formulario.dc.html": {
+      "x": 0,
+      "y": 980,
+      "w": 1440,
+      "h": 980,
+      "title": "2 · Nuevo pendiente (impresión)"
+    },
+    "Estados.dc.html": {
+      "x": 0,
+      "y": 2080,
+      "w": 1440,
+      "h": 760,
+      "title": "3 · Estados de la interfaz"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "Movil.dc.html",
+    "Formulario.dc.html",
+    "Estados.dc.html"
+  ],
+  "notes": {},
+  "designSystems": []
+}

@@ -2,7 +2,7 @@
 
 **Estado (2026-10-15):** especificación en borrador, actualizada con las decisiones del equipo de esa noche. No hay código, migración ni permisos para este perfil. Hoy el rol `internal` existe en autenticación, no tiene permisos de negocio y quien lo recibe termina en `/access-pending`. El equipo decidió **omitir la entrevista** con el rol por tener clara la necesidad.
 **Alcance:** rol `internal` ("Interno"), una sola persona usuaria, con una vista principal en forma de **mapa estático de Valencia Norte, Naguanagua y San Diego** donde cada tienda muestra los pendientes de la persona.
-**Diseño de UI:** todavía no existe lienzo ni maquetas. §9 describe las vistas propuestas.
+**Diseño de UI:** cuatro maquetas en [`prototypes/internal-map/`](./prototypes/internal-map) (mapa de escritorio y móvil, formulario y estados), hechas con las coordenadas reales de §5.2 y datos de ejemplo; §9 las mapea a las vistas.
 **Documentos relacionados:** [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`plan-rol-design.md`](./plan-rol-design.md), [`plan-eventos-programacion.md`](./plan-eventos-programacion.md) y [`plan-inventario-eventos.md`](./plan-inventario-eventos.md) (mismo patrón de acceso, RPC y catálogo de tiendas).
 
 ## 1. Resultado esperado
@@ -223,7 +223,22 @@ Errores con código estable, como en Eventos: `CONFLICTO_VERSION`, `MOTIVO_REQUE
 | Archivo | `/internal/map/archive` | Entregados y cancelados archivados, con restauración. |
 | Estados de la interfaz | Todas | Vacío, sin resultados, error con reintento, carga, conflicto, mapa sin fondo y móvil. |
 
-La paleta y el lenguaje visual son los de la marca ya aplicados en `globals.css`. Falta definir el diseño; el siguiente paso natural es un lienzo de maquetas como los de Eventos.
+La paleta y el lenguaje visual son los de la marca ya aplicados en `globals.css`.
+
+**Mapa de maquetas** (`docs/design/prototypes/internal-map/`, un archivo por pantalla y `canvas.json` con su posición). A diferencia de las demás carpetas de prototipos, estas son **autónomas**: no usan `support.js` ni etiquetas `<x-dc>`, así que se abren directo en el navegador y los marcadores son interactivos. Los datos (pendientes y fechas) son de ejemplo; las coordenadas y el cálculo de posición son los reales de §5.
+
+| Maqueta | Vista |
+|---|---|
+| `Main.dc.html` | Mapa de escritorio: resumen, marcadores por urgencia, pie de San Felipe y panel de la tienda elegida |
+| `Movil.dc.html` | Mapa en móvil con panel inferior |
+| `Formulario.dc.html` | Nuevo pendiente de impresión, con varias tiendas e instrucciones para Design; "Guardar y solicitar a Design" aparece deshabilitado hasta la fase 3b |
+| `Estados.dc.html` | Sin pendientes, fondo no disponible, error, conflicto de edición y tiendas sin ubicación |
+
+Lo que las maquetas aportan al diseño:
+
+- El punto del marcador es la coordenada exacta de la tienda; el nombre flota al lado (a la izquierda o derecha según la tienda) para no tapar a las vecinas. Con las coordenadas actuales ningún marcador se superpone, tampoco en móvil.
+- El color del marcador da la urgencia, y el signo "!" distingue las tiendas con vencidos sin depender solo del color. El panel repite la urgencia con texto.
+- Falta definir con el equipo el fondo real del mapa (D5) y el tamaño táctil en móvil: los marcadores miden 40 px, algo menos que los 44 px recomendados, para no tapar a las tiendas más cercanas.
 
 ## 10. Relación con otros módulos
 
