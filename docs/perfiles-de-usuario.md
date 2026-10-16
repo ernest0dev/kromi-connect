@@ -9,7 +9,7 @@ Este documento separa el perfil funcional de los permisos efectivos. Los perfile
 | Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
 | Diseño / Diseñador | `design` | Perfil operativo: cola global, ficha de trabajo, carga de entregables en la app e historial. Pendiente de verificar en producción. |
 | Eventos | `events` | Dos módulos. **Inventario** compartido por sede en `/events/inventory` (implementado; plan en `design/plan-inventario-eventos.md`). **Programación de eventos** en `/events/calendar`, con sub vistas `/events/calendar/list` y `/events/calendar/archive` (calendario mensual/semanal, ficha, alta/edición, estados, cierre y archivo). El usuario reportó aplicada `202610150001_events_schedule.sql`; faltan `db pull` y verificación de permisos/flujos en remoto. Solo este rol ve y gestiona eventos. |
-| Interno | `internal` | Rol existente. Perfil en **borrador** (2026-10-15): pendientes de impresiones, insumos y necesidades por tienda sobre un mapa de Valencia. Sin código, migración ni permisos; hoy el rol termina en `/access-pending`. Plan en `design/plan-rol-interno.md`. |
+| Interno | `internal` | Rol existente. Perfil en **borrador** (2026-10-15): una persona, pendientes de impresiones, insumos y necesidades por tienda sobre un mapa estático de Valencia. Sin código, migración ni permisos; hoy el rol termina en `/access-pending`. Plan en `design/plan-rol-interno.md`. |
 | Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
 | Gerencia | `management` | Rol existente; no tiene vista de aprobación de publicaciones. Social Media registra el resultado externo. |
 
@@ -97,23 +97,24 @@ Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
 
 ## Interno (borrador)
 
-**Estado:** especificación en borrador, sin implementar. Parte de un pedido del equipo del 2026-10-15; no hay todavía entrevista documentada con quien ocupa el rol. Detalle, modelo de datos y decisiones por confirmar en [`design/plan-rol-interno.md`](design/plan-rol-interno.md).
+**Estado:** especificación en borrador, sin implementar. Parte de pedidos y decisiones del equipo del 2026-10-15; la entrevista con el rol se omitió por decisión del equipo. Detalle, modelo de datos y decisiones en [`design/plan-rol-interno.md`](design/plan-rol-interno.md).
 
-### Qué se pidió
+### Qué se decidió
 
-- Se encarga sobre todo de **solicitar impresiones** y de tener **asignados pendientes** de impresiones, insumos y necesidades de cada tienda.
-- Su interfaz principal es un **mapa de Valencia, Carabobo** con las sucursales; cada una muestra los pendientes del usuario. No usa calendario.
+- Lo usa **una sola persona**. Crea sus pendientes de impresiones, insumos y necesidades por tienda y se los asigna; por ahora no recibe solicitudes de otros.
+- Su interfaz principal es un **mapa estático** de Valencia Norte, Naguanagua y San Diego, minimalista, con las tiendas de Valencia y sus pendientes. San Felipe va como icono al pie. No usa calendario.
+- Las **impresiones se solicitan a Design**, como hace Social Media, con formatos y medidas libres en un campo de instrucciones.
 
 ### Propuesta (por confirmar)
 
-- Un pendiente pertenece a una tienda, tiene tipo (`IMPRESION`, `INSUMO`, `NECESIDAD`), estado (`PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`) y fecha requerida opcional.
-- Vistas: mapa con panel por tienda, listado, archivo. Cada persona ve solo sus pendientes.
-- Permisos `internal.store-tasks.*`, solo para el rol `internal`.
+- Un pendiente pertenece a una tienda y tiene tipo (`IMPRESION`, `INSUMO`, `NECESIDAD`), estado (`PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`) y fecha requerida opcional.
+- Vistas: mapa con panel por tienda, listado, archivo. Permisos `internal.store-tasks.*`, solo para el rol `internal`.
+- La entrega se divide en dos: primero el mapa y los pendientes (fase 3a) y después el envío de impresiones a Design (fase 3b), porque la cola de Design hoy solo lee `publicaciones`.
 
-### Bloqueos y dudas abiertas
+### Pendiente
 
-- Las tiendas no tienen coordenadas en la base; deben aportarlas el equipo.
-- Falta definir quién crea y asigna pendientes, qué significa "solicitar impresiones" (proveedor externo, Diseño o pedidos de las tiendas) y si el rol lo usan varias personas.
+- Cómo llega la solicitud de impresión a Design (reutilizar `publicaciones`, solicitud propia o solo texto y enlace).
+- Verificar las coordenadas de las siete tiendas, tomadas de los enlaces de Google Maps del equipo, y elegir el fondo del mapa.
 
 ## Perfiles por definir
 
