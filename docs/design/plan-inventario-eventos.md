@@ -64,7 +64,7 @@ Los demás roles no reciben concesiones. RLS solo permite SELECT a quien tenga `
 | Acciones | `src/app/actions/inventory/inventory.ts` |
 | Rutas | `src/app/(dashboard)/events/{layout,shell,page}.tsx`, `events/inventory/{page,InventoryView}.tsx` |
 | Componentes | `events/inventory/components/{InventoryTable,InventoryFilters,ArticleForm,MovementForm,ActivityPanel,ui}.tsx` |
-| Redirección por rol | `src/app/actions/auth.ts`, `login/page.tsx`, `access-pending/page.tsx` (`events` → `/events/inventory`) |
+| Redirección por rol | `src/app/actions/auth.ts`, `login/page.tsx`, `access-pending/page.tsx` (`events` → `/events`; `/events` prioriza `/events/calendar` cuando hay `events.schedule.read` y usa `/events/inventory` si solo tiene permiso de inventario) |
 
 ## 5. Mapa de maquetas
 

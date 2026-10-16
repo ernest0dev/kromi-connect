@@ -1,6 +1,6 @@
 # Perfiles de usuario
 
-Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Estado revisado contra el repositorio al 2026-10-12; no implica consulta directa al proyecto remoto. El despliegue de las migraciones `202610120001` y `202610120002` está pendiente de verificar (ver §13 y §14 de [`supabase-db-migration.md`](supabase-db-migration.md)).
+Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Revisado contra el repositorio al 2026-10-15; los estados de despliegue se registran según reportes del usuario y no implican consulta directa al proyecto remoto. Para las migraciones de Design ver §13 y §14 de [`supabase-db-migration.md`](supabase-db-migration.md).
 
 ## Estado de perfiles
 
@@ -8,7 +8,7 @@ Este documento separa el perfil funcional de los permisos efectivos. Los perfile
 |---|---|---|
 | Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
 | Diseño / Diseñador | `design` | Perfil operativo: cola global, ficha de trabajo, carga de entregables en la app e historial. Pendiente de verificar en producción. |
-| Eventos | `events` | Dos módulos. **Inventario** compartido por sede en `/events/inventory` (implementado; plan en `design/plan-inventario-eventos.md`). **Programación de eventos** en `/events/calendar`, con sub vistas `/events/calendar/list` y `/events/calendar/archive` (implementación local: calendario mensual/semanal, ficha, alta/edición, estados, cierre y archivo; requiere aplicar `202610150001_events_schedule.sql` en Supabase). Solo este rol ve y gestiona eventos. |
+| Eventos | `events` | Dos módulos. **Inventario** compartido por sede en `/events/inventory` (implementado; plan en `design/plan-inventario-eventos.md`). **Programación de eventos** en `/events/calendar`, con sub vistas `/events/calendar/list` y `/events/calendar/archive` (calendario mensual/semanal, ficha, alta/edición, estados, cierre y archivo). El usuario reportó aplicada `202610150001_events_schedule.sql`; faltan `db pull` y verificación de permisos/flujos en remoto. Solo este rol ve y gestiona eventos. |
 | Interno | `internal` | Rol existente; perfil funcional pendiente. |
 | Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
 | Gerencia | `management` | Rol existente; no tiene vista de aprobación de publicaciones. Social Media registra el resultado externo. |

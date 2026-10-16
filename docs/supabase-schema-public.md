@@ -1,3 +1,56 @@
+## Programación de Eventos (`202610150001_events_schedule.sql`)
+
+> Esta sección describe los objetos de la migración local. La captura y el esquema siguientes se generaron antes de incorporar Programación, por lo que no son una introspección actual del proyecto remoto. El usuario reportó aplicada la migración; regenerar este documento y `supabase-schema-public.png` después de conciliar el proyecto mediante `supabase db pull`.
+
+### Table `eventos`
+
+| Name | Type | Constraints / use |
+|---|---|---|
+| `id` | `uuid` | Primary key |
+| `nombre` | `text` | Required, 1–160 chars |
+| `descripcion` | `text` | Nullable, max 2000 |
+| `tipo`, `tipo_otro` | `text` | `DEGUSTACION`, `IMPULSO`, `OTRO`; detalle solo con `OTRO` |
+| `origen`, `proveedor_nombre` | `text` | `PROPIO` o `PROVEEDOR`; nombre requerido para proveedor |
+| `inicio`, `fin` | `timestamptz` | Nullable en planificación; fin posterior a inicio |
+| `estatus` | `text` | Planificación, programado, en curso, terminado o cancelado |
+| `responsable_id` | `uuid` | Nullable, referencia a `auth.users` |
+| `campana_id` | `uuid` | Nullable, referencia a `campanas` |
+| `presupuesto_estimado`, `gasto_real` | `numeric(14,2)` | Nullable, no negativos; USD |
+| `moneda` | `text` | Requerido, default y check `USD` |
+| `patrocinadores`, `materiales` | `text` | Nullable, campos libres, max 2000 |
+| `requiere_inscripcion` | `boolean` | Requerido, default false |
+| `inscripcion_cupo` | `integer` | Nullable, mínimo 1 |
+| `inscripcion_limite` | `timestamptz` | Nullable |
+| `inscripcion_info` | `text` | Nullable, máximo 500 |
+| `asistentes_esperados`, `asistentes_reales` | `integer` | Nullable, no negativos |
+| `notas_cierre` | `text` | Nullable, máximo 2000 |
+| `archivado_en` | `timestamptz` | Nullable, solo si terminado o cancelado |
+| `archivado_por`, `creado_por`, `modificado_por` | `uuid` | Nullable, referencias a `auth.users` |
+| `version` | `int4` | Requerido, default 1 |
+| `creado_en`, `modificado_en` | `timestamptz` | Requeridos, default `now()` |
+
+### Table `evento_sedes`
+
+| Name | Type | Constraints / use |
+|---|---|---|
+| `evento_id` | `uuid` | Parte de PK compuesta; FK a `eventos` con cascade delete |
+| `sede_id` | `uuid` | Parte de PK compuesta; FK a `inventario_sedes` |
+| `zona` | `text` | Nullable, texto libre por sede, máximo 80 |
+
+### Table `evento_historial`
+
+| Name | Type | Constraints / use |
+|---|---|---|
+| `id` | `uuid` | Primary key |
+| `evento_id` | `uuid` | FK a `eventos` con cascade delete |
+| `tipo` | `text` | `ESTATUS` o `REPROGRAMACION` |
+| `anterior`, `nuevo` | `jsonb` | Valores anterior y nuevo |
+| `motivo` | `text` | Nullable, máximo 300 |
+| `cambiado_por` | `uuid` | Nullable; `NULL` identifica cambio automático del sistema |
+| `cambiado_en` | `timestamptz` | Requerido, default `now()` |
+
+Las tres tablas tienen RLS y policy de lectura que requiere `events.schedule.read`; las escrituras usan RPC protegidas. La definición de RPC, grants y políticas debe validarse contra Supabase remoto; consultar [`supabase-db-migration.md` §16](supabase-db-migration.md#16-programación-de-eventos-202610150001).
+
 ## Table `campanas`
 
 ### Columns

@@ -1,8 +1,8 @@
-# Kromi Connect — Informe Técnico y SRS (Fase 1: Perfil Social Media Manager)
+# Kromi Connect — Informe Técnico y SRS
 
 > Documento interno de seguimiento operativo de desarrollo. No apto para distribución externa ni comercial.
 > Stack objetivo: Next.js (App Router) + Supabase/PostgreSQL + Server Actions.
-> **Estado del documento:** actualización de repositorio al 2026-10-12. Secciones 1-5 conservan el alcance funcional; el anexo de estado actual más abajo supersede afirmaciones anteriores sobre Grid, Brief, cola Design, transiciones y migraciones. No se consultó la instancia Supabase remota en esta actualización.
+> **Estado del documento:** alcance original de Social Media más actualizaciones de implementación al 2026-10-15. Las secciones históricas de Social Media mantienen sus fechas y advertencias. Se añade §8 para Eventos; el usuario reportó aplicada la migración de programación, pero este repositorio no consultó Supabase remoto.
 
 ## Estado actual del repositorio (2026-10-12)
 
@@ -375,7 +375,7 @@ Los códigos persistidos son estables y usan inglés; los nombres visibles está
 |---|---|---|
 | `pending` | Acceso pendiente | Sin vistas de negocio |
 | `social-media` | Social Media | Grid, campañas y efemérides según permisos concedidos |
-| `events` | Eventos | Inventario: `events.inventory.read`, `.create`, `.update`, `.move`, `.locations.create` (migraciones `202610130001` y `202610130002`). Programación: `events.schedule.read`, `.create`, `.update`, `.status.update`, `.archive` (cliente implementado localmente; requiere aplicar `202610150001_events_schedule.sql`); ver `docs/design/plan-eventos-programacion.md` |
+| `events` | Eventos | Inventario: `events.inventory.read`, `.create`, `.update`, `.move`, `.locations.create` (migraciones `202610130001` y `202610130002`). Programación: `events.schedule.read`, `.create`, `.update`, `.status.update`, `.archive` (implementación local; el usuario reportó aplicada `202610150001_events_schedule.sql`; falta verificación remota); ver §8 y `docs/design/plan-eventos-programacion.md` |
 | `design` | Diseño | Cola y ficha de publicaciones, carga de entregables, historial y transiciones de inicio/entrega |
 | `internal` | Interno | Sin permisos de negocio asignados |
 | `customer-support` | Atención al cliente | Sin permisos de negocio asignados |
@@ -392,6 +392,7 @@ El rol `admin` se limita al control de acceso (`can_manage_access()`); no equiva
 - `design.posts.{read,start,deliver}` para la cola y los eventos de inicio y entrega; `design.posts.upload` (migración `202610120001`) para cargar a `Entregables`.
 - `social-media.campaigns.{read,create,update,status.update,archive,evaluation.create}` para campañas.
 - `social-media.efemerides.{read,create,update,delete}` para efemérides.
+- `events.schedule.{read,create,update,status.update,archive}` para calendario, operaciones y archivo de Eventos; asignados al rol `events` por `202610150001_events_schedule.sql`.
 
 `customer-support` e `internal` no reciben concesiones de negocio en esta implementación. `design` sí tiene los permisos enumerados arriba; `management` no interviene en aprobaciones dentro de la app. La interfaz puede ocultar navegación sin permiso, pero servidor y RPC vuelven a validar el acceso.
 
@@ -422,3 +423,30 @@ El usuario reportó como ejecutadas `202610100001_publication_workflow_archive.s
 Las migraciones de octubre incorporan columnas de Archivo/Drive/producción, Brief, historial/comentarios, permisos, policies y RPC de flujo. El detalle se registra en [`supabase-db-migration.md`](supabase-db-migration.md) y en `docs/design/modales-publicacion.md`. La captura y el esquema Markdown `supabase-schema-public` fueron actualizados por el usuario; estas migraciones no alteran `auth`, por lo que `supabase-schema-auth` no requiere cambio por este flujo.
 
 La ejecución de una migración no sustituye pruebas con usuarios reales por rol ni verifica la configuración de `CRON_SECRET`, credenciales de Drive y cron del despliegue. La purga programada vive en `/api/cron/purge-publicaciones` y requiere `CRON_SECRET`.
+
+## 8. Programación de eventos (rol Eventos)
+
+La programación es el segundo módulo del rol `events`, junto con Inventario. La especificación funcional y el mapeo de código están en [`docs/design/plan-eventos-programacion.md`](design/plan-eventos-programacion.md); esta sección resume su contrato implementado.
+
+### 8.1 Rutas y acceso
+
+- `/events/calendar`: calendario mensual y semanal (`?vista=semana`).
+- `/events/calendar/list`: sub vista de listado con búsqueda, filtros por tienda/estado/tipo/origen y paginación.
+- `/events/calendar/archive`: sub vista de archivados y restauración.
+- `/events/inventory`: módulo separado. El menú de Eventos muestra Calendario e Inventario según permisos. `/events/list` y `/events/archive` redirigen a las sub vistas nuevas y preservan la query string.
+
+El layout admite usuarios que tengan programación o inventario. Cada página, Server Action y RPC vuelve a comprobar permisos; la navegación oculta los módulos no autorizados. Solo el rol `events` recibe los permisos de programación en esta entrega.
+
+### 8.2 Datos y reglas
+
+La migración `202610150001_events_schedule.sql` crea `eventos`, `evento_sedes` y `evento_historial`. Un evento puede abarcar varias tiendas con el mismo horario; `inicio` y `fin` son `timestamptz` y la UI usa `America/Caracas`. Materiales y patrocinadores se guardan como texto libre (hasta 2000 caracteres) en `eventos`; la moneda es USD. Inscritos, tareas, reservas de inventario y catálogos separados de materiales/patrocinadores no forman parte de esta entrega.
+
+Los estados son `EN_PLANIFICACION`, `PROGRAMADO`, `EN_CURSO`, `TERMINADO` y `CANCELADO`. Las RPC de listado, ficha/historial y mutación llaman a `sync_event_statuses()` antes de operar: al llegar la hora de inicio o fin, el estado avanza y se registra como cambio del sistema en el historial. Los catálogos y la consulta de cruces no sincronizan estados; no hay cron específico de Eventos. Los cambios manuales y reprogramaciones usan control de versión; los cruces entre eventos de tiendas/horarios coincidentes requieren confirmación explícita. Solo eventos terminados o cancelados pueden archivarse.
+
+Al cerrar un evento se pueden registrar asistentes reales, gasto real en USD y notas. Los indicadores de fecha vencida, incompleto, materiales sin declarar, próximo y cierre pendiente son derivados y no se persisten.
+
+### 8.3 Persistencia y RPC
+
+La migración mantiene RLS de lectura condicionada a `events.schedule.read`, revoca escritura directa y expone operaciones mediante funciones `SECURITY DEFINER` con `search_path` vacío. La app usa `list_event_responsables`, `list_event_campaigns`, `list_events`, `get_event`, `get_event_history`, `check_event_overlap`, `create_event`, `update_event`, `reschedule_event`, `transition_event_status`, `save_event_closure`, `archive_event` y `restore_event`. Las funciones internas de normalización, autorización, cruces, indicadores y sincronización no se conceden directamente al cliente.
+
+El usuario reportó aplicada la migración en Supabase. No se ha hecho `supabase db pull` ni se han verificado desde aquí el esquema vivo, los grants/policies, ni el comportamiento con cuentas reales. Ver el estado detallado en [`docs/supabase-db-migration.md` §16](supabase-db-migration.md#16-programación-de-eventos-202610150001) y el [plan](design/plan-eventos-programacion.md).

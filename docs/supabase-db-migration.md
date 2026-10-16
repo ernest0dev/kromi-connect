@@ -7,7 +7,7 @@
 
 ---
 
-> **Vigencia:** los capítulos 1–9 documentan la arquitectura base y migraciones anteriores; no son un volcado completo del esquema desplegado actual. La imagen [`supabase-schema-public.png`](supabase-schema-public.png) y el esquema Markdown fueron actualizados por el usuario. `202610100001`, `202610110001` y la migración del flujo sin Design `202610110002` fueron reportadas como ejecutadas. El usuario compartió comprobaciones parciales; este repositorio no verificó el estado vivo. Reconciliar con `supabase db pull` antes de generar nuevas migraciones.
+> **Vigencia:** los capítulos 1–9 documentan la arquitectura base y migraciones anteriores; no son un volcado completo del esquema desplegado actual. El inventario (`202610130001`/`002`) y programación (`202610150001`) fueron reportados por el usuario como aplicados. La captura y el esquema Markdown todavía deben reconciliarse con la programación mediante `supabase db pull`. Este repositorio no verificó el estado vivo; revisar objetos, grants, policies y funciones antes de generar nuevas migraciones.
 
 ---
 
@@ -530,3 +530,26 @@ La migración correctiva `202610130002_events_inventory_transfer_identity.sql` s
 **Prueba registrada para `202610130001`:** PostgreSQL 16 local con esquema `auth` y roles simulados: movimientos de lote e individuales, ajustes, conflicto de versión, duplicados, inmutabilidad del historial y grants (anon no ejecuta; las funciones internas no son ejecutables por `authenticated`). El usuario reportó que ambas migraciones se aplicaron en Supabase y actualizó `supabase-schema-public.md` y la captura; el esquema documenta las cinco tablas y políticas RLS de lectura. No consta verificación remota de los cuerpos/grants de RPC ni pruebas con usuarios reales. La migración correctiva todavía requiere validación, en especial atributos distintos y traslados concurrentes.
 
 **Estado de despliegue:** el usuario reportó la aplicación de `202610130001` y luego `202610130002`; también actualizó `supabase-schema-public.md` y su captura. El esquema reflejado muestra las cinco tablas del inventario y sus políticas de lectura. Falta conciliar mediante `supabase db pull` y verificar en remoto las funciones, grants y permisos por rol, además de probar traslados con atributos distintos y concurrentes. Plan de implementación en [`design/plan-inventario-eventos.md`](./design/plan-inventario-eventos.md).
+
+## 16. Programación de Eventos (`202610150001`)
+
+La migración [`202610150001_events_schedule.sql`](../supabase/migrations/202610150001_events_schedule.sql) implementa la programación del rol `events`. Depende de `profiles`, `has_permission`, `app_permissions`, `role_permissions`, `inventario_sedes` y `campanas`; se aplica después del esquema de autenticación y del inventario. El usuario reportó que la ejecutó desde Supabase SQL Editor. No se recibió una salida de introspección ni `supabase db pull` posterior, por lo que el estado remoto queda **reportado, no verificado independientemente**.
+
+### Objetos y seguridad
+
+- Tablas: `eventos` (datos, inscripción, presupuesto USD, cierre, versionado y archivo), `evento_sedes` (tiendas y zona libre por tienda) y `evento_historial` (estado/reprogramación, inmutable por trigger). No crea `evento_tareas`, lista de patrocinadores/materiales ni tabla de inscritos.
+- Permisos asignados a `events`: `events.schedule.read`, `events.schedule.create`, `events.schedule.update`, `events.schedule.status.update`, `events.schedule.archive`.
+- RLS habilitada en las tres tablas; policy de `SELECT` requiere `events.schedule.read`. No hay escritura directa concedida a `anon` ni `authenticated`; mutaciones usan RPC `SECURITY DEFINER` con `search_path = ''`.
+- Fechas como `timestamptz`, capturadas/presentadas por la UI en `America/Caracas`; `moneda` tiene default y constraint para `USD` únicamente en esta entrega. Materiales y patrocinadores son campos libres `text` con límite de 2000 caracteres.
+- `sync_event_statuses()` se ejecuta en las RPC de listado, ficha/historial y mutación; los catálogos y la consulta de cruces no sincronizan estados. No existe cron de Eventos en el repositorio. El historial usa `cambiado_por = NULL` para transiciones automáticas.
+
+### Funciones expuestas
+
+`list_event_responsables()`, `list_event_campaigns()`, `list_events(...)`, `get_event(uuid)`, `get_event_history(uuid, integer, integer)`, `check_event_overlap(uuid, timestamptz, timestamptz, uuid[])`, `create_event(jsonb, boolean)`, `update_event(uuid, integer, jsonb, text, boolean)`, `reschedule_event(uuid, integer, timestamptz, timestamptz, text, boolean)`, `transition_event_status(uuid, integer, text, text, boolean)`, `save_event_closure(uuid, integer, integer, numeric, text)`, `archive_event(uuid, integer)` y `restore_event(uuid, integer)`. Las funciones internas de validación, sincronización y autorización no se conceden directamente a usuarios autenticados.
+
+### Comprobaciones pendientes para cerrar despliegue
+
+1. Ejecutar `supabase db pull` y comparar tablas/columnas, índices, policies, grants y funciones con esta migración.
+2. Confirmar que el rol `events` tiene los cinco permisos y probar lectura/creación/edición/estados/cierre/archivo con una cuenta real; confirmar denegación para otros roles.
+3. Probar sincronización por hora, cruces entre tiendas y conflictos de versión en Supabase remoto.
+4. Regenerar `supabase-schema-public.md` y `supabase-schema-public.png` a partir de la instancia reconciliada.
