@@ -1,6 +1,6 @@
 {
   "v": 3,
-  "title": "Interno · Mapa de tiendas",
+  "title": "Interno · Pendientes",
   "launch": {
     "view": "canvas"
   },
@@ -10,35 +10,75 @@
       "x": 0,
       "y": 0,
       "w": 1440,
-      "h": 860,
-      "title": "1 · Mapa de tiendas (escritorio)"
+      "h": 880,
+      "title": "1 · Pendientes: mapa (escritorio)"
     },
     "Movil.dc.html": {
       "x": 1520,
       "y": 0,
       "w": 390,
-      "h": 1500,
-      "title": "1b · Mapa en móvil"
+      "h": 1300,
+      "title": "1b · Pendientes: mapa (móvil)"
+    },
+    "Lista.dc.html": {
+      "x": 0,
+      "y": 1000,
+      "w": 1440,
+      "h": 760,
+      "title": "2 · Listado (sub vista)"
+    },
+    "Archivo.dc.html": {
+      "x": 0,
+      "y": 1880,
+      "w": 1440,
+      "h": 560,
+      "title": "3 · Archivo (sub vista)"
     },
     "Formulario.dc.html": {
       "x": 0,
-      "y": 980,
+      "y": 2560,
       "w": 1440,
-      "h": 980,
-      "title": "2 · Nuevo pendiente (impresión)"
+      "h": 1180,
+      "title": "4 · Crear pendiente"
+    },
+    "CrearBrief.dc.html": {
+      "x": 0,
+      "y": 3860,
+      "w": 1440,
+      "h": 1100,
+      "title": "5 · Crear: brief tras guardar"
+    },
+    "Editar.dc.html": {
+      "x": 0,
+      "y": 5080,
+      "w": 1440,
+      "h": 1380,
+      "title": "6 · Editar pendiente"
+    },
+    "Detalle.dc.html": {
+      "x": 0,
+      "y": 6580,
+      "w": 1440,
+      "h": 1500,
+      "title": "7 · Detalle con solicitud a Design"
     },
     "Estados.dc.html": {
       "x": 0,
-      "y": 2080,
+      "y": 8200,
       "w": 1440,
-      "h": 760,
-      "title": "3 · Estados de la interfaz"
+      "h": 1180,
+      "title": "8 · Estados de la interfaz"
     }
   },
   "order": [
     "Main.dc.html",
     "Movil.dc.html",
+    "Lista.dc.html",
+    "Archivo.dc.html",
     "Formulario.dc.html",
+    "CrearBrief.dc.html",
+    "Editar.dc.html",
+    "Detalle.dc.html",
     "Estados.dc.html"
   ],
   "notes": {},

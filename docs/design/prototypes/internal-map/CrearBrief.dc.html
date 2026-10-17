@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pendiente creado · Brief</title>
+<!-- Maqueta autónoma: se abre directo en el navegador (sin support.js ni <x-dc>). Datos de ejemplo; coordenadas reales. -->
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:'Plus Jakarta Sans',Inter,system-ui,sans-serif;color:#10233F;background:#F3F5F9;font-size:14px}
+button{font-family:inherit;cursor:pointer}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:40px;padding:0 16px;border-radius:8px;border:1px solid #CBD3DF;background:#fff;color:#10233F;font-weight:600;font-size:14px}
+.btn:hover{background:#EEF2F8}
+.btn.pri{background:#0066D2;border-color:#0066D2;color:#fff}
+.btn.pri:hover{background:#0054AE}
+.btn[disabled]{opacity:.55;cursor:not-allowed}
+:focus-visible{outline:3px solid #F28D19;outline-offset:2px}
+.nv{display:flex;align-items:center;gap:10px;height:44px;padding:0 14px;border-radius:8px;color:#D5E3FA;font-weight:600;text-decoration:none}
+.nv.on{background:rgba(255,255,255,.16);color:#fff}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.t-imp{background:#E6EEFB;color:#0B4A94}.t-ins{background:#EAF5E6;color:#2D6A1F}.t-nec{background:#F3EAFB;color:#6A2E94}
+.s-pen{background:#EEF0F4;color:#3A4658}.s-pro{background:#E3EFFC;color:#0B4A94}.s-lis{background:#E4F4EA;color:#17653A}
+.i-ven{background:#FBE4E1;color:#9B1C12}.i-prx{background:#FDEBD3;color:#7A4306}.i-nor{background:#EEF0F4;color:#3A4658}
+.mut{color:#566274;font-size:12px}
+.kpi{flex:1;min-width:0;background:#fff;border:1px solid #DDE3EC;border-radius:12px;padding:12px 16px}
+.kpi b{display:block;font-size:26px;line-height:1.1}
+.mapwrap{background:#fff;border:1px solid #DDE3EC;border-radius:14px;padding:14px}
+.map{position:relative;width:100%;aspect-ratio:1.3;border-radius:10px;overflow:hidden;background:#EEF2F6;border:1px solid #DDE3EC}
+.map svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.pin{position:absolute;transform:translate(-50%,-50%);border:0;background:none;padding:0;display:block}
+.pin .dot{position:relative;display:grid;place-items:center;border-radius:50%;font-weight:800;border:3px solid #fff;box-shadow:0 2px 8px rgba(16,35,63,.28)}
+.pin .nm{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:#10233F;background:rgba(255,255,255,.92);padding:1px 6px;border-radius:5px;white-space:nowrap}
+.pin .nm.r{left:100%;margin-left:6px}.pin .nm.l{right:100%;margin-right:6px}
+.pin.sel .dot{outline:3px solid #10233F;outline-offset:2px}
+.pin .bang{position:absolute;right:-7px;top:-7px;width:18px;height:18px;border-radius:50%;background:#fff;color:#C62828;font-size:12px;font-weight:800;display:grid;place-items:center;border:2px solid #C62828}
+.foot{display:flex;align-items:center;gap:12px;margin-top:10px;padding:8px 10px;border:1px dashed #BAC4D3;border-radius:10px;background:#F8FAFC}
+.foot .pin{position:relative;transform:none}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#3A4658}
+.lg i{width:12px;height:12px;border-radius:50%;display:inline-block}
+.row{padding:12px 0;border-top:1px solid #E7E4DC}
+.row:first-child{border-top:0}
+label.f{display:block;font-weight:700;margin:14px 0 6px}
+.inp{width:100%;min-height:40px;border:1px solid #CBD3DF;border-radius:8px;padding:9px 12px;font:inherit;background:#fff;color:#10233F}
+textarea.inp{min-height:120px;resize:vertical}
+.seg{display:flex;border:1px solid #CBD3DF;border-radius:8px;overflow:hidden;background:#fff}
+.seg button{flex:1;height:40px;border:0;background:#fff;font-weight:700;color:#3A4658}
+.seg button.on{background:#E3EFFC;color:#0B4A94}
+.tag{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #CBD3DF;border-radius:999px;background:#fff;font-weight:600}
+.tag.on{background:#0066D2;border-color:#0066D2;color:#fff}
+
+.segnav{display:inline-flex;border:1px solid #CBD3DF;border-radius:8px;overflow:hidden;background:#fff}
+.segnav a{display:inline-flex;align-items:center;height:38px;padding:0 16px;font-weight:700;color:#3A4658;text-decoration:none}
+.segnav a.on{background:#E3EFFC;color:#0B4A94}
+.dd{display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #CBD3DF;border-radius:8px;background:#fff;font-weight:600}
+.d-por{background:#EEF0F4;color:#3A4658}.d-sol{background:#E3EFFC;color:#0B4A94}.d-dis{background:#D6E6FB;color:#002F80}.d-ent{background:#E4F4EA;color:#17653A}
+.card{border:1px solid #DDE3EC;border-radius:12px;padding:14px 16px;background:#fff;margin-top:14px}
+.card.dash{border-style:dashed;background:#F8FAFC}
+.warn{background:#FFF6E5;border:1px solid #F2CE98;color:#5C3A06;border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:8px}
+.ok{background:#EAF6EE;border:1px solid #B7DFC4;color:#17653A;border-radius:8px;padding:8px 10px;font-size:12.5px;margin-top:8px}
+.frow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #EEF0F4}
+.frow:first-of-type{border-top:0}
+.fico{width:34px;height:34px;border-radius:8px;background:#E6EEFB;color:#0B4A94;display:grid;place-items:center;font-size:11px;font-weight:800}
+.pbar{height:6px;border-radius:3px;background:#E3E8F0;overflow:hidden;margin-top:5px}.pbar i{display:block;height:100%;background:#0066D2}
+.link{color:#0B4A94;font-weight:700;text-decoration:underline}
+.chk{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid #CBD3DF;border-radius:10px;background:#fff}
+.chk .bx{flex:none;width:20px;height:20px;border-radius:5px;border:2px solid #0066D2;background:#0066D2;color:#fff;display:grid;place-items:center;font-size:13px;font-weight:800;margin-top:1px}
+.chk .bx.off{background:#fff;border-color:#8896AB}
+table{border-collapse:collapse;width:100%}
+th{text-align:left;font-size:12px;color:#566274;text-transform:uppercase;letter-spacing:.05em;padding:10px 12px;border-bottom:1px solid #DDE3EC;background:#F8FAFC}
+td{padding:12px;border-bottom:1px solid #EEF0F4;vertical-align:top}
+.ghost{background:#fff;border:1px solid #DDE3EC;border-radius:14px;height:210px;margin-top:16px}
+.scrim{position:absolute;inset:0;background:rgba(16,35,63,.38)}
+.sidepanel{position:absolute;right:0;top:0;bottom:0;width:540px;background:#fff;border-left:1px solid #DDE3EC;box-shadow:-10px 0 30px rgba(16,35,63,.18);padding:22px 24px;overflow:auto}
+.tl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.tl span{font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;background:#EEF0F4;color:#566274}.tl span.on{background:#0066D2;color:#fff}.tl span.done{background:#E4F4EA;color:#17653A}
+</style></head><body style="width:1440px">
+<div style="position:relative;min-height:1100px"><aside style="position:absolute;left:0;top:0;bottom:0;width:224px;background:#002F80;padding:18px 14px;color:#fff">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:22px"><div style="width:36px;height:36px;border-radius:10px;background:#F28D19;color:#2E1600;font-weight:800;display:grid;place-items:center;font-size:18px">K</div><div><b>Kromi Connect</b><div style="font-size:11px;color:#BBD0F3">Interno</div></div></div>
+<a class="nv on" href="#">Pendientes</a></aside><main style="margin-left:224px;padding:24px 28px"><div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+<div><div class="mut" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:#0066D2">Interno</div><h1 style="margin:2px 0 0;font-size:26px">Pendientes</h1><div class="mut" style="margin-top:2px">Paso posterior a guardar</div></div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><nav class="segnav" aria-label="Vistas de pendientes"><a href="#" class=on aria-current=page>Mapa</a><a href="#">Listado</a><a href="#">Archivo</a></nav>
+<span class="dd">Tipo: todos ▾</span><span class="dd">Estado: abiertos ▾</span><button class="btn pri">+ Nuevo pendiente</button></div></div><div class="ghost"></div><div class="ghost" style="height:120px"></div></main><div class="scrim"></div><div class="sidepanel"><div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="margin:0;font-size:20px">Pendiente creado</h2></div><button class="btn" style="width:40px;padding:0" aria-label="Cerrar">✕</button></div><div class="ok" style="margin-top:14px"><b>Pendiente creado</b> · Afiches de oferta fin de semana · Prebo. Agrega los archivos del brief ahora o continúa después desde el detalle.</div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>Brief</b><span class="chip s-pro">1 de 3 subidos</span></div>
+<div class="frow"><div class="fico">PDF</div><div style="flex:1"><b>arte-afiche-a3.pdf</b><div class="mut">4,2 MB · listo</div></div><span class="chip s-lis">✓ Subido</span></div>
+<div class="frow"><div class="fico">PNG</div><div style="flex:1"><b>referencia-colores.png</b><div class="mut">8,9 MB · 62 %</div><div class="pbar" role="progressbar" aria-valuenow="62" aria-valuemin="0" aria-valuemax="100"><i style="width:62%"></i></div></div><button class="btn" style="height:32px">Cancelar</button></div>
+<div class="frow"><div class="fico">MP4</div><div style="flex:1"><b>demo-movimiento.mp4</b><div class="mut">62 MB · en cola</div></div><button class="btn" style="height:32px">Cancelar</button></div><div class="mut" style="margin-top:6px">Hasta 10 archivos · 100 MB cada uno · JPG, PNG, WebP, PDF o MP4</div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><b>Solicitud a Design</b><span class="chip d-por">Por solicitar</span></div><div style="display:flex;gap:8px;margin-top:6px"><span style="color:#17653A;font-weight:800">✓</span><span>Instrucciones escritas</span></div><div style="display:flex;gap:8px;margin-top:6px"><span style="color:#17653A;font-weight:800">✓</span><span>Fecha de entrega de la pieza</span></div><div style="display:flex;gap:8px;margin-top:6px"><span style="color:#9B6A00;font-weight:800">○</span><span style="color:#5C3A06">Brief con al menos un archivo</span></div><button class="btn pri" style="margin-top:12px;width:100%" disabled aria-disabled="true">Solicitar a Design</button></div><div class="mut" style="margin-top:8px">“Solicitar a Design” se habilita cuando termina la subida y hay al menos un archivo en el brief.</div><div style="display:flex;justify-content:flex-end;margin-top:14px"><button class="btn pri">Listo</button></div></div></div>
+<script>
+const D={"stores": [{"c": "PREBO", "n": "Prebo", "lat": 10.2133212, "lng": -68.0279878, "z": "Valencia Norte", "d": "Urb. Prebo Av. 137 c/c 114, C.C. V Avenida", "side": "r"}, {"c": "MANONGO", "n": "Mañongo", "lat": 10.2415025, "lng": -67.9974483, "z": "Naguanagua", "d": "Urb. Ciudad Jardín Mañongo, Parcela 1 y 2", "side": "r"}, {"c": "TRIGAL_SUR", "n": "Trigal Sur", "lat": 10.2124862, "lng": -67.9999188, "z": "Valencia Norte", "d": "C.C. Trigal Sur, Planta Baja", "side": "r"}, {"c": "TRIGAL_NORTE", "n": "Trigal Norte", "lat": 10.2251378, "lng": -68.0012985, "z": "Valencia Norte", "d": "C.C. Las Clavellinas, antiguo Panda", "side": "l"}, {"c": "GUATAPARO", "n": "Guataparo", "lat": 10.1882288, "lng": -68.0435123, "z": "Valencia Norte", "d": "C.C. Guataparo Express, Valencia 2001", "side": "r"}, {"c": "CASTILLITO", "n": "Castillito", "lat": 10.1955375, "lng": -67.9692031, "z": "San Diego", "d": "Parque Comercio Industrial Castillito, C.C. Tigsa, galpón G-2", "side": "l"}, {"c": "SAN_FELIPE", "n": "San Felipe", "lat": 10.3427758, "lng": -68.7259993, "z": "Yaracuy", "d": "Av. Intercomunal El Fuerte", "side": "r"}], "tasks": [["PREBO", "IMP", "Afiches de oferta fin de semana", "PRO", "2026-10-14", "A3 vertical y A4 horizontal, 40 y 60 unidades", "DIS"], ["PREBO", "INS", "Bolsas ecológicas para caja", "PEN", "2026-10-17", "200 unidades, las del lote anterior se agotaron", null], ["PREBO", "NEC", "Reparar exhibidor de la entrada", "PEN", null, "La base se mueve; avisar a mantenimiento", null], ["MANONGO", "IMP", "Etiquetas de precio de charcutería", "LIS", "2026-10-20", "Rollos de 500, 58 mm", null], ["MANONGO", "INS", "Guantes para degustación", "PEN", "2026-10-22", "5 cajas", null], ["TRIGAL_SUR", "NEC", "Cambiar lámpara del pasillo 3", "PEN", "2026-10-18", "", null], ["GUATAPARO", "IMP", "Banner de aniversario", "PRO", "2026-10-15", "Lona 2 × 1 m con ojales", "ENT"], ["GUATAPARO", "INS", "Papel térmico para balanza", "LIS", "2026-10-18", "10 rollos", null], ["CASTILLITO", "IMP", "Volantes del festival de carnes", "PEN", "2026-10-25", "Media carta, 500 unidades", "POR"], ["SAN_FELIPE", "NEC", "Revisar rotulación exterior", "PEN", "2026-10-30", "", null]], "b": {"latMax": 10.25, "latMin": 10.18, "lngMin": -68.052, "lngMax": -67.961}, "hoy": "2026-10-16"};
+const TIPO={IMP:['Impresión','t-imp','Impresiones'],INS:['Insumo','t-ins','Insumos'],NEC:['Necesidad','t-nec','Necesidades']};
+const DIS={POR:'Diseño: por solicitar',SOL:'Diseño: solicitado',DIS:'Diseño: en curso',ENT:'Diseño: entregado'};
+const EST={PEN:['Pendiente','s-pen'],PRO:['En proceso','s-pro'],LIS:['Listo para entregar','s-lis']};
+const day=s=>Math.round((new Date(s+'T00:00:00')-new Date(D.hoy+'T00:00:00'))/864e5);
+function ind(t){ if(!t[4]) return ['Sin fecha','i-nor','nor']; const d=day(t[4]);
+  if(d<0) return ['Vencido hace '+(-d)+' d','i-ven','ven']; if(d<=2) return [d===0?'Vence hoy':'Vence en '+d+' d','i-prx','prx'];
+  return ['Para el '+t[4].slice(8)+'/'+t[4].slice(5,7),'i-nor','nor']; }
+const inBox=s=>s.lat<=D.b.latMax&&s.lat>=D.b.latMin&&s.lng>=D.b.lngMin&&s.lng<=D.b.lngMax;
+const pos=s=>({x:(s.lng-D.b.lngMin)/(D.b.lngMax-D.b.lngMin)*100,y:(D.b.latMax-s.lat)/(D.b.latMax-D.b.latMin)*100});
+const open=s=>D.tasks.filter(t=>t[0]===s.c);
+function worst(ts){const r=ts.map(t=>ind(t)[2]); return r.includes('ven')?'ven':r.includes('prx')?'prx':ts.length?'nor':'vac';}
+const COL={ven:['#C62828','#fff'],prx:['#F28D19','#10233F'],nor:['#0066D2','#fff'],vac:['#C9D0DB','#566274']};
+const AR={ven:'vencidos',prx:'próximos a vencer',nor:'sin urgencia',vac:'sin pendientes'};
+function pin(s,size,sel,lab){const ts=open(s),w=worst(ts),[bg,fg]=COL[w];
+  const b=document.createElement('button');b.className='pin'+(sel?' sel':'');b.dataset.c=s.c;
+  b.setAttribute('aria-label',s.n+': '+ts.length+' pendientes, '+AR[w]);
+  b.innerHTML='<span class="dot" style="width:'+size+'px;height:'+size+'px;background:'+bg+';color:'+fg+';font-size:'+Math.round(size*.42)+'px">'+ts.length+(w==='ven'?'<span class="bang">!</span>':'')+'</span>'+(lab?'<span class="nm '+(s.side||'r')+'">'+s.n+'</span>':'');
+  return b;}
+function drawMap(el,size,sel,onPick){
+  el.querySelectorAll('.pin').forEach(n=>n.remove());
+  D.stores.filter(inBox).forEach(s=>{const p=pos(s),b=pin(s,size,s.c===sel,true);
+    b.style.left=p.x+'%';b.style.top=p.y+'%';b.onclick=()=>onPick(s.c);el.appendChild(b);});}
+function drawFoot(el,size,sel,onPick){
+  el.innerHTML='';D.stores.filter(s=>!inBox(s)).forEach(s=>{
+    const w=document.createElement('div');w.className='foot';
+    const b=pin(s,size,s.c===sel);b.onclick=()=>onPick(s.c);w.appendChild(b);
+    const t=document.createElement('div');t.innerHTML='<b>'+s.n+'</b><div class="mut">Fuera del encuadre del mapa · '+s.z+'</div>';w.appendChild(t);el.appendChild(w);});}
+function summary(){const all=D.tasks;return {ab:all.length,ven:all.filter(t=>ind(t)[2]==='ven').length,lis:all.filter(t=>t[3]==='LIS').length};}
+function taskRow(t){const [tn,tc]=TIPO[t[1]],[en,ec]=EST[t[3]],[inn,ic]=ind(t);
+  return '<div class="row"><div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"><span class="chip '+tc+'">'+tn+'</span><span class="chip '+ec+'">'+en+'</span><span class="chip '+ic+'">'+inn+'</span></div>'
+   +'<div style="font-weight:700;font-size:15px">'+t[2]+'</div>'+(t[5]?'<div class="mut" style="margin-top:3px">'+t[5]+'</div>':'')
+   +(t[6]?'<div style="margin-top:8px"><span class="chip d-'+t[6].toLowerCase()+'">'+DIS[t[6]]+'</span></div>':'')
+   +'<div style="display:flex;gap:8px;margin-top:10px"><button class="btn" style="height:34px;font-size:13px">'+(t[3]==='PEN'?'Marcar en proceso':t[3]==='PRO'?'Marcar listo':'Marcar entregado')+'</button><button class="btn" style="height:34px;font-size:13px">Detalle</button></div></div>';}
+function panelHTML(s){const ts=open(s);const g=['IMP','INS','NEC'].map(k=>[k,ts.filter(t=>t[1]===k)]).filter(x=>x[1].length);
+  return '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px"><div><div class="mut" style="text-transform:uppercase;letter-spacing:.08em;font-weight:700">'+s.z+'</div><h2 style="margin:2px 0 2px;font-size:20px">'+s.n+'</h2><div class="mut">'+s.d+'</div></div></div>'
+   +'<div style="margin:12px 0 4px;font-weight:700">'+ts.length+' pendientes abiertos</div>'
+   +(ts.length?g.map(([k,l])=>'<div style="margin-top:8px"><div class="mut" style="font-weight:700;text-transform:uppercase;letter-spacing:.06em">'+TIPO[k][2]+'</div>'+l.map(taskRow).join('')+'</div>').join(''):'<div class="mut" style="padding:18px 0">Esta tienda no tiene pendientes abiertos.</div>')
+   +'<button class="btn pri" style="width:100%;margin-top:14px">+ Nuevo pendiente en '+s.n+'</button>';}
+const BG='<svg class="bg" viewBox="0 0 1000 770" preserveAspectRatio="none" aria-hidden="true"><defs><pattern id="g" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M50 0H0V50" fill="none" stroke="#DCE3EC" stroke-width="1"/></pattern></defs><rect width="1000" height="770" fill="url(#g)"/>'
+ +'<path d="M0 0H1000V330C820 300 760 360 640 330C520 300 430 220 300 250C170 280 80 220 0 250Z" fill="#E3EAF3"/><path d="M0 250C80 220 170 280 300 250C430 220 520 300 640 330C760 360 820 300 1000 330V770H0Z" fill="#E9EEF5"/>'
+ +'<path d="M720 400C800 380 900 400 1000 390V770H760C700 700 690 520 720 400Z" fill="#DFE7F1"/>'
+ +'<text x="40" y="60" fill="#8A97AB" font-size="26" font-weight="700" letter-spacing="3">NAGUANAGUA</text><text x="40" y="560" fill="#8A97AB" font-size="26" font-weight="700" letter-spacing="3">VALENCIA NORTE</text><text x="760" y="740" fill="#8A97AB" font-size="26" font-weight="700" letter-spacing="3">SAN DIEGO</text></svg>';
+</script></body></html>
