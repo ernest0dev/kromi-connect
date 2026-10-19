@@ -377,7 +377,7 @@ Los códigos persistidos son estables y usan inglés; los nombres visibles está
 | `social-media` | Social Media | Grid, campañas y efemérides según permisos concedidos |
 | `events` | Eventos | Inventario: `events.inventory.read`, `.create`, `.update`, `.move`, `.locations.create` (migraciones `202610130001` y `202610130002`). Programación: `events.schedule.read`, `.create`, `.update`, `.status.update`, `.archive` (implementación local; el usuario reportó aplicada `202610150001_events_schedule.sql`; falta verificación remota); ver §8 y `docs/design/plan-eventos-programacion.md` |
 | `design` | Diseño | Cola y ficha de publicaciones, carga de entregables, historial y transiciones de inicio/entrega |
-| `internal` | Interno | Sin permisos de negocio asignados |
+| `internal` | Interno | Pendientes: `internal.store-tasks.*` y solicitudes a Design (`202610180001`, `202610180002`). Inventario de Eventos: los mismos cinco permisos `events.inventory.*` que `events`, sin restricción (`202610180004_internal_inventory_access.sql`); ver `docs/design/plan-rol-interno.md` |
 | `customer-support` | Atención al cliente | Sin permisos de negocio asignados |
 | `management` | Gerencia | Sin permisos de negocio asignados |
 | `admin` | Administrador | Puede gestionar roles/perfiles; no recibe permisos de negocio automáticamente |
@@ -394,7 +394,7 @@ El rol `admin` se limita al control de acceso (`can_manage_access()`); no equiva
 - `social-media.efemerides.{read,create,update,delete}` para efemérides.
 - `events.schedule.{read,create,update,status.update,archive}` para calendario, operaciones y archivo de Eventos; asignados al rol `events` por `202610150001_events_schedule.sql`.
 
-`customer-support` e `internal` no reciben concesiones de negocio en esta implementación. `design` sí tiene los permisos enumerados arriba; `management` no interviene en aprobaciones dentro de la app. La interfaz puede ocultar navegación sin permiso, pero servidor y RPC vuelven a validar el acceso.
+`customer-support` no recibe concesiones de negocio en esta implementación; `internal` recibe las de Pendientes y las del inventario de Eventos. `design` sí tiene los permisos enumerados arriba; `management` no interviene en aprobaciones dentro de la app. La interfaz puede ocultar navegación sin permiso, pero servidor y RPC vuelven a validar el acceso.
 
 El catálogo puede conservar el código histórico `social-media.posts.delete` de migraciones previas, pero el flujo actual usa Archivo: se revocó el borrado directo para `authenticated`; las acciones de purga se ejecutan en servidor con comprobaciones de permiso.
 

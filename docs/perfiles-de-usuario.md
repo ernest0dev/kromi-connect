@@ -116,6 +116,10 @@ Con diseño se elige una sola tienda; la casilla viene marcada solo en impresion
 - Para una fase posterior: imagen o representación geográfica, fuente, límites y coordenadas verificadas del mapa.
 - Definir con el equipo las correcciones de piezas tras las pruebas.
 
+### Acceso al inventario de Eventos (2026-10-18)
+
+Por decisión del equipo, el Interno tiene **el mismo acceso al inventario que el rol Eventos, sin limitaciones**: consultar, crear, editar y registrar traslados y ajustes, y crear ubicaciones. Los permisos son los cinco `events.inventory.*` (migración `202610180004_internal_inventory_access.sql`, pendiente de aplicar). En su menú aparece el grupo **Eventos › Inventario**, que abre `/events/inventory`; en esa vista el menú conserva **Interno › Pendientes**. No incluye la programación de eventos. Los movimientos quedan a nombre de quien los registra.
+
 ## Perfiles por definir
 
 Atención al cliente y Gerencia requieren entrevistas y una ficha funcional antes de desarrollar vistas específicas. Los nombres de rol disponibles no sustituyen la definición de tareas, límites y permisos.
