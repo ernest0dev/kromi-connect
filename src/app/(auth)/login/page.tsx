@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { getAuthContext } from "@/lib/auth/dal";
 import LoginForm from "./LoginForm";
 
@@ -8,6 +9,7 @@ export default async function LoginPage() {
   if (context?.profile?.role_code === "customer-support") redirect("/support");
   if (context?.profile?.role_code === "design") redirect("/design/publications");
   if (context?.profile?.role_code === "events") redirect("/events");
+  if (context?.profile?.role_code === "internal") redirect("/internal/pendientes");
   if (context?.user) redirect("/access-pending");
 
 return (
@@ -25,7 +27,7 @@ return (
         <p className="mb-7 text-sm text-[#6b7482]">Ingresa con el correo y la contraseña de tu cuenta.</p>
         <LoginForm />
         <p className="mt-6 text-center text-sm text-[#6b7482]">
-          <a href="/" className="font-medium text-[#0066d2] hover:underline">← Volver al inicio</a>
+          <Link href="/" className="font-medium text-[#0066d2] hover:underline">← Volver al inicio</Link>
         </p>
       </section>
     </main>

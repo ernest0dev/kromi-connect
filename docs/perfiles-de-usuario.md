@@ -9,7 +9,7 @@ Este documento separa el perfil funcional de los permisos efectivos. Los perfile
 | Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
 | Diseño / Diseñador | `design` | Perfil operativo: cola global, ficha de trabajo, carga de entregables en la app e historial. Pendiente de verificar en producción. |
 | Eventos | `events` | Dos módulos. **Inventario** compartido por sede en `/events/inventory` (implementado; plan en `design/plan-inventario-eventos.md`). **Programación de eventos** en `/events/calendar`, con sub vistas `/events/calendar/list` y `/events/calendar/archive` (calendario mensual/semanal, ficha, alta/edición, estados, cierre y archivo). El usuario reportó aplicada `202610150001_events_schedule.sql`; faltan `db pull` y verificación de permisos/flujos en remoto. Solo este rol ve y gestiona eventos. |
-| Interno | `internal` | Rol existente. Perfil **especificado** (2026-10-17), sin implementar: una persona, vista Pendientes con mapa estático de Valencia, sub vistas Listado y Archivo, y solicitudes a Design dentro de cada pendiente. Hoy el rol termina en `/access-pending`. Plan en `design/plan-rol-interno.md`. |
+| Interno | `internal` | Rol existente. Primera implementación en revisión visual: Mapa con fondo gris, Listado, Archivo, briefs en Drive y solicitudes a Design. El equipo reportó aplicadas las migraciones manualmente; faltan pruebas integrales de UI y flujos. |
 | Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
 | Gerencia | `management` | Rol existente; no tiene vista de aprobación de publicaciones. Social Media registra el resultado externo. |
 
@@ -95,25 +95,25 @@ Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
 - La regla de reentrega se valida solo en la acción de servidor, no en la base de datos.
 - Verificar en remoto las migraciones `202610120001` y `202610120002`, y revisar los tickets antiguos en `SOLICITADO` sin instrucciones (riesgo descrito en la §13 de `supabase-db-migration.md`).
 
-## Interno (especificado, sin implementar)
+## Interno (plan de implementación)
 
-**Estado (2026-10-17):** especificación lista para implementar; no hay código, migración ni permisos. La entrevista con el rol se omitió por decisión del equipo. Detalle en [`design/plan-rol-interno.md`](design/plan-rol-interno.md) y pasos en [`design/implementacion-rol-interno.md`](design/implementacion-rol-interno.md).
+**Estado (2026-10-18):** implementación inicial en revisión visual. Las migraciones se aplicaron manualmente según el equipo. La primera entrega incluye Mapa funcional con fondo gris, Listado y Archivo; la imagen geográfica del mapa queda para una fase posterior. La entrevista con el rol se omitió por decisión del equipo. Detalle en [`design/plan-rol-interno.md`](design/plan-rol-interno.md) y pasos en [`design/implementacion-rol-interno.md`](design/implementacion-rol-interno.md).
 
 ### Qué se decidió
 
 - Lo usa **una sola persona**. Crea sus pendientes de impresiones, insumos y necesidades por tienda y se los asigna; por ahora no recibe solicitudes de otros.
-- Menú con un solo ítem, **Pendientes** (`/internal/pendientes`). Es un **mapa estático** de Valencia Norte, Naguanagua y San Diego, minimalista, con las tiendas de Valencia y sus pendientes; San Felipe va como icono al pie. **Listado** y **Archivo** son sub vistas con botones en el encabezado, junto a los selects Tipo y Estado. No usa calendario.
-- Cada pendiente puede llevar una **solicitud a Design** (impresión o pieza digital) en crear, editar y detalle, como en Social Media: casilla **Requiere diseño**, **Instrucciones** de texto libre, fecha de entrega de la pieza y brief a Drive (10 archivos, 100 MB cada uno).
+- Menú con un solo ítem, **Pendientes** (`/internal/pendientes`), que abre el Mapa; **Listado** y **Archivo** son vistas secundarias. El fondo geográfico se posterga. No usa calendario.
+- Tipos nuevos: **Impresión**, **Sonido interno**, **Reparación** y **Otro**; los pendientes históricos de insumos y necesidades siguen identificados como anteriores. Cualquier pendiente puede guardar brief en Drive (10 archivos, 100 MB cada uno). Con diseño, la fecha de entrega y el límite de brief se calculan a partir de la fecha requerida en tienda; la solicitud exige estado `PENDIENTE`, que pasa a `EN_PROCESO`.
 - Estados del pendiente: `PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`. Estados de la solicitud: `SOLICITADO`, `EN_DISENO`, `ENTREGADO`. Sin ciclo de corrección; se define con el equipo en las pruebas.
 - Permisos `internal.store-tasks.*` (Interno) y `design.internal.*` (Design); Design ve una cola propia en `/design/internal`.
 
 ### Adoptado por defecto, por confirmar
 
-Con diseño se elige una sola tienda; la casilla viene marcada solo en impresiones; las piezas digitales usan el mismo flujo; Design tiene permisos propios. Ver plan §12.2.
+Con diseño se elige una sola tienda; la casilla viene marcada solo en impresiones; las piezas digitales usan el mismo flujo; Design tiene permisos propios. Listado y Archivo tienen paginación seleccionable. Desde un pendiente entregado o cancelado se crea una solicitud nueva prellenada y con una carpeta Drive nueva. Ver plan §12.2.
 
 ### Pendiente
 
-- Imagen del mapa (fuente, límites, términos de uso) y verificación de las coordenadas de las siete tiendas, tomadas de los enlaces de Google Maps del equipo.
+- Para una fase posterior: imagen o representación geográfica, fuente, límites y coordenadas verificadas del mapa.
 - Definir con el equipo las correcciones de piezas tras las pruebas.
 
 ## Perfiles por definir

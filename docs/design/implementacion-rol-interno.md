@@ -1,12 +1,14 @@
 # Guía de implementación: perfil Interno
 
-**Estado (2026-10-17):** preparada, **sin implementar**. La especificación está en [`plan-rol-interno.md`](./plan-rol-interno.md) (gana ante cualquier diferencia) y las maquetas en [`prototypes/internal-map/`](./prototypes/internal-map).
+**Estado (2026-10-18):** implementación inicial en revisión visual. La vista de mapa forma parte de la primera entrega con fondo gris liso; solo se posterga la imagen geográfica. La especificación está en [`plan-rol-interno.md`](./plan-rol-interno.md) (gana ante cualquier diferencia) y las maquetas en [`prototypes/internal-map/`](./prototypes/internal-map).
+
+**Ajuste local actual:** opciones nuevas `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` (se preservan `INSUMO` y `NECESIDAD` como valores históricos); brief de Drive como carga de archivos en lugar de enlace para nuevas solicitudes; SLA derivado de la fecha requerida en tienda (entrega a Design -2 días, límite del brief -5 días, estimación de Design +2 días calendario desde la solicitud); paginación con selector 10/25/50/100; y acción para crear un pendiente nuevo prellenado desde uno entregado o cancelado. La solicitud con diseño sigue requiriendo una tienda. La migración incremental pendiente de aplicar manualmente es `202610180003_internal_task_types.sql`.
 
 ## Antes de empezar
 
-1. Confirmar con el equipo las decisiones D14 a D21 (plan §12.2) y resolver D5 y D6 (imagen del mapa y coordenadas, plan §12.3). Sin imagen se puede construir todo con lienzo liso y sustituirla después.
+1. Las decisiones del flujo se fijan según el plan: solo solicitar desde `PENDIENTE`, retirar antes de inicio vuelve a `PENDIENTE`, y todo pendiente puede tener brief en Drive. No se requiere imagen ni coordenadas para esta entrega.
 2. Leer `AGENTS.md` y la guía correspondiente de `node_modules/next/dist/docs/` antes de escribir rutas, acciones o layouts: esta versión de Next.js tiene cambios incompatibles.
-3. Ejecutar `supabase db pull` y contrastar con las migraciones del repositorio antes de crear las nuevas. La última existente es `202610150001_events_schedule.sql`; las nuevas serían `202610170001_internal_store_tasks.sql` y `202610170002_internal_design_requests.sql`.
+3. Crear las migraciones en el repositorio para aplicación manual. No se aplican desde esta tarea. Antes de ejecutarlas en Supabase, contrastarlas con el esquema remoto (por ejemplo, con `supabase db pull`) y resolver diferencias allí.
 4. En Git Bash (Windows), los scripts se ejecutan con `bash archivo.sh`.
 5. Cada tanda termina con `npm run lint`, `npx tsc --noEmit`, `npm test` y, si toca interfaz, una revisión visual contra la maqueta indicada. Una tanda por rama o commit.
 6. **No tocar** el código de publicaciones ni de Design existente: se duplica y adapta (D21). Los helpers de `src/lib/googleDrive.ts` y `src/lib/driveFileRules.ts` se reutilizan tal cual.
@@ -15,32 +17,31 @@
 
 | Tanda | Contenido | Depende de | Maqueta |
 |---|---|---|---|
-| T0 | Verificar coordenadas, imagen y `db pull` | Equipo | — |
-| T1 | Migración 1: coordenadas, pendientes, historial, permisos Interno, RLS y RPC | T0 | — |
-| T2 | Tipos, lógica pura y pruebas (`src/lib/internalTasks.ts`) | T1 | — |
+| T0 | Revisar esquema local y preparar migraciones para aplicación manual | — | — |
+| T1 | Migración 1: pendientes, historial, permisos Interno, RLS y RPC de tiendas | T0 | — |
+| T2 | Tipos y lógica de dominio (`src/lib/internalTasks.ts`) | T1 | — |
 | T3 | Acciones de servidor, acceso, rutas y menú | T1, T2 | — |
-| T4 | Mapa estático, resumen y panel de tienda | T3 | `Main`, `Movil` |
-| T5 | Listado, Archivo y formularios sin diseño | T3 | `Lista`, `Archivo`, `Formulario` |
-| T6 | Migración 2: cargas a Drive, solicitud a Design, RPC y permisos de Design | T1 | — |
-| T7 | Lado Interno de la solicitud: casilla, instrucciones, fecha, brief, solicitar, retirar | T5, T6 | `Formulario`, `CrearBrief`, `Editar`, `Detalle`, `Estados` |
+| T4 | Mapa funcional sobre fondo gris | T3 | `Main`, `Movil`, `Estados` |
+| T5 | Listado, Archivo y formularios sin diseño; entrega inicial usable | T3 | `Lista`, `Archivo`, `Formulario` |
+| T6 | Migración 2: Drive, solicitud a Design, RPC y permisos de Design | T1 | — |
+| T7 | Lado Interno: brief siempre disponible; solicitud condicionada a diseño | T5, T6 | `Formulario`, `CrearBrief`, `Editar`, `Detalle`, `Estados` |
 | T8 | Lado Design: cola, ficha, historial, entregables, entrega | T6, T7 | (existentes) |
-| T9 | Verificación remota, pruebas con cuentas reales y actualización de SRS y esquema | T1 a T8 | — |
+| T9 | Conciliación al aplicar en remoto, pruebas con cuentas reales y actualización de SRS/esquema | T1 a T8 | — |
 
 T5 entrega una versión usable sin diseño; T7 y T8 añaden el flujo con Design.
 
 ## T0. Preparación
 
-- Revisar las coordenadas de plan §5.2 en Google Maps y corregir las que no marquen la tienda.
-- Conseguir la imagen y sus límites geográficos reales (plan §5.3); guardarla como `public/maps/valencia-tiendas.webp`.
-- Verificar los términos de uso y la atribución de la fuente de la imagen.
-- `supabase db pull` y comparar con `supabase/migrations`.
+- Confirmar los nombres/códigos de las tiendas existentes que consumirá el formulario.
+- Revisar el esquema del repositorio y usarlo como base de las migraciones. La conciliación contra remoto se realiza antes de aplicarlas manualmente.
+- No se añade imagen, coordenadas ni módulo de mapa en esta entrega.
 
 ## T1. Migración 1: pendientes y permisos del Interno
 
-**Archivo:** `supabase/migrations/202610170001_internal_store_tasks.sql`
+**Archivo:** `supabase/migrations/202610180001_internal_store_tasks.sql`
 
 **Contenido** (plan §6 a §8):
-- Columnas `latitud`, `longitud`, `direccion` en `inventario_sedes` y `UPDATE` con los valores de plan §5.2.
+- RPC `list_internal_stores` con acceso controlado, para devolver solo los campos del catálogo que necesita el formulario; no modifica `inventario_sedes`.
 - Tablas `pendientes_tienda` (incluidas las columnas de diseño y de Drive), `pendiente_tienda_historial` (inmutable) y sus índices, `CHECK` y triggers (`version`, `updated_at`, bloqueo de columnas `drive_*` y `diseno_*` para `authenticated`).
 - Permisos `internal.store-tasks.{read,create,update,status.update,archive}` en `app_permissions` y `role_permissions` solo para `internal`.
 - RLS de lectura (`has_permission` y `creado_por = auth.uid()`), sin grants de escritura a `anon` ni `authenticated`.
@@ -55,7 +56,7 @@ Seguir el estilo de `202610150001_events_schedule.sql`. No aplicar a remoto sin 
 
 ```
 Lee AGENTS.md, docs/design/plan-rol-interno.md (§3, §4, §6, §7, §8) y docs/design/implementacion-rol-interno.md (T1). Toma como modelo supabase/migrations/202610150001_events_schedule.sql.
-Crea supabase/migrations/202610170001_internal_store_tasks.sql con: columnas de ubicación en inventario_sedes y carga de coordenadas (§5.2), tablas pendientes_tienda y pendiente_tienda_historial, permisos internal.store-tasks.*, RLS, y las RPC de pendientes de §8.1 (sin las de Drive ni Design). No toques otros archivos. No apliques la migración. Al terminar, lista las decisiones que tomaste y qué no pudiste verificar.
+Crea supabase/migrations/202610180001_internal_store_tasks.sql con: tablas pendientes_tienda y pendiente_tienda_historial, permisos internal.store-tasks.*, RLS, y las RPC de pendientes de §8.1 (sin las de carga/Design), incluyendo list_internal_stores sin modificar inventario_sedes. No toques otros archivos. No apliques la migración. Al terminar, lista las decisiones que tomaste y qué no pudiste verificar.
 ```
 </details>
 
@@ -63,58 +64,50 @@ Crea supabase/migrations/202610170001_internal_store_tasks.sql con: columnas de 
 
 **Archivos:** `src/lib/internalTasks.ts`, `src/lib/internalTasks.test.ts` (jest + ts-jest, como `events.test.ts` e `inventory.test.ts`).
 
-**Contenido:** constantes y tipos (tipos, estados, estados de diseño, etiquetas), `MAP_BOUNDS` y `MAP_ASPECT`, `projectToMap(lat, lng)` (devuelve `{x, y}` en % o `null` si queda fuera, plan §5.3), indicadores derivados con la fecha de hoy en America/Caracas (§4.3), urgencia por tienda, transiciones permitidas (§4.2), validación del formulario (incluye reglas de solicitud, §3.1) y reglas de archivos (reutiliza `DRIVE_FILE_RULES`).
+**Contenido:** constantes y tipos (tipos, estados, estados de diseño, etiquetas), indicadores derivados con la fecha de hoy en America/Caracas (§4.3), transiciones permitidas (§4.2), validación del formulario (incluye reglas de solicitud, §3.1) y reglas de archivos (reutiliza `DRIVE_FILE_RULES`). La proyección geográfica se implementará con el mapa.
 
-**Aceptación:** pruebas de proyección con las siete tiendas (seis dentro, San Felipe fuera), indicadores en los bordes (hoy, +2 días, ayer), transiciones válidas e inválidas y validación de solicitud.
+**Aceptación:** indicadores en los bordes (hoy, +2 días, ayer), transiciones válidas e inválidas, solicitud solo desde `PENDIENTE`, y validación del brief y del formulario.
 
 <details><summary>Prompt para Kilo Code</summary>
 
 ```
 Lee AGENTS.md y docs/design/plan-rol-interno.md (§3, §4, §5). Mira src/lib/events.ts y src/lib/inventory.ts para el estilo.
-Crea src/lib/internalTasks.ts y su prueba con: tipos y etiquetas, MAP_BOUNDS/MAP_ASPECT, projectToMap, indicadores derivados (America/Caracas), urgencia por tienda, transiciones y validación del formulario y de la solicitud a Design. Solo lógica pura, sin React ni Supabase. Ejecuta npm test y tsc.
+Crea src/lib/internalTasks.ts y su prueba con: tipos y etiquetas, indicadores derivados (America/Caracas), urgencia, transiciones y validación del formulario y de la solicitud a Design (solo desde PENDIENTE). Solo lógica pura, sin React ni Supabase. Ejecuta npm test y tsc.
 ```
 </details>
 
 ## T3. Acciones, acceso, rutas y menú
 
-**Archivos nuevos:** `src/app/actions/internal/tasks.ts` (acciones que llaman a las RPC); `src/app/(dashboard)/internal/layout.tsx` y `shell.tsx` (modelo: `events/layout.tsx` y `shell.tsx`); `internal/pendientes/page.tsx`, `list/page.tsx`, `archive/page.tsx` con cargadores que leen filtros de la URL.
+**Archivos nuevos:** `src/app/actions/internal/tasks.ts` (acciones que llaman a las RPC); `src/app/(dashboard)/internal/layout.tsx` y `shell.tsx` (modelo: `events/layout.tsx` y `shell.tsx`); `internal/pendientes/page.tsx` y `archive/page.tsx` con cargadores que leen filtros de la URL.
 **Archivos a modificar:** `src/lib/auth/permissions.ts` (permisos nuevos en el tipo si hace falta), `src/lib/auth/dal.ts` (guardia `requireInternalAccess` o equivalente), `src/app/actions/auth.ts`, `src/app/(auth)/login/page.tsx` y `access-pending/page.tsx` (redirigir a `/internal/pendientes` con `internal.store-tasks.read`).
 
 **Menú:** un solo ítem **Pendientes**. Sin acceso a `/support` ni `/third-parties`.
 
-**Aceptación:** un usuario `internal` con permisos aterriza en `/internal/pendientes`; sin permisos no entra; un usuario de otro rol no entra.
+**Aceptación:** un usuario `internal` con permisos aterriza en `/internal/pendientes` (Mapa); sin permisos no entra; un usuario de otro rol no entra.
 
 <details><summary>Prompt para Kilo Code</summary>
 
 ```
 Lee AGENTS.md y la guía de Next en node_modules/next/dist/docs/ para layouts, rutas y server actions. Lee docs/design/implementacion-rol-interno.md (T3) y mira src/app/(dashboard)/events/{layout,shell}.tsx, src/lib/auth/dal.ts y src/app/actions/auth.ts.
-Crea la sección /internal con layout, shell de un solo ítem "Pendientes", las rutas pendientes, pendientes/list y pendientes/archive (páginas mínimas por ahora), las acciones de servidor que llaman a las RPC de T1, y la redirección de login/access-pending para el rol internal. No toques publicaciones ni Design.
+Crea la sección /internal con layout, shell de un solo ítem "Pendientes", las rutas pendientes y pendientes/archive (páginas mínimas por ahora), las acciones de servidor que llaman a las RPC de T1, y la redirección de login/access-pending para el rol internal. No toques publicaciones ni Design.
 ```
 </details>
 
-## T4. Mapa estático
+## T4. Mapa funcional con fondo gris
 
-**Archivos:** `internal/pendientes/StoreMap.tsx` (marcadores sobre la imagen, pie con San Felipe y bloque "Sin ubicación"), `StorePanel.tsx` (panel lateral y hoja inferior en móvil), `SummaryBar.tsx`, `PendientesHeader.tsx` (título, botones **Mapa / Listado / Archivo**, selects Tipo y Estado, "+ Nuevo pendiente").
+La vista de mapa forma parte de la primera entrega. Presenta resumen, marcadores por tienda posicionados con las coordenadas provisionales del plan, colores por urgencia, tiendas fuera del encuadre en una franja inferior y panel contextual al seleccionar una tienda. El fondo inicial es gris liso y no dibuja calles ni límites geográficos. La imagen geográfica se posterga hasta que el equipo la provea y valide sus límites.
 
-**Referencia:** `Main.dc.html`, `Movil.dc.html` y los estados vacío y de error de `Estados.dc.html`. Los marcadores son botones accesibles; sin la imagen se dibujan sobre un lienzo liso. La cabecera con los botones es la misma en las tres sub vistas.
+**Referencia:** `Main.dc.html`, `Movil.dc.html` y `Estados.dc.html`.
 
-**Aceptación:** los marcadores caen sobre las coordenadas; ninguno se superpone con las siete tiendas actuales; el panel cambia al tocar un marcador; los filtros viven en la URL; no se añade ninguna biblioteca de mapas.
-
-<details><summary>Prompt para Kilo Code</summary>
-
-```
-Lee docs/design/plan-rol-interno.md §5 y §9, y abre docs/design/prototypes/internal-map/Main.dc.html, Movil.dc.html y Estados.dc.html como referencia visual. Usa projectToMap de src/lib/internalTasks.ts.
-Implementa el mapa estático sobre public/maps/valencia-tiendas.webp (si no existe, lienzo liso), el pie para tiendas fuera de encuadre, el resumen, el panel de tienda y la cabecera con los botones Mapa/Listado/Archivo junto a los selects Tipo y Estado. Sin bibliotecas de mapas. Compara con las maquetas en escritorio y móvil.
-```
-</details>
+**Aceptación:** el mapa es la vista inicial, cada marcador es accesible y abre su tienda, San Felipe aparece fuera del encuadre, y el panel muestra pendientes agrupados por tipo y permite iniciar uno nuevo para esa tienda. Los filtros Tipo y Estado actualizan marcadores, resumen y panel.
 
 ## T5. Listado, Archivo y formularios sin diseño
 
-**Archivos:** `internal/pendientes/list/ListView.tsx`, `archive/ArchiveView.tsx`, `TaskFormPanel.tsx` (crear y editar), `TaskDetailPanel.tsx`.
+**Archivos:** `internal/pendientes/TaskListView.tsx`, `StoreMapView.tsx`, `TaskDrawer.tsx` (crear, editar y detalle), Archivo.
 
-**Referencia:** `Lista`, `Archivo`, `Formulario`, `Editar` y `Detalle` (sin la parte de diseño todavía). Crear permite varias tiendas; cambio de estado con motivo donde corresponda; conflicto de versión (`Estados`).
+**Referencia:** `Lista`, `Archivo`, `Formulario`, `Editar` y `Detalle` (sin la parte de diseño todavía). Listado tabular paginado y formularios/detalle en panel lateral. Crear permite varias tiendas sin diseño; cambio de estado con motivo donde corresponda; conflicto de versión (`Estados`).
 
-**Aceptación:** se crea, edita, avanza, cancela con motivo, archiva y restaura; el historial muestra quién y cuándo; el conflicto de versión ofrece recargar.
+**Aceptación:** Listado es la ruta `/internal/pendientes`; se crea, edita, avanza, cancela con motivo, archiva y restaura; el historial muestra quién y cuándo; el conflicto de versión ofrece recargar.
 
 <details><summary>Prompt para Kilo Code</summary>
 
@@ -125,7 +118,7 @@ Lee docs/design/plan-rol-interno.md §3, §4 y §9 y abre las maquetas Lista, Ar
 
 ## T6. Migración 2: Drive y solicitud a Design
 
-**Archivo:** `supabase/migrations/202610170002_internal_design_requests.sql`.
+**Archivo:** `supabase/migrations/202610180002_internal_design_requests.sql`.
 
 **Contenido** (plan §6.2, §6.4, §7, §8): tabla `pendiente_drive_uploads` (modelo: `publicacion_drive_uploads`), RPC `sync_pendiente_drive_brief`, `reserve_pendiente_brief_upload`, `reserve_pendiente_deliverable_upload`, `request_pendiente_to_design`, `retract_pendiente_design_request`, `get_design_internal_queue`, `get_design_internal_history`, `get_design_internal_request`, `design_start_internal_request`, `design_deliver_internal_request`, `get_pendiente_designer_names`, y permisos `design.internal.*` solo para `design`.
 
@@ -137,7 +130,7 @@ Las RPC que dependen de Drive son solo para `service_role`. Las de Design devuel
 
 ```
 Lee docs/design/plan-rol-interno.md §3.1, §6, §7 y §8 y las migraciones supabase/migrations/202610110001, 202610110002, 202610120001 y 202610130001 como modelo (cargas a Drive, solicitud a Design, cola de Design).
-Crea supabase/migrations/202610170002_internal_design_requests.sql con las tablas y RPC de §8.1 para cargas a Drive, solicitud y lado Design, y los permisos design.internal.*. Reutiliza el patrón service_role-only para lo que depende de Drive. No apliques la migración y no modifiques las de publicaciones.
+Crea supabase/migrations/202610180002_internal_design_requests.sql con las tablas y RPC de §8.1 para cargas a Drive, solicitud y lado Design, y los permisos design.internal.*. Reutiliza el patrón service_role-only para lo que depende de Drive. No apliques la migración y no modifiques las de publicaciones.
 ```
 </details>
 
@@ -146,11 +139,11 @@ Crea supabase/migrations/202610170002_internal_design_requests.sql con las tabla
 **Archivos nuevos:** `src/app/actions/internal/{drive,design}.ts` (duplican y adaptan `actions/publicaciones/drive.ts` y `workflow.ts`; llaman a las RPC de T6), `internal/pendientes/PendienteDriveFiles.tsx` (adapta `PublicationDriveFiles.tsx`), `DesignRequestSection.tsx`.
 **Archivos a ampliar:** `TaskFormPanel.tsx`, `TaskDetailPanel.tsx`.
 
-**Referencia:** `Formulario` (brief bloqueado hasta guardar y aviso de una sola tienda), `CrearBrief`, `Editar` (aviso ámbar de fechas, tarjeta con requisitos), `Detalle` y `Estados` (sin carpeta de Drive, archivos con error, diseño ya abrió, cancelar con diseño en curso).
+**Referencia:** `Formulario`, `CrearBrief`, `Editar` (aviso ámbar de fechas, tarjeta con requisitos), `Detalle` y `Estados` (sin carpeta de Drive, archivos con error, diseño ya abrió, cancelar con diseño en curso).
 
-**Reglas:** casilla marcada por defecto solo en `IMPRESION`; con la casilla, una sola tienda; instrucciones hasta 4000; fecha de entrega obligatoria para solicitar y no anterior a hoy; brief de 10 archivos y 100 MB; solicitar exige archivo verificado hace menos de 5 minutos; retirar solo en `SOLICITADO`.
+**Reglas:** el brief está disponible en todos los pendientes y admite 10 archivos de 100 MB; se sube desde el detalle después de guardar; la casilla de diseño viene marcada solo en `IMPRESION`; con diseño se elige una sola tienda; instrucciones hasta 4000; fecha de entrega a Design = fecha requerida en tienda menos dos días calendario, límite del brief = fecha requerida menos cinco días, estimación de Design = dos días calendario desde la solicitud; solicitar exige estar en `PENDIENTE` y un archivo verificado hace menos de 5 minutos; solicitar cambia a `EN_PROCESO`; retirar solo en `SOLICITADO` devuelve a `PENDIENTE`. Desde entregado o cancelado se crea un pendiente nuevo prellenado, con carpeta nueva. Editar la casilla no borra la carpeta ni los archivos; su sincronización detallada con Drive queda fuera de esta entrega.
 
-**Aceptación:** el flujo crear → guardar → subir brief → solicitar → retirar funciona; la carga va directa del navegador a Drive; los avisos y los estados de error coinciden con las maquetas.
+**Aceptación:** el flujo crear → guardar → subir brief sin diseño funciona; con diseño: crear → guardar → subir brief → solicitar desde `PENDIENTE` → retirar devuelve a `PENDIENTE`; la carga va directa del navegador a Drive; los avisos y estados de error corresponden a las reglas del plan.
 
 <details><summary>Prompt para Kilo Code</summary>
 

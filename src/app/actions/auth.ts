@@ -33,6 +33,7 @@ export async function loginAction(_previousState: LoginState, formData: FormData
   if (profile?.role_code === "customer-support") redirect("/support");
   if (profile?.role_code === "design") redirect("/design/publications");
   if (profile?.role_code === "events") redirect("/events");
+  if (profile?.role_code === "internal") redirect("/internal/pendientes");
   redirect("/access-pending");
 }
 

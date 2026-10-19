@@ -9,6 +9,7 @@ export default async function AccessPendingPage() {
   if (context.profile?.role_code === "customer-support") redirect("/support");
   if (context.profile?.role_code === "design") redirect("/design/publications");
   if (context.profile?.role_code === "events") redirect("/events");
+  if (context.profile?.role_code === "internal") redirect("/internal/pendientes");
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#f4f6f9] px-4 py-10">

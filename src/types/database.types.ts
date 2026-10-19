@@ -21,6 +21,45 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      pendientes_tienda: {
+        Row: {
+          id: string; sede_id: string; tipo: string; titulo: string; detalle: string | null;
+          cantidad: number | null; enlace_referencia: string | null; fecha_requerida: string | null;
+          estatus: string; entregado_en: string | null; archivado_en: string | null; version: number;
+          creado_por: string; creado_en: string; modificado_por: string | null; modificado_en: string;
+          requiere_diseno: boolean; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null;
+          diseno_estatus: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null;
+          diseno_entregado_en: string | null; disenador_id: string | null; drive_folder_id: string | null;
+          drive_folder_url: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null;
+          drive_brief_file_count: number; drive_brief_checked_at: string | null;
+        };
+        Insert: {
+          id?: string; sede_id: string; tipo: string; titulo: string; detalle?: string | null; cantidad?: number | null;
+          enlace_referencia?: string | null; fecha_requerida?: string | null; estatus?: string; entregado_en?: string | null;
+          archivado_en?: string | null; version?: number; creado_por: string; creado_en?: string; modificado_por?: string | null;
+          modificado_en?: string; requiere_diseno?: boolean; instrucciones_diseno?: string | null;
+          fecha_entrega_diseno?: string | null; diseno_estatus?: string | null; diseno_solicitado_en?: string | null;
+          diseno_iniciado_en?: string | null; diseno_entregado_en?: string | null; disenador_id?: string | null;
+          drive_folder_id?: string | null; drive_folder_url?: string | null; drive_brief_folder_id?: string | null;
+          drive_deliverables_folder_id?: string | null; drive_brief_file_count?: number; drive_brief_checked_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['pendientes_tienda']['Insert']>;
+        Relationships: [];
+      };
+      pendiente_drive_uploads: {
+        Row: {
+          id: string; pendiente_id: string; actor_id: string; carpeta: string; file_name: string; mime_type: string;
+          file_size: number; session_uri: string | null; status: string; drive_file_id: string | null;
+          expires_at: string; created_at: string; completed_at: string | null;
+        };
+        Insert: {
+          id?: string; pendiente_id: string; actor_id: string; carpeta: string; file_name: string; mime_type: string;
+          file_size: number; session_uri?: string | null; status?: string; drive_file_id?: string | null;
+          expires_at?: string; created_at?: string; completed_at?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['pendiente_drive_uploads']['Insert']>;
+        Relationships: [];
+      };
       campanas: {
         Row: {
           id: string;
@@ -628,6 +667,37 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      list_internal_stores: {
+        Args: Record<PropertyKey, never>;
+        Returns: { id: string; codigo: string; nombre: string }[];
+      };
+      list_store_tasks: {
+        Args: { p_archived?: boolean; p_tipo?: string | null; p_estatus?: string | null; p_sede_id?: string | null; p_search?: string | null; p_limit?: number; p_offset?: number };
+        Returns: {
+          id: string; sede_id: string; sede_nombre: string; tipo: string; titulo: string; detalle: string | null;
+          cantidad: number | null; enlace_referencia: string | null; fecha_requerida: string | null; estatus: string;
+          version: number; creado_en: string; archivado_en: string | null; requiere_diseno: boolean;
+          instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string | null;
+          drive_brief_file_count: number; total_count: number;
+        }[];
+      };
+      get_store_task: { Args: { p_id: string }; Returns: Json };
+      create_store_tasks: { Args: { p_data: Json; p_sede_ids: string[] }; Returns: Json };
+      update_store_task: { Args: { p_id: string; p_version: number; p_data: Json }; Returns: Json };
+      transition_store_task_status: { Args: { p_id: string; p_version: number; p_estatus: string; p_motivo?: string | null }; Returns: Json };
+      archive_store_task: { Args: { p_id: string; p_version: number }; Returns: Json };
+      restore_store_task: { Args: { p_id: string; p_version: number }; Returns: Json };
+      sync_pendiente_drive_brief: { Args: { p_pendiente_id: string; p_brief_folder_id: string; p_deliverables_folder_id: string; p_file_count: number }; Returns: undefined };
+      reserve_pendiente_brief_upload: { Args: { p_actor_id: string; p_pendiente_id: string; p_file_name: string; p_mime_type: string; p_file_size: number }; Returns: string };
+      reserve_pendiente_deliverable_upload: { Args: { p_actor_id: string; p_pendiente_id: string; p_file_name: string; p_mime_type: string; p_file_size: number }; Returns: string };
+      request_pendiente_to_design: { Args: { p_pendiente_id: string; p_actor_id: string }; Returns: undefined };
+      retract_pendiente_design_request: { Args: { p_pendiente_id: string; p_version: number }; Returns: undefined };
+      get_design_internal_queue: { Args: Record<PropertyKey, never>; Returns: { id: string; titulo: string; tipo: string; sede_nombre: string; cantidad: number | null; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null }[] };
+      get_design_internal_request: { Args: { p_pendiente_id: string }; Returns: Json[] };
+      get_design_internal_history: { Args: { p_limit?: number; p_offset?: number }; Returns: Json[] };
+      get_pendiente_designer_names: { Args: { p_ids: string[] }; Returns: { user_id: string; full_name: string | null }[] };
+      design_start_internal_request: { Args: { p_pendiente_id: string }; Returns: undefined };
+      design_deliver_internal_request: { Args: { p_pendiente_id: string }; Returns: undefined };
       has_permission: {
         Args: { required_permission: string };
         Returns: boolean;

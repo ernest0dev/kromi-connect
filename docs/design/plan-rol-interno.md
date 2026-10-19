@@ -1,19 +1,21 @@
-# Perfil Interno: pendientes por tienda sobre un mapa estático
+# Perfil Interno: pendientes por tienda
 
-**Estado (2026-10-17):** especificación **lista para implementar**; no hay código, migración ni permisos. Hoy el rol `internal` existe en autenticación, no tiene permisos de negocio y quien lo recibe termina en `/access-pending`. El equipo decidió omitir la entrevista con el rol por tener clara la necesidad.
-**Alcance:** rol `internal` ("Interno"), una sola persona usuaria. Vista principal **Pendientes**: un mapa estático de Valencia Norte, Naguanagua y San Diego con los pendientes de cada tienda, más las sub vistas Listado y Archivo. Cada pendiente puede llevar una **solicitud a Design** (impresión o pieza digital).
+**Estado (2026-10-18):** implementación inicial en curso. Las migraciones y el flujo funcional de Pendientes están en el workspace y el equipo reportó haber aplicado las migraciones manualmente. Se está ajustando la UI para seguir las maquetas. La entrevista con el rol se omitió por decisión del equipo.
+**Alcance inicial:** rol `internal` ("Interno"), una sola persona usuaria. Vista **Pendientes** con Mapa y Listado, más Archivo. El mapa funcional incluye marcadores, urgencias y panel por tienda sobre un fondo gris liso; la imagen o representación geográfica del fondo se incorpora en una fase posterior. Cada pendiente puede llevar un brief en Drive y, opcionalmente, una **solicitud a Design** (impresión o pieza digital).
 **Cómo implementarlo:** [`implementacion-rol-interno.md`](./implementacion-rol-interno.md) trae las tandas, los archivos a tocar, los criterios de aceptación y un prompt por tanda.
+
+**Actualización de implementación (2026-10-18):** las opciones nuevas de Tipo son `IMPRESION`, `SONIDO_INTERNO`, `REPARACION` y `OTRO`; las filas históricas `INSUMO` y `NECESIDAD` se conservan como categorías anteriores. El campo de enlace deja de usarse para nuevas solicitudes: los briefs y materiales se cargan en la carpeta de Drive después de crear o guardar el pendiente. Con diseño, el usuario indica la fecha requerida en tienda; el sistema deriva la entrega a Design (dos días calendario antes) y el límite para subir el brief (cinco días calendario antes), siguiendo el SLA de Social Media. La estimación de Design es dos días calendario desde que recibe la solicitud. La solicitud con diseño sigue limitada a una tienda. Listado y Archivo usan selector de filas por página. Desde un pendiente entregado o cancelado se puede crear otro prellenado, con estado nuevo y carpeta de Drive nueva.
 **Diseño de UI:** nueve maquetas en [`prototypes/internal-map/`](./prototypes/internal-map) (§9). Si difieren de este documento, gana el documento.
 **Documentos relacionados:** [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`plan-rol-design.md`](./plan-rol-design.md), [`modales-publicacion.md`](./modales-publicacion.md), [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md), [`plan-eventos-programacion.md`](./plan-eventos-programacion.md) y [`plan-inventario-eventos.md`](./plan-inventario-eventos.md) (mismo patrón de acceso, RPC y catálogo de tiendas).
 
 ## 1. Resultado esperado
 
-1. La persona con rol Interno entra a **Pendientes** y ve un **mapa estático** con las tiendas de Kromi en Valencia. Cada tienda muestra cuántos pendientes tiene y cuál es su urgencia. San Felipe, que está lejos, aparece como un icono al pie del mapa.
-2. Al elegir una tienda ve sus pendientes de **impresiones, insumos y necesidades** y los hace avanzar hasta dejarlos entregados.
+1. En la primera entrega, la persona con rol Interno entra a **Pendientes** y ve el Mapa funcional de sus pendientes por tienda. El fondo es gris liso provisional; la imagen geográfica queda para una fase posterior.
+2. Al elegir una tienda ve sus pendientes de **impresiones, sonido interno, reparaciones y otros** y los hace avanzar hasta dejarlos entregados.
 3. Crea sus propios pendientes y se los asigna a sí misma. Por ahora **no recibe solicitudes de otros roles**, solo las crea.
-4. En el formulario de crear, editar y en el detalle de un pendiente puede marcar **Requiere diseño** y pedir a Design una impresión o una pieza digital, igual que Social Media pide una publicación: instrucciones de texto libre, fecha de entrega de la pieza y brief con archivos en Drive (hasta 10 archivos de 100 MB).
+4. En crear, editar y detalle puede guardar un **brief en Drive** (hasta 10 archivos de 100 MB), requiera o no diseño. Si marca **Requiere diseño**, puede pedir a Design una impresión o pieza digital con instrucciones y fecha de entrega. Solicitar diseño exige que el pendiente esté en `PENDIENTE` y lo pasa a `EN_PROCESO`.
 5. Cada cambio de estado guarda quién lo hizo y cuándo; los retrocesos y cancelaciones piden motivo.
-6. **Listado** y **Archivo** son sub vistas de Pendientes, con botones de navegación en el encabezado junto a los filtros Tipo y Estado.
+6. **Listado** y **Archivo** son las vistas iniciales de Pendientes, con botones de navegación en el encabezado junto a los filtros Tipo y Estado. El mapa se añade después sin cambiar el modelo de datos.
 7. Vive como un perfil más (`internal`), con su propio menú de **un solo ítem** y permisos; no abre `/support` ni `/third-parties`.
 
 ## 2. Punto de partida
@@ -27,7 +29,7 @@
 | Quién crea | El rol los crea y se los asigna a sí mismo (una sola persona). Por ahora no recibe solicitudes, solo las crea. | 2026-10-15 |
 | Entrevista | Omitida por ahora. | 2026-10-15 |
 | Tiendas y direcciones | Las siete tiendas, con dirección y enlace de Google Maps, entregadas por el equipo (§5.2). | 2026-10-15 |
-| **Mapa estático** | **Estático, minimalista, sin integraciones ni dibujo en HTML.** Muestra Valencia Norte, Naguanagua y San Diego con las tiendas de Valencia; San Felipe va como icono al pie. Que sea interactivo (tocar un marcador abre el panel) alcanza para la versión básica, que es la de las maquetas. | 2026-10-15 y 2026-10-17 |
+| **Mapa estático** | **Vista funcional, minimalista y sin integraciones.** Muestra tiendas de Valencia ubicadas según coordenadas provisionales sobre un fondo gris liso; San Felipe va como icono al pie. Tocar un marcador abre el panel. La imagen geográfica del fondo se puede añadir después. | 2026-10-15 y 2026-10-17 |
 | **Solicitud en el pendiente** | **Las solicitudes a Design van en crear, editar y detalle del pendiente**, como en las publicaciones de Social Media. | 2026-10-17 |
 | **Piezas digitales** | El Interno no solo pide impresiones: también **piezas digitales**. Se mantiene simple: el campo **Instrucciones** de texto libre cubre ambos casos. | 2026-10-17 |
 | **Campos de la solicitud** | Casilla **Requiere diseño**; campo **Instrucciones** cuando está marcada; **fecha de entrega de la pieza de diseño**; **brief a Drive** con 10 archivos y 100 MB por archivo como máximo. | 2026-10-17 |
@@ -56,11 +58,11 @@ Unidad de trabajo: **un pendiente pertenece a una tienda**.
 | Campo | Tipo | Regla |
 |---|---|---|
 | Tienda | una de `inventario_sedes` | Obligatoria. Sin diseño se pueden elegir varias y se crea un pendiente por tienda. **Con "Requiere diseño" se elige una sola** (D14). |
-| Tipo | `IMPRESION`, `INSUMO`, `NECESIDAD` | Obligatorio. |
+| Tipo | `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` | Obligatorio. `INSUMO` y `NECESIDAD` se conservan solo para filas históricas. |
 | Título | texto, hasta 160 | Obligatorio. |
 | Detalle | texto largo libre, hasta 2000 | Opcional. Notas internas, proveedor, etc. No se comparte con Design. |
 | Cantidad | entero ≥ 1 | Opcional. |
-| Enlace de referencia | texto (URL http/https), hasta 500 | Opcional. Para material de apoyo. |
+| Brief y materiales | Archivos en Drive | Disponibles para cualquier pendiente; se cargan después de guardar. `enlace_referencia` queda solo para lectura de datos históricos. |
 | Fecha requerida en tienda | fecha (America/Caracas) | Opcional. Cuándo debe estar en la tienda. |
 | Creado por | usuario con rol `internal` | Siempre quien crea. No se reasigna. |
 
@@ -70,12 +72,12 @@ La solicitud **no es una entidad aparte**: son columnas del propio pendiente, co
 
 | Campo | Regla |
 |---|---|
-| **Requiere diseño** | Casilla. Por defecto marcada solo si el tipo es `IMPRESION`; en `INSUMO` y `NECESIDAD` queda sin marcar. Cualquier tipo puede marcarla: una **pieza digital** se registra con la casilla y las instrucciones (D16). Editable mientras no se haya solicitado. |
+| **Requiere diseño** | Casilla. Por defecto marcada solo si el tipo es `IMPRESION`; en los demás tipos queda sin marcar. Cualquier tipo puede marcarla: una **pieza digital** se registra con la casilla y las instrucciones (D16). Editable mientras no se haya solicitado. |
 | **Instrucciones para Design** | Texto libre, hasta 4000 caracteres. Visible cuando la casilla está marcada. **Obligatorias para solicitar**. Formato, medidas, cantidades, papel o canal digital: lo que haga falta. Editables solo mientras no se haya solicitado. |
-| **Fecha de entrega de la pieza** | Fecha (America/Caracas). **Obligatoria para solicitar** y no puede ser anterior a hoy. Si es posterior a la fecha requerida en tienda, la interfaz avisa en ámbar, sin bloquear. Editable solo antes de solicitar. |
-| **Brief** | Archivos en la subcarpeta `Brief` de Drive del pendiente. Hasta **10 archivos de 100 MB**: JPG, JPEG, PNG, WebP, PDF y MP4 (las mismas reglas de Social Media). Se sube **después de guardar** (en el paso posterior a crear, en Editar o en Detalle). **Solicitar exige al menos un archivo**, comprobado en Drive hace menos de 5 minutos. |
-| **Solicitar a Design** | Acción de servidor que comprueba lo anterior, deja la solicitud en `SOLICITADO` y, si el pendiente estaba `PENDIENTE`, lo pasa a `EN_PROCESO`. |
-| **Retirar solicitud** | Mientras esté `SOLICITADO` (Design no la abrió): vuelve a "por solicitar", y el pendiente a `PENDIENTE` si la solicitud lo había movido. Permite editar instrucciones y fecha. |
+| **Fecha de entrega de la pieza** | Se calcula como la fecha requerida en tienda menos dos días calendario. **Obligatoria para solicitar** y no puede ser anterior a hoy. Editable solo antes de solicitar. |
+| **Brief** | Archivos en la subcarpeta `Brief` de Drive del pendiente, requiera o no diseño. Hasta **10 archivos de 100 MB**: JPG, JPEG, PNG, WebP, PDF y MP4 (las mismas reglas de Social Media). Se sube **después de guardar** desde Detalle. El límite del brief se calcula cinco días calendario antes de la fecha requerida en tienda. **Solicitar a Design exige al menos un archivo**, comprobado en Drive hace menos de 5 minutos. |
+| **Solicitar a Design** | Acción de servidor que comprueba lo anterior y exige que el pendiente esté en `PENDIENTE`. Lo deja en `SOLICITADO` y pasa el pendiente a `EN_PROCESO` en la misma operación. No se puede solicitar desde `EN_PROCESO`, `LISTO`, `ENTREGADO` ni `CANCELADO`. |
+| **Retirar solicitud** | Mientras esté `SOLICITADO` (Design no la abrió): vuelve a "por solicitar" y el pendiente siempre vuelve a `PENDIENTE`, porque ese era el único estado permitido al solicitar. Permite editar instrucciones y fecha. Si ya está `EN_DISENO`, no se puede retirar. |
 
 Estados de la solicitud (`diseno_estatus`), sin ciclo de corrección:
 
@@ -124,18 +126,21 @@ El color del marcador de cada tienda sigue el peor indicador de sus pendientes a
 ### 4.4 Reglas
 
 1. **Conflicto de edición:** cada cambio comprueba `version`; si cambió, la interfaz ofrece cargar la versión actual.
-2. **Acceso por persona:** cada usuario `internal` ve y modifica solo lo que creó. Hoy es una sola persona; la regla evita exponer datos si el rol crece.
-3. **Un pendiente entregado** solo permite corregir el detalle; no se reprograma.
-4. **Zona horaria:** fechas y "hoy" en America/Caracas, igual que en Eventos (`src/lib/events.ts`, `src/lib/inventory.ts`).
-5. **Design no lee `pendientes_tienda`.** Solo ve, por RPC, los campos que necesita (§6.4).
+2. **Solicitud a Design:** solo se solicita desde `PENDIENTE`; la operación cambia atómicamente el pendiente a `EN_PROCESO`. Retirar una solicitud aún `SOLICITADO` devuelve el pendiente a `PENDIENTE`. Para volver a solicitar tras avanzar el trabajo, la persona debe devolverlo primero a `PENDIENTE` mediante la transición normal, con motivo cuando aplique.
+3. **Acceso por persona:** cada usuario `internal` ve y modifica solo lo que creó. Hoy es una sola persona; la regla evita exponer datos si el rol crece.
+4. **Un pendiente entregado** solo permite corregir el detalle; no se reprograma.
+5. **Zona horaria:** fechas y "hoy" en America/Caracas, igual que en Eventos (`src/lib/events.ts`, `src/lib/inventory.ts`).
+6. **Design no lee `pendientes_tienda`.** Solo ve, por RPC, los campos que necesita (§6.4).
 
-## 5. El mapa estático
+## 5. Mapa de tiendas
+
+El mapa funcional forma parte de la primera entrega. Muestra marcadores, urgencias, resumen y panel de tienda. El fondo inicia como un color gris liso; incorporar una imagen geográfica o una representación visual del territorio queda para una fase posterior. El Listado ofrece la misma información en formato tabular.
 
 Es la diferencia central con los demás perfiles: la dimensión principal es **dónde**, no cuándo.
 
 ### 5.1 Comportamiento
 
-- **Imagen estática de fondo** provista por el equipo, sin zoom, sin teselas, sin biblioteca de mapas ni dibujo en HTML/SVG. El código solo coloca los marcadores encima.
+- **Fondo inicial:** gris liso, sin imagen geográfica, zoom, teselas, biblioteca cartográfica ni dibujo de calles o límites. Los marcadores y el panel por tienda sí se implementan en esta entrega. La imagen estática se añadirá cuando el equipo la provea.
 - **Marcadores:** uno por tienda dentro del encuadre. Muestran el número de pendientes abiertos y el color de urgencia (§4.3). Una tienda sin pendientes se ve atenuada pero visible. Tocar un marcador abre el **panel de la tienda**.
 - **Pie del mapa:** las tiendas cuyas coordenadas caen **fuera del encuadre** (hoy, San Felipe) se muestran como un icono con su insignia, en una franja al pie. La regla es geométrica, no un campo de la base de datos. Las tiendas sin coordenadas van a un bloque "Sin ubicación".
 - **Resumen superior:** abiertos, vencidos, listos para entregar y tiendas con pendientes.
@@ -168,7 +173,7 @@ El mapa se compone de una imagen y cuatro límites geográficos. Los dos tienen 
 |---|---|
 | Archivo | `public/maps/valencia-tiendas.webp` (o `.png`), aportado por el equipo. |
 | Proporción | **1,3 : 1** (ancho : alto), que equivale a unos 10 × 7,7 km. Si la imagen tiene otra proporción, se ajusta `MAP_ASPECT`. |
-| Límites **provisionales** | Latitud 10.180 a 10.250; longitud -68.052 a -67.961. Cubren las seis tiendas de Valencia con margen. Son constantes en `src/lib/internalTasks.ts` (`MAP_BOUNDS`). |
+| Límites **provisionales** | Latitud 10.180 a 10.250; longitud -68.052 a -67.961. Cubren las seis tiendas de Valencia con margen. Son constantes en `src/app/(dashboard)/internal/pendientes/StoreMapView.tsx` (`BOUNDS`). |
 | Posición lineal | `x = (lng − lngMin) / (lngMax − lngMin)` e `y = (latMax − lat) / (latMax − latMin)`, en porcentaje. A esta escala la diferencia con una proyección Mercator es despreciable. |
 | Pie | Tiendas con coordenadas fuera de `MAP_BOUNDS` se dibujan en el pie. |
 | Contenido | Minimalista: sin marcadores propios del proveedor, sin textos de otros comercios y con las etiquetas "Naguanagua", "Valencia Norte" y "San Diego" **dentro de la imagen**, no como código. |
@@ -179,11 +184,11 @@ Si la imagen no carga, los marcadores se dibujan igualmente sobre un lienzo liso
 
 ## 6. Modelo de datos
 
-Migraciones nuevas, **sin escribir todavía**: `supabase/migrations/202610170001_internal_store_tasks.sql` y `202610170002_internal_design_requests.sql` (§11). Antes de crearlas, partir de `supabase db pull` para contrastar con el esquema desplegado.
+Migraciones del módulo, preparadas para aplicación manual: `supabase/migrations/202610180001_internal_store_tasks.sql` y `202610180002_internal_design_requests.sql` (§11). Antes de aplicarlas en Supabase, contrastarlas con el esquema desplegado y resolver cualquier diferencia.
 
-### 6.1 Coordenadas de tiendas
+### 6.1 Catálogo de tiendas (mapa)
 
-Añadir a `inventario_sedes` las columnas opcionales `latitud numeric(10,7)`, `longitud numeric(10,7)` y `direccion text` (máx. 200), con `CHECK` de rango, y cargar los valores de §5.2 con `UPDATE … WHERE codigo = …` en la misma migración. Un solo catálogo de tiendas compartido con Eventos. Son nulas por defecto: no alteran Inventario ni Programación.
+En la primera entrega no se modifica `inventario_sedes` ni se guardan coordenadas en la base. El formulario y el mapa obtienen el catálogo de tiendas mediante `list_internal_stores()` (`SECURITY DEFINER`, exige `internal.store-tasks.read`) y devuelve `id`, `codigo` y `nombre` de las tiendas activas. La UI del mapa usa temporalmente coordenadas y direcciones estáticas de este documento; una fase posterior puede trasladarlas al catálogo tras verificar los datos, sin abrir la política de `inventario_sedes` a `internal`.
 
 La lectura para el rol `internal` se hace con la RPC `list_internal_stores()` (`SECURITY DEFINER`, exige `internal.store-tasks.read`) que devuelve solo `id`, `codigo`, `nombre`, `direccion`, `latitud`, `longitud` de las tiendas activas, sin abrir la política de `inventario_sedes` a `internal`.
 
@@ -193,8 +198,8 @@ La lectura para el rol `internal` se hace con la RPC `list_internal_stores()` (`
 
 | Grupo | Columnas |
 |---|---|
-| Identidad | `id uuid pk`, `sede_id uuid not null → inventario_sedes`, `tipo text` (`IMPRESION`, `INSUMO`, `NECESIDAD`), `titulo text`, `detalle text`, `cantidad integer`, `enlace_referencia text`, `fecha_requerida date` |
-| Estado | `estatus text` (`PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`; por defecto `PENDIENTE`), `entregado_en timestamptz`, `archivado_en timestamptz`, `version integer not null default 1`, `creado_por uuid not null → auth.users`, `created_at`, `updated_at` |
+| Identidad | `id uuid pk`, `sede_id uuid not null → inventario_sedes`, `tipo text` (`IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO`; admite categorías históricas), `titulo text`, `detalle text`, `cantidad integer`, `enlace_referencia text` legado, `fecha_requerida date` |
+| Estado | `estatus text` (`PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`; por defecto `PENDIENTE`), `entregado_en timestamptz`, `archivado_en timestamptz`, `version integer not null default 1`, `creado_por uuid not null → auth.users`, `creado_en`, `modificado_en`, `modificado_por` |
 | Diseño | `requiere_diseno boolean not null default false`, `instrucciones_diseno text` (≤ 4000), `fecha_entrega_diseno date`, `diseno_estatus text` (`SOLICITADO`, `EN_DISENO`, `ENTREGADO`), `diseno_solicitado_en`, `diseno_iniciado_en`, `diseno_entregado_en timestamptz`, `disenador_id uuid → auth.users on delete set null` |
 | Drive | `drive_folder_id`, `drive_folder_url`, `drive_brief_folder_id`, `drive_deliverables_folder_id text`, `drive_brief_file_count integer not null default 0 check (0..10)`, `drive_brief_checked_at timestamptz` |
 
@@ -237,8 +242,8 @@ Ningún otro rol los recibe; `admin` no los adquiere por su nombre de rol (SRS �
 
 | Función | Quién la llama | Hace |
 |---|---|---|
-| `list_internal_stores()` | cargador de la página | Tiendas activas con coordenadas. |
-| `list_store_tasks(filtros)` | cargador de mapa, listado y archivo | Pendientes propios con filtros e indicadores derivados. |
+| `list_internal_stores()` | cargador de formulario y páginas | Tiendas activas (`id`, `codigo`, `nombre`, `activa`); sin coordenadas en esta entrega. |
+| `list_store_tasks(filtros)` | cargador de listado y archivo | Pendientes propios con filtros e indicadores derivados. |
 | `get_store_task(id)` | acción de detalle | Ficha e historial. |
 | `create_store_tasks(datos jsonb, sedes uuid[])` | acción de alta | Crea uno por tienda; con `requiere_diseno`, exige una sola tienda. |
 | `update_store_task(id, versión, datos jsonb)` | acción de edición | Edita con control de versión. Instrucciones, fecha de entrega y la casilla solo cambian antes de solicitar. |
@@ -264,19 +269,20 @@ Igual que en publicaciones: la acción de servidor comprueba en Drive que hay al
 
 ### 8.3 Drive
 
-- La carpeta raíz del pendiente se crea con `createPublicacionDriveFolder` (misma carpeta padre `GOOGLE_DRIVE_PARENT_FOLDER_ID`) cuando se guarda un pendiente con "Requiere diseño", con el nombre `[PENDIENTE] AAAA-MM-DD - Tienda - Título`. Si falla, el pendiente queda guardado y la interfaz muestra "Sin carpeta de Drive" con "Reintentar carpeta".
-- `ensurePublicacionDriveFolders` crea las subcarpetas `Brief` y `Entregables`.
+- Todo pendiente puede tener documentación en Drive, independientemente de "Requiere diseño". La carpeta raíz y `Brief` se crean al guardar el pendiente; si falla, el pendiente queda guardado y la interfaz muestra "Sin carpeta de Drive" con "Reintentar carpeta".
+- `ensurePublicacionDriveFolders` asegura `Brief` y `Entregables` al primer acceso a Drive, incluso si todavía no se requiere diseño. Ambas carpetas y sus archivos se conservan si se desmarca "Requiere diseño". La interacción exacta de la casilla y la carpeta en ediciones posteriores queda pendiente para una decisión futura; en esta entrega no se ejecutan borrados de Drive.
 - **Archivar un pendiente no borra su carpeta de Drive** y no hay purga programada para pendientes en esta entrega.
 
 ## 9. Vistas
 
 | Vista | Ruta | Contenido | Maqueta |
 |---|---|---|---|
-| Pendientes · Mapa | `/internal/pendientes` | Encabezado con título, botones **Mapa / Listado / Archivo**, selects Tipo y Estado y "+ Nuevo pendiente"; resumen; mapa estático con pie; panel de tienda. | `Main`, `Movil` |
-| Listado | `/internal/pendientes/list` | Misma cabecera, búsqueda y filtros de tienda y diseño; tabla con indicador de urgencia y estado de diseño; paginación en la URL. | `Lista` |
+| Pendientes · Mapa | `/internal/pendientes` | Vista inicial con resumen, fondo gris provisional, marcadores con cantidad y urgencia, San Felipe al pie y panel de la tienda seleccionada; filtros Tipo y Estado. | `Main`, `Movil`, `Estados` |
+| Pendientes · Listado | `/internal/pendientes` | Botones **Mapa / Listado / Archivo**; búsqueda, filtros Tipo, Estado, tienda y diseño; tabla con indicador de urgencia y estado de diseño; paginación en la URL. | `Lista` |
+| Mapa (posterior) | `/internal/pendientes/map` (por definir al implementar esa fase) | Mapa estático con pie y panel de tienda. | `Main`, `Movil` |
 | Archivo | `/internal/pendientes/archive` | Misma cabecera; entregados y cancelados, con "Restaurar". | `Archivo` |
-| Crear | Panel lateral | Tipo, tienda, título, cantidad, fecha requerida, detalle, enlace; casilla **Requiere diseño**, instrucciones, fecha de entrega y brief bloqueado hasta guardar. | `Formulario` |
-| Paso posterior a crear | Panel lateral | Confirmación, brief con subida en curso y "Solicitar a Design" deshabilitado hasta tener un archivo. | `CrearBrief` |
+| Crear | Panel lateral | Tipo, tienda, título, cantidad, fecha requerida, detalle; brief en Drive se carga después de guardar; casilla **Requiere diseño**, instrucciones y fechas calculadas. | `Formulario` |
+| Paso posterior a crear | Panel lateral | Confirmación y brief con subida en curso; "Solicitar a Design" deshabilitado hasta tener un archivo y cumplir los demás requisitos. | `CrearBrief` |
 | Editar | Panel lateral | Igual que crear, con el brief activo, el aviso ámbar de fechas y la tarjeta de solicitud. | `Editar` |
 | Detalle | Panel lateral | Estados, fechas, solicitud a Design con su línea de estados, instrucciones, brief, entregables e historial. | `Detalle` |
 | Estados de la interfaz | Todas | Sin pendientes, fondo no disponible, error, conflicto, sin carpeta de Drive, archivos con error, "Diseño ya abrió", cancelar con diseño en curso y tiendas sin ubicación. | `Estados` |
@@ -286,7 +292,7 @@ Igual que en publicaciones: la acción de servidor comprueba en Drive que hay al
 
 **Menú:** el Interno tiene un solo ítem, **Pendientes**. Design suma un ítem **Pendientes del Interno** a su menú actual, visible con `design.internal.read`.
 
-Las maquetas (`docs/design/prototypes/internal-map/`) son **autónomas**: se abren directo en el navegador, no usan `support.js` ni `<x-dc>`, y los marcadores son interactivos. Los datos (pendientes y fechas) son de ejemplo; las coordenadas y el cálculo de posición son los reales. El fondo del mapa es un placeholder: en la implementación lo reemplaza la imagen estática de §5.3. Hay un `canvas.json` con su posición. La maqueta de Design no existe porque reutiliza la cola y la ficha ya implementadas.
+Las maquetas (`docs/design/prototypes/internal-map/`) son **autónomas**: se abren directo en el navegador, no usan `support.js` ni `<x-dc>`. `Main` y `Movil` guían el mapa funcional con fondo gris; `Lista`, `Archivo`, `Formulario`, `CrearBrief`, `Editar`, `Detalle` y `Estados` guían sus respectivos flujos. Los datos son de ejemplo. La maqueta de Design no existe porque reutiliza la cola y la ficha ya implementadas.
 
 Lo que las maquetas fijan:
 
@@ -310,14 +316,14 @@ El orden de construcción y los prompts están en [`implementacion-rol-interno.m
 
 | Fase | Contenido | Depende de |
 |---|---|---|
-| 0 | Imagen del mapa y verificación de coordenadas (§5); `supabase db pull`; confirmar D14 a D17. | Equipo |
-| 1 | Migración `202610170001`: coordenadas, `pendientes_tienda` con sus columnas de diseño, historial, permisos del Interno, RLS y RPC de pendientes. | Fase 0 |
-| 2 | Migración `202610170002`: cargas a Drive, solicitud a Design, RPC y permisos de Design. | Fase 1 |
-| 3a | Tipos, lógica y pruebas; acciones de servidor; rutas, menú y mapa; listado, archivo y formularios **sin** diseño. Entrega usable sola. | Fase 1 |
+| 0 | Fijar decisiones de flujo, revisar el esquema local y preparar migraciones para aplicación manual. Mapa y coordenadas se aplazan. | — |
+| 1 | Migración `202610180001`: `pendientes_tienda` con sus columnas de diseño y Drive, historial, permisos del Interno, RLS y RPC de pendientes y catálogo de tiendas. | Fase 0 |
+| 2 | Migración `202610180002`: cargas a Drive, solicitud a Design, RPC y permisos de Design. | Fase 1 |
+| 3a | Tipos, lógica y pruebas; acciones de servidor; rutas, menú, mapa sobre fondo gris, listado, archivo y formularios **sin** diseño. Entrega usable sin imagen geográfica. | Fase 1 |
 | 3b | Lado Interno de la solicitud: casilla, instrucciones, fecha, brief a Drive, solicitar y retirar. | Fases 2 y 3a |
 | 3c | Lado Design: cola, ficha, historial, carga de entregables y entrega. | Fase 2 y 3b |
-| 4 | Verificación en remoto (`supabase db pull`, grants, RLS, RPC) y prueba con cuentas `internal` y `design` reales; actualizar SRS y esquema. | Fases 1 a 3 |
-| 5 | Posteriores según uso: ciclo de corrección, recibir solicitudes de otros roles, vínculos con eventos y terceros, ruta de entregas, notificaciones. | Uso real |
+| 4 | Verificación después de la aplicación manual (`supabase db pull`, grants, RLS, RPC) y prueba con cuentas `internal` y `design` reales; actualizar SRS y esquema. | Fases 1 a 3 |
+| 5 | Mapa estático (imagen/representación, coordenadas y marcadores); otras mejoras según uso: ciclo de corrección, recibir solicitudes de otros roles, vínculos con eventos y terceros, ruta de entregas y notificaciones. | Equipo / uso real |
 
 ## 12. Decisiones
 

@@ -472,6 +472,78 @@
 | `cambiado_por` | `uuid`        | Nullable    |
 | `cambiado_en`  | `timestamptz` |             |
 
+## Table `pendientes_tienda`
+
+### Columns
+
+| Name                           | Type          | Constraints |
+| ------------------------------ | ------------- | ----------- |
+| `id`                           | `uuid`        | Primary     |
+| `sede_id`                      | `uuid`        |             |
+| `tipo`                         | `text`        |             |
+| `titulo`                       | `text`        |             |
+| `detalle`                      | `text`        | Nullable    |
+| `cantidad`                     | `int4`        | Nullable    |
+| `enlace_referencia`            | `text`        | Nullable    |
+| `fecha_requerida`              | `date`        | Nullable    |
+| `estatus`                      | `text`        |             |
+| `entregado_en`                 | `timestamptz` | Nullable    |
+| `archivado_en`                 | `timestamptz` | Nullable    |
+| `version`                      | `int4`        |             |
+| `creado_por`                   | `uuid`        |             |
+| `creado_en`                    | `timestamptz` |             |
+| `modificado_por`               | `uuid`        | Nullable    |
+| `modificado_en`                | `timestamptz` |             |
+| `requiere_diseno`              | `bool`        |             |
+| `instrucciones_diseno`         | `text`        | Nullable    |
+| `fecha_entrega_diseno`         | `date`        | Nullable    |
+| `diseno_estatus`               | `text`        | Nullable    |
+| `diseno_solicitado_en`         | `timestamptz` | Nullable    |
+| `diseno_iniciado_en`           | `timestamptz` | Nullable    |
+| `diseno_entregado_en`          | `timestamptz` | Nullable    |
+| `disenador_id`                 | `uuid`        | Nullable    |
+| `drive_folder_id`              | `text`        | Nullable    |
+| `drive_folder_url`             | `text`        | Nullable    |
+| `drive_brief_folder_id`        | `text`        | Nullable    |
+| `drive_deliverables_folder_id` | `text`        | Nullable    |
+| `drive_brief_file_count`       | `int4`        |             |
+| `drive_brief_checked_at`       | `timestamptz` | Nullable    |
+
+## Table `pendiente_tienda_historial`
+
+### Columns
+
+| Name           | Type          | Constraints |
+| -------------- | ------------- | ----------- |
+| `id`           | `uuid`        | Primary     |
+| `pendiente_id` | `uuid`        |             |
+| `tipo`         | `text`        |             |
+| `anterior`     | `jsonb`       |             |
+| `nuevo`        | `jsonb`       |             |
+| `motivo`       | `text`        | Nullable    |
+| `cambiado_por` | `uuid`        | Nullable    |
+| `cambiado_en`  | `timestamptz` |             |
+
+## Table `pendiente_drive_uploads`
+
+### Columns
+
+| Name            | Type          | Constraints |
+| --------------- | ------------- | ----------- |
+| `id`            | `uuid`        | Primary     |
+| `pendiente_id`  | `uuid`        |             |
+| `actor_id`      | `uuid`        |             |
+| `carpeta`       | `text`        |             |
+| `file_name`     | `text`        |             |
+| `mime_type`     | `text`        |             |
+| `file_size`     | `int8`        |             |
+| `session_uri`   | `text`        | Nullable    |
+| `status`        | `text`        |             |
+| `drive_file_id` | `text`        | Nullable    |
+| `expires_at`    | `timestamptz` |             |
+| `created_at`    | `timestamptz` |             |
+| `completed_at`  | `timestamptz` | Nullable    |
+
 ## Custom Types / Enums
 
 ### `formato_enum`
@@ -640,3 +712,15 @@
 | Policy                               | Command | Roles         | Action     | USING                                                                      | WITH CHECK |
 | ------------------------------------ | ------- | ------------- | ---------- | -------------------------------------------------------------------------- | ---------- |
 | `app_permissions_read_event_history` | SELECT  | authenticated | PERMISSIVE | `( SELECT has_permission('events.schedule.read'::text) AS has_permission)` | —          |
+
+### `pendientes_tienda`
+
+| Policy                          | Command | Roles         | Action     | USING                                                                                                                            | WITH CHECK |
+| ------------------------------- | ------- | ------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `internal_read_own_store_tasks` | SELECT  | authenticated | PERMISSIVE | `(( SELECT has_permission('internal.store-tasks.read'::text) AS has_permission) AND (creado_por = ( SELECT auth.uid() AS uid)))` | —          |
+
+### `pendiente_tienda_historial`
+
+| Policy                                 | Command | Roles         | Action     | USING                                                                                                                                                                                                                                              | WITH CHECK |
+| -------------------------------------- | ------- | ------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `internal_read_own_store_task_history` | SELECT  | authenticated | PERMISSIVE | `(( SELECT has_permission('internal.store-tasks.read'::text) AS has_permission) AND (EXISTS ( SELECT 1    FROM pendientes_tienda p   WHERE ((p.id = pendiente_tienda_historial.pendiente_id) AND (p.creado_por = ( SELECT auth.uid() AS uid))))))` | —          |
