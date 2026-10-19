@@ -134,6 +134,8 @@ El color del marcador de cada tienda sigue el peor indicador de sus pendientes a
 
 ## 5. Mapa de tiendas
 
+**Actualización 2026-10-18:** el mapa ya usa la imagen estática `public/maps/valencia-tiendas.webp` (captura de Google Maps aportada por el equipo) en lugar del fondo gris; las referencias a "fondo gris provisional" más abajo son históricas. Pendiente del equipo: confirmar términos de uso y atribución de la imagen.
+
 El mapa funcional forma parte de la primera entrega. Muestra marcadores, urgencias, resumen y panel de tienda. El fondo inicia como un color gris liso; incorporar una imagen geográfica o una representación visual del territorio queda para una fase posterior. El Listado ofrece la misma información en formato tabular.
 
 Es la diferencia central con los demás perfiles: la dimensión principal es **dónde**, no cuándo.
@@ -173,7 +175,7 @@ El mapa se compone de una imagen y cuatro límites geográficos. Los dos tienen 
 |---|---|
 | Archivo | `public/maps/valencia-tiendas.webp` (o `.png`), aportado por el equipo. |
 | Proporción | **1,3 : 1** (ancho : alto), que equivale a unos 10 × 7,7 km. Si la imagen tiene otra proporción, se ajusta `MAP_ASPECT`. |
-| Límites **provisionales** | Latitud 10.180 a 10.250; longitud -68.052 a -67.961. Cubren las seis tiendas de Valencia con margen. Son constantes en `src/app/(dashboard)/internal/pendientes/StoreMapView.tsx` (`BOUNDS`). |
+| Límites **calibrados (2026-10-18)** | Latitud 10.18216 a 10.24430; longitud -68.04744 a -67.96091, ajustados con los pines de Mañongo, Trigal Norte, Trigal Sur, Prebo y Guataparo de la imagen (error menor a 1 px). Imagen de 1124 × 821 px (`MAP_ASPECT` = 1124 / 821). Castillito cae sobre el pin de San Diego. Son constantes en `src/app/(dashboard)/internal/pendientes/StoreMapView.tsx` (`BOUNDS`). |
 | Posición lineal | `x = (lng − lngMin) / (lngMax − lngMin)` e `y = (latMax − lat) / (latMax − latMin)`, en porcentaje. A esta escala la diferencia con una proyección Mercator es despreciable. |
 | Pie | Tiendas con coordenadas fuera de `MAP_BOUNDS` se dibujan en el pie. |
 | Contenido | Minimalista: sin marcadores propios del proveedor, sin textos de otros comercios y con las etiquetas "Naguanagua", "Valencia Norte" y "San Diego" **dentro de la imagen**, no como código. |

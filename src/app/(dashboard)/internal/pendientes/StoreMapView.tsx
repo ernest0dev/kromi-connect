@@ -3,7 +3,11 @@
 import { useMemo, useState } from 'react';
 import { STORE_MAP_INFO, TASK_STATUS_LABELS, getUrgency, type InternalStore, type StoreTaskRow } from '@/lib/internalTasks';
 
-const BOUNDS = { latMin: 10.18, latMax: 10.25, lngMin: -68.052, lngMax: -67.961 };
+// Calibrado con la imagen public/maps/valencia-tiendas.webp (1124 x 821 px): ajuste lineal sobre los pines de
+// Mañongo, Trigal Norte, Trigal Sur, Prebo y Guataparo, con error menor a 1 px. Si se cambia la imagen, recalibrar.
+const BOUNDS = { latMin: 10.18216, latMax: 10.24430, lngMin: -68.04744, lngMax: -67.96091 };
+const MAP_ASPECT = 1124 / 821;
+const MAP_IMAGE = '/maps/valencia-tiendas.webp';
 const TYPE_ORDER = ['IMPRESION', 'SONIDO_INTERNO', 'REPARACION', 'OTRO', 'INSUMO', 'NECESIDAD'] as const;
 const TYPE_GROUP_LABELS: Record<(typeof TYPE_ORDER)[number], string> = { IMPRESION: 'Impresiones', SONIDO_INTERNO: 'Sonido interno', REPARACION: 'Reparaciones', OTRO: 'Otros', INSUMO: 'Insumos (anteriores)', NECESIDAD: 'Necesidades (anteriores)' };
 
@@ -49,7 +53,9 @@ export function StoreMapView({ stores, rows, onOpenTask, onCreate, onAdvance }: 
     </section>
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_380px]">
       <section className="rounded-xl border border-[#dce2ea] bg-white p-3 sm:p-4" aria-label="Mapa de tiendas">
-        <div className="relative aspect-[1.3] min-h-[300px] overflow-hidden rounded-lg border border-[#dce2ea] bg-[#e9edf2] sm:min-h-[430px]">
+        <div className="relative w-full overflow-hidden rounded-lg border border-[#dce2ea] bg-[#e9edf2]" style={{ aspectRatio: MAP_ASPECT }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={MAP_IMAGE} alt="Mapa de Valencia, Naguanagua y San Diego con las tiendas de Kromi" className="absolute inset-0 h-full w-full select-none object-fill" draggable={false} />
           {inFrame.map((store) => {
             const storeRows = grouped.get(store.id) ?? [];
             return <button key={store.id} type="button" onClick={() => setSelectedId(store.id)} style={point(store)} aria-pressed={selected?.id === store.id} aria-label={`${store.nombre}: ${storeRows.length} pendientes abiertos`} className="group absolute z-10 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2 focus-visible:outline focus-visible:outline-4 focus-visible:outline-orange-400">
@@ -57,16 +63,13 @@ export function StoreMapView({ stores, rows, onOpenTask, onCreate, onAdvance }: 
               <span className="rounded bg-white/90 px-1.5 py-0.5 text-xs font-bold text-[#10233F] shadow-sm group-hover:bg-white">{store.nombre}</span>
             </button>;
           })}
-          <span className="absolute left-4 top-4 text-xs font-bold uppercase tracking-[.12em] text-slate-500">Naguanagua</span>
-          <span className="absolute bottom-4 left-4 text-xs font-bold uppercase tracking-[.12em] text-slate-500">Valencia Norte</span>
-          <span className="absolute bottom-4 right-4 text-xs font-bold uppercase tracking-[.12em] text-slate-500">San Diego</span>
-          {inFrame.length === 0 && <p className="absolute inset-0 grid place-items-center text-sm text-slate-500">No hay tiendas para mostrar con estos filtros.</p>}
+          {inFrame.length === 0 && <p className="absolute inset-0 grid place-items-center rounded bg-white/90 text-sm text-slate-500">No hay tiendas para mostrar con estos filtros.</p>}
         </div>
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-xs font-medium text-slate-600">
           <Legend color="bg-red-600" label="Con vencidos (!)" /><Legend color="bg-orange-500" label="Próximos a vencer" /><Legend color="bg-[#0066D2]" label="Sin urgencia" /><Legend color="bg-slate-300" label="Sin pendientes" />
         </div>
         {outOfFrame.length > 0 && <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-dashed pt-3">{outOfFrame.map((store) => <button key={store.id} type="button" onClick={() => setSelectedId(store.id)} aria-pressed={selected?.id === store.id} className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-left ${selected?.id === store.id ? 'border-[#0066D2] bg-blue-50' : 'border-slate-200 bg-slate-50'}`}><span className={`grid h-8 min-w-8 place-items-center rounded-full px-2 text-xs font-bold ${urgencyTone(grouped.get(store.id) ?? [])}`}>{grouped.get(store.id)?.length ?? 0}</span><span><span className="block text-sm font-bold">{store.nombre}</span><span className="block text-xs text-slate-500">Fuera del encuadre · {STORE_MAP_INFO[store.codigo]?.zone ?? 'Sin ubicación'}</span></span></button>)}</div>}
-        <p className="mt-3 text-xs text-slate-500">Representación geográfica pendiente. Las tiendas y sus marcadores se muestran sobre un fondo gris provisional.</p>
+        <p className="mt-3 text-xs text-slate-500">Mapa estático de referencia. Imagen © Google Maps.</p>
       </section>
       <aside className="max-xl:fixed max-xl:inset-x-0 max-xl:bottom-0 max-xl:z-30 max-xl:max-h-[56vh] max-xl:overflow-y-auto max-xl:rounded-t-[18px] max-xl:border-b-0 max-xl:pb-8 max-xl:shadow-[0_-6px_20px_rgba(16,35,63,0.12)] rounded-xl border border-[#dce2ea] bg-white p-4" aria-live="polite">
         <div className="mx-auto mb-3 h-1.5 w-11 rounded-full bg-slate-300 xl:hidden" aria-hidden="true" />
