@@ -12,10 +12,10 @@ async function getDesignPublication(publicationId: string, permission: 'design.p
   if (!UUID.test(publicationId)) return { error: 'Identificador de publicación no válido.' } as const;
   const access = await authorizeAction(permission);
   if (access.error || !access.context) return { error: access.error || 'Inicia sesión para continuar.' } as const;
-  const { data: queue, error } = await access.context.supabase.rpc('get_design_publication_queue');
+  const { data: rows, error } = await access.context.supabase.rpc('get_design_publication_request', { p_id: publicationId });
   if (error) return { error: error.message } as const;
-  const publication = queue?.find((item) => item.id === publicationId);
-  if (!publication) return { error: 'La solicitud ya no está en la cola de Diseño.' } as const;
+  const publication = rows?.[0];
+  if (!publication) return { error: 'No se encontró la solicitud de Diseño.' } as const;
   return { access, publication } as const;
 }
 

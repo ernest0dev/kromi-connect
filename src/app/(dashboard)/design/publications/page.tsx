@@ -1,6 +1,5 @@
 import { requirePermission } from '@/lib/auth/dal';
 import { getCaracasToday } from '@/lib/designSla';
-import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { adaptEvent, adaptInternal, adaptPublication, sortDesignRequests } from '@/lib/designRequests';
 import { UnifiedQueueView } from './UnifiedQueueView';
 import { DesignWorkspaceNav } from './DesignWorkspaceNav';
@@ -17,7 +16,7 @@ export default async function DesignPublicationsPage() {
   const publications = publicationResult.data ?? [];
   const ids = publications.map((publication) => publication.id);
   const { data: channelRows } = ids.length
-    ? await getSupabaseAdmin().from('publicacion_canales').select('publicacion_id,canal').in('publicacion_id', ids)
+    ? await supabase.rpc('get_design_publication_channels', { p_ids: ids })
     : { data: [] };
   const channels = Object.fromEntries(ids.map((id) => [id, (channelRows ?? []).filter((item) => item.publicacion_id === id).map((item) => item.canal)]));
   const requests = sortDesignRequests([

@@ -60,6 +60,12 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['pendiente_drive_uploads']['Insert']>;
         Relationships: [];
       };
+      evento_drive_uploads: {
+        Row: { id: string; evento_id: string; actor_id: string; carpeta: string; file_name: string; mime_type: string; file_size: number; session_uri: string | null; status: string; drive_file_id: string | null; expires_at: string; created_at: string; completed_at: string | null };
+        Insert: { id?: string; evento_id: string; actor_id: string; carpeta: string; file_name: string; mime_type: string; file_size: number; session_uri?: string | null; status?: string; drive_file_id?: string | null; expires_at?: string; created_at?: string; completed_at?: string | null };
+        Update: Partial<Database['public']['Tables']['evento_drive_uploads']['Insert']>;
+        Relationships: [];
+      };
       campanas: {
         Row: {
           id: string;
@@ -667,6 +673,13 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      get_design_publication_request: { Args: { p_id: string }; Returns: Database['public']['Tables']['publicaciones']['Row'][] };
+      get_design_publication_timeline: { Args: { p_id: string }; Returns: { at: string; label: string; note: string | null }[] };
+      get_design_publication_channels: { Args: { p_ids: string[] }; Returns: { publicacion_id: string; canal: string }[] };
+      get_design_internal_timeline: { Args: { p_id: string }; Returns: { at: string; label: string; note: string | null }[] };
+      get_design_event_timeline: { Args: { p_id: string }; Returns: { at: string; label: string; note: string | null }[] };
+      reserve_evento_deliverable_upload: { Args: { p_actor_id: string; p_evento_id: string; p_file_name: string; p_mime_type: string; p_file_size: number }; Returns: string };
+      sync_evento_drive_brief: { Args: { p_evento_id: string; p_drive_folder_id: string | null; p_drive_folder_url: string | null; p_brief_folder_id: string | null; p_deliverables_folder_id: string | null; p_file_count: number }; Returns: undefined };
       list_internal_stores: {
         Args: Record<PropertyKey, never>;
         Returns: { id: string; codigo: string; nombre: string }[];
@@ -695,8 +708,8 @@ export interface Database {
       get_design_internal_queue: { Args: Record<PropertyKey, never>; Returns: { id: string; titulo: string; tipo: string; sede_nombre: string; cantidad: number | null; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null }[] };
       get_design_event_queue: { Args: Record<PropertyKey, never>; Returns: { id: string; nombre: string; inicio: string | null; fin: string | null; sedes: Json; diseno_formatos: string[]; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; drive_brief_file_count: number }[] };
       get_design_event_history: { Args: { p_limit?: number; p_offset?: number }; Returns: { id: string; nombre: string; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_entregado_en: string | null }[] };
-      get_design_event_request: { Args: { p_evento_id: string }; Returns: { id: string; nombre: string; inicio: string | null; fin: string | null; sedes: Json; diseno_formatos: string[]; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; drive_brief_file_count: number }[] };
-      get_design_internal_request: { Args: { p_pendiente_id: string }; Returns: Json[] };
+      get_design_event_request: { Args: { p_evento_id: string }; Returns: { id: string; nombre: string; inicio: string | null; fin: string | null; sedes: Json; diseno_formatos: string[]; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; disenador_nombre: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; drive_brief_file_count: number; creado_en: string; creado_por: string | null; estatus: string }[] };
+      get_design_internal_request: { Args: { p_pendiente_id: string }; Returns: { id: string; titulo: string; tipo: string; sede_nombre: string; cantidad: number | null; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; creado_en: string; fecha_requerida: string | null; disenador_nombre: string | null }[] };
       get_design_internal_history: { Args: { p_limit?: number; p_offset?: number }; Returns: Json[] };
       get_pendiente_designer_names: { Args: { p_ids: string[] }; Returns: { user_id: string; full_name: string | null }[] };
       design_start_internal_request: { Args: { p_pendiente_id: string }; Returns: undefined };

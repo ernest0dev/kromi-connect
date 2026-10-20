@@ -1,5 +1,4 @@
 import { requirePermission } from '@/lib/auth/dal';
-import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { adaptEvent, adaptInternal, adaptPublication } from '@/lib/designRequests';
 import { UnifiedHistoryView } from './UnifiedHistoryView';
 
@@ -17,10 +16,10 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
   if (publicationResult.error || internalResult.error || eventResult.error) throw new Error('No se pudo cargar el historial unificado de Diseño.');
   const publications = publicationResult.data ?? [];
   const ids = publications.map((row) => row.id);
-  const { data: channelRows } = ids.length ? await getSupabaseAdmin().from('publicacion_canales').select('publicacion_id,canal').in('publicacion_id', ids) : { data: [] };
+  const { data: channelRows } = ids.length ? await supabase.rpc('get_design_publication_channels', { p_ids: ids }) : { data: [] };
   const requests = [
-    ...publications.map((row) => adaptPublication(row as unknown as Record<string, any>, (channelRows ?? []).filter((item) => item.publicacion_id === row.id).map((item) => item.canal))),
-    ...(internalResult.data ?? []).map((row) => adaptInternal(row as unknown as Record<string, any>)),
+    ...publications.map((row) => adaptPublication(row as unknown as Parameters<typeof adaptPublication>[0], (channelRows ?? []).filter((item) => item.publicacion_id === row.id).map((item) => item.canal))),
+    ...(internalResult.data ?? []).map((row) => adaptInternal(row as unknown as Parameters<typeof adaptInternal>[0])),
     ...(eventResult.data ?? []).map((row) => adaptEvent(row)),
   ].map((request) => ({ ...request, design_status: request.design_status === 'CANCELLED' ? 'CANCELLED' as const : 'DELIVERED' as const }))
     .sort((a, b) => (b.delivered_at ?? b.requested_at ?? '').localeCompare(a.delivered_at ?? a.requested_at ?? ''));

@@ -1,6 +1,6 @@
 # Plan: ficha única de solicitud para Design
 
-**Estado (2026-10-19):** plan, sin código ni migración. Extiende [`plan-eventos-diseno.md`](./plan-eventos-diseno.md) §9 (contrato común y cola única) y cubre la parte de T6 que sigue pendiente: la ficha. Lo que se afirma del código sale de leer el repositorio (`main`, commit `4d6e99b`). Lo que se afirma de la base sale de las migraciones locales, **no** del remoto.
+**Estado (2026-10-19):** implementación local de D0–D6 preparada. El usuario confirmó aplicadas las migraciones `20261020011300_events_design.sql` y `20261020011301_unified_design_requests.sql`. La migración adicional `20261020011400_design_request_details.sql` está preparada localmente y pendiente de aplicación. Las afirmaciones previas del punto de partida describen el estado histórico del commit indicado; no representan el estado actual del código.
 
 ## 1. Punto de partida
 
@@ -126,7 +126,7 @@ No se reescriben las RPC. Se agrega una capa fina en `src/app/actions/design/req
 2. **Lecturas de ficha:** `get_design_event_request` suma `disenador_nombre` (ya hay un patrón en `get_event_design_data`); `get_design_internal_request` suma `creado_en` y `fecha_requerida`, y el nombre vía `get_pendiente_designer_names`.
 3. **Estados terminales sin 404:** `get_design_internal_request` incluye `CANCELADO` cuando hay historial `DISENO` (mismo criterio que el historial); nueva `get_design_publication_request(p_id)` para Social Media, apoyada en `design_can_see_publication`, que devuelve la fila activa o terminal.
 4. **Historial de Interno y Eventos:** `get_design_internal_timeline(uuid)` y `get_design_event_timeline(uuid)`, sobre `pendiente_tienda_historial` y `evento_historial` con `tipo = 'DISENO'`.
-5. Las migraciones se preparan en local y no se aplican hasta que lo indiques. `20261020011300` y `20261020011301` tampoco están aplicadas según `plan-eventos-diseno.md`; D5 depende de ellas.
+5. Las migraciones se preparan en local y no se aplican hasta que lo indiques. El usuario confirmó aplicadas `20261020011300` y `20261020011301`; la nueva migración de detalle/carga es `20261020011400` y está pendiente.
 
 ## 8. Tandas
 
@@ -139,6 +139,8 @@ No se reescriben las RPC. Se agrega una capa fina en `src/app/actions/design/req
 | D4 | `driveResumableUpload.ts` y `FilesPanel` comunes; Interno gana reanudar, cancelar y tope visible | D3 | Misma zona de carga en los tres orígenes (Eventos aún deshabilitada) |
 | D5 | Eventos con Drive: migración §7.1, acciones, carga y entrega | D4 | Design entrega un evento de punta a punta |
 | D6 | Borrar las tres fichas antiguas; e2e Playwright por origen; actualizar `docs/design/README.md` y `UI_IMPLEMENTATION.md` | D2–D5 | Sin rutas ni componentes duplicados |
+
+**Estado local:** D0–D5 implementados en código; D6 incluye la redirección de rutas antiguas, la eliminación de fichas duplicadas y la actualización de este documento y el README. Se añadieron pruebas unitarias de adaptadores. Falta añadir/ejecutar Playwright por origen. La migración `20261020011400_design_request_details.sql` debe aplicarse antes de usar la ruta nueva. No existe un archivo `UI_IMPLEMENTATION.md` en este repositorio. La verificación end-to-end con cuentas reales y Drive queda pendiente de ejecutar con el entorno conectado.
 
 <details><summary>Prompt D0–D1 para Kilo Code</summary>
 
@@ -178,5 +180,5 @@ Mueve el cargador resumible de design/publications/[id]/detail.tsx (líneas 23�
 
 - **Cargas resumibles:** mover el cargador puede romper la subida de archivos grandes. Mover primero sin cambiar lógica y probar con archivos mayores de 8 MB (tamaño del fragmento).
 - **Permisos:** la ficha lee con `design.requests.read`, pero cada acción debe seguir validando el permiso de su origen (§9.3 del plan de Eventos). Social Media hoy usa `getSupabaseAdmin()` para historial y canales, lo que salta RLS; al migrarlo, pasar esas lecturas a RPC con `design_can_see_publication`.
-- **Migraciones sin aplicar:** D5 no avanza hasta que las dos migraciones del 2026-10-20 estén en el remoto.
+- **Migración adicional sin aplicar:** la ruta única necesita aplicar `20261020011400_design_request_details.sql` para las lecturas terminales, cronologías, el permiso de carga de Eventos y las sesiones resumibles.
 - **Sin verificación remota:** nada de §7 se contrastó con el proyecto vivo; antes de D2 conviene un `db diff` o consulta manual de las firmas de las RPC que se modifican.

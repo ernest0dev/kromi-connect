@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { authorizeAction } from '@/lib/auth/dal';
-import { createDriveResumableSession, ensurePublicacionDriveFolders, findDriveUploadedFile, listDriveFolderFiles } from '@/lib/googleDrive';
+import { createDriveResumableSession, ensurePublicacionDriveFolders, findDriveUploadedFile, listDriveFolderFiles, revokeDriveResumableSession } from '@/lib/googleDrive';
 import { getDriveFileRule } from '@/lib/driveFileRules';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import type { InternalDesignRequest } from '@/lib/internalTasks';
@@ -37,7 +37,8 @@ export async function getInternalDesignFilesAction(id: string) {
     const folders = await ensurePublicacionDriveFolders(result.request.drive_folder_id);
     const [briefFiles, deliverableFiles] = await Promise.all([listDriveFolderFiles(folders.brief.id), listDriveFolderFiles(folders.deliverables.id)]);
     await getSupabaseAdmin().from('pendientes_tienda').update({ drive_brief_folder_id: folders.brief.id, drive_deliverables_folder_id: folders.deliverables.id }).eq('id', id);
-    return { success: true as const, briefFiles, deliverableFiles };
+    const { data: pendingUploads } = await getSupabaseAdmin().from('pendiente_drive_uploads').select('id,file_name,mime_type,file_size,expires_at').eq('pendiente_id', id).eq('actor_id', result.access.context.user.id).eq('carpeta', 'ENTREGABLES').eq('status', 'UPLOADING').gt('expires_at', new Date().toISOString());
+    return { success: true as const, briefFiles, deliverableFiles, pendingUploads: (pendingUploads ?? []).map((item) => ({ id: item.id, name: item.file_name, mimeType: item.mime_type, size: Number(item.file_size), expiresAt: item.expires_at })) };
   } catch (cause) { return { success: false as const, error: cause instanceof Error ? cause.message : 'No se pudieron cargar archivos de Drive.' }; }
 }
 
@@ -79,6 +80,28 @@ export async function finishInternalDeliverableUploadAction(uploadId: string) {
     revalidatePath(`${PATH}/${upload.pendiente_id}`);
     return { success: true as const };
   } catch (cause) { return { success: false as const, error: cause instanceof Error ? cause.message : 'No se pudo confirmar el entregable.' }; }
+}
+
+export async function resumeInternalDeliverableUploadAction(uploadId: string) {
+  if (!UUID.test(uploadId)) return { success: false as const, error: 'Carga inválida.' };
+  const admin = getSupabaseAdmin(); const { data: upload } = await admin.from('pendiente_drive_uploads').select('*').eq('id', uploadId).eq('carpeta', 'ENTREGABLES').maybeSingle();
+  if (!upload) return { success: false as const, error: 'No se encontró la carga.' };
+  const access = await authorizeAction('design.internal.upload');
+  if (access.error || !access.context || access.context.user.id !== upload.actor_id) return { success: false as const, error: 'No tienes autorización para reanudar esta carga.' };
+  if (upload.status !== 'UPLOADING' || !upload.session_uri || new Date(upload.expires_at).getTime() <= Date.now()) return { success: false as const, error: 'La sesión venció o ya no está disponible.' };
+  const request = await getRequest(upload.pendiente_id);
+  if ('error' in request || request.request.diseno_estatus !== 'EN_DISENO') return { success: false as const, error: 'La solicitud ya no admite entregables.' };
+  return { success: true as const, data: { sessionUri: upload.session_uri, name: upload.file_name, mimeType: upload.mime_type, size: Number(upload.file_size) } };
+}
+
+export async function cancelInternalDeliverableUploadAction(uploadId: string) {
+  if (!UUID.test(uploadId)) return { success: false as const, error: 'Carga inválida.' };
+  const admin = getSupabaseAdmin(); const { data: upload } = await admin.from('pendiente_drive_uploads').select('id,actor_id,session_uri').eq('id', uploadId).eq('carpeta', 'ENTREGABLES').maybeSingle();
+  const access = await authorizeAction('design.internal.upload');
+  if (!upload || access.error || !access.context || access.context.user.id !== upload.actor_id) return { success: false as const, error: 'No tienes autorización para cancelar esta carga.' };
+  const revoked = upload.session_uri ? await revokeDriveResumableSession(upload.session_uri).catch(() => false) : true;
+  await admin.from('pendiente_drive_uploads').update({ status: revoked ? 'CANCELLED' : 'CANCEL_PENDING', ...(revoked ? { session_uri: null } : {}) }).eq('id', uploadId);
+  return revoked ? { success: true as const } : { success: false as const, error: 'No se pudo cancelar la sesión; el cupo queda reservado hasta que expire.' };
 }
 
 export async function deliverInternalDesignWorkAction(id: string) {

@@ -10,12 +10,33 @@ export type DesignRequest = {
   source_context: Record<string, unknown>;
 };
 
+export type SourceContext =
+  | { source: 'SOCIAL_MEDIA'; format: string; channels: string[]; publication_date: string | null }
+  | { source: 'INTERNAL'; task_type: string; store: string; quantity: number | null; needed_by: string | null }
+  | { source: 'EVENTS'; event_name: string; stores: string[]; starts_at: string | null; ends_at: string | null; formats: string[] };
+
+export type DesignRequestDetail = DesignRequest & {
+  context: SourceContext;
+  designer: { id: string; name: string | null } | null;
+  created_at: string | null;
+  usage_date: { label: string; value: string | null } | null;
+  copy: { hook?: string; body?: string; cta?: string; hashtags?: string[] } | null;
+  priority: 'HIGH' | 'NORMAL' | 'LOW' | null;
+  correction: { text: string; at: string } | null;
+  history: { at: string; label: string; note?: string | null }[];
+  capabilities: {
+    canStart: boolean; canUpload: boolean; canDeliver: boolean; canReopen: boolean;
+    deliverLabel: string; deliverHint?: string;
+    upload: { maxFiles: number; maxBytes: number; resumable: boolean } | null;
+  };
+};
+
 const sourceState = (value: string): DesignStatus => value === 'EN_DISENO' ? 'IN_PROGRESS' : value === 'EN_CORRECCION' ? 'NEEDS_CHANGES' : value === 'ENTREGADO' || value === 'EN_REVISION_CM' || value === 'PROGRAMADO' || value === 'PUBLICADO' || value === 'APROBADO' ? 'DELIVERED' : value === 'CANCELADO' ? 'CANCELLED' : 'REQUESTED';
 
 export function adaptPublication(row: Record<string, any>, channels: string[] = []): DesignRequest {
   return {
     request_id: `SOCIAL_MEDIA:${row.id}`, source: 'SOCIAL_MEDIA', source_record_id: row.id, title: row.titulo,
-    requested_by: row.created_by ?? null, requested_at: row.fecha_solicitud_diseno ?? row.created_at ?? null,
+    requested_by: row.creador_id ?? null, requested_at: row.fecha_solicitud_diseno ?? row.created_at ?? null,
     instructions: row.instrucciones_diseno ?? '', target_date: row.fecha_entrega_diseno_estimada ?? row.fecha_publicacion ?? null,
     requested_outputs: [{ category: 'SOCIAL_MEDIA', source_format_code: row.formato ?? 'OTHER', label: row.formato ?? 'Pieza' }, ...channels.map((x) => ({ category: 'CHANNEL', source_format_code: x, label: x }))],
     brief_files: row.drive_brief_file_count ? [{ count: row.drive_brief_file_count }] : [], design_status: sourceState(row.estatus),
