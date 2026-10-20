@@ -1,6 +1,10 @@
 # Plan: solicitud de diseño desde la programación de eventos
 
-**Estado (2026-10-18):** plan, sin código ni migración. Extiende [`plan-eventos-programacion.md`](./plan-eventos-programacion.md). Antes de implementar depende de (1) conciliar el esquema real de Supabase con las migraciones locales y (2) definir el contrato común de solicitud y la cola única de Design para Social Media, Interno y Eventos. Ver §8 y §9. Las referencias de Social Media ([`modales-publicacion.md`](./modales-publicacion.md), [`plan-rol-design.md`](./plan-rol-design.md)) e Interno ([`plan-rol-interno.md`](./plan-rol-interno.md), [`implementacion-rol-interno.md`](./implementacion-rol-interno.md)) son flujos existentes, no el objetivo de conservar pantallas separadas.
+**Estado (2026-10-19):** plan, sin código ni migración. El historial remoto de migraciones se concilió manualmente con las 20 migraciones locales; el esquema se revisó contra el snapshot remoto y verificaciones puntuales, aunque no fue posible ejecutar `db diff` desde CLI. El contrato común de solicitud y la cola única de Design quedan definidos en §9. Extiende [`plan-eventos-programacion.md`](./plan-eventos-programacion.md). Las referencias de Social Media ([`modales-publicacion.md`](./modales-publicacion.md), [`plan-rol-design.md`](./plan-rol-design.md)) e Interno ([`plan-rol-interno.md`](./plan-rol-interno.md), [`implementacion-rol-interno.md`](./implementacion-rol-interno.md)) son flujos existentes, no el objetivo de conservar pantallas separadas.
+
+## Estado de implementación (2026-10-20)
+
+Hay una primera integración local de los campos de diseño en Eventos y de una cola/historial unificados. Se añadieron las migraciones locales `20261020011300_events_design.sql` y `20261020011301_unified_design_requests.sql`; todavía no se aplican. La ficha universal entre los tres orígenes y las cargas opcionales/entregables de Drive para Eventos siguen pendientes. Las funciones remotas `list_events` y `get_event` y sus permisos se verificaron manualmente con el usuario; `db diff` sigue sin estar disponible.
 
 ## 1. Resultado esperado
 
@@ -21,12 +25,12 @@ Fuera de alcance por ahora: cantidad, medidas como campos separados (van en las 
 
 | Pieza | Modelo existente | En Eventos |
 |---|---|---|
-| Solicitud de diseño | Contrato común pendiente de definir (§9) | Debe usar el mismo contrato y cola que Social Media e Interno; el origen y contexto de Evento se muestran como datos de contexto |
+| Solicitud de diseño | Contrato común definido en §9; adaptador de Eventos | Debe usar el mismo contrato y cola que Social Media e Interno; el origen y contexto de Evento se muestran como datos de contexto |
 | Formatos | Preferencias propias de cada flujo | Eventos admite Digital, Impresión o ambos; mapear al campo común acordado en §9 |
 | Estados de diseño | Diferentes por módulo actualmente | Normalizar a estados comunes en la cola; preservar el flujo editorial de Social Media en su módulo |
 | Carga de brief y entregables | `actions/internal/drive.ts`, `design-work.ts`, `TaskBriefPanel.tsx` | adaptar el origen Eventos al contrato y componentes comunes; mantener las reglas propias por fuente y evitar una pantalla paralela |
 | Cola, ficha e historial de Design | `design/publications/*` y `design/internal/*` hoy están separados | Incorporar Eventos a una cola/ficha/historial únicos según el contrato común; no crear `design/events/*` como experiencia paralela |
-| Permisos de Design | Hoy separados por fuente | Definir en P1 el permiso común para la cola y acciones de Design; Eventos no debe requerir `events.schedule.read` |
+| Permisos de Design | Hoy separados por fuente | Usar el permiso común `design.requests.read` para la cola única y conservar autorización de acciones por origen en los adaptadores; Eventos no requiere `events.schedule.read` |
 | Helpers | `src/lib/googleDrive.ts`, `driveFileRules.ts`, `designSla.ts` | se reutilizan tal cual |
 
 ## 3. Diferencias con Interno que hay que respetar
@@ -75,7 +79,7 @@ Archivo propuesto: `supabase/migrations/202610180005_events_design.sql`. Solo co
 Archivo propuesto: `supabase/migrations/202610180006_events_design_requests.sql`. Sigue a `202610180002_internal_design_requests.sql` casi línea por línea.
 
 - Tabla `evento_drive_uploads` (modelo `pendiente_drive_uploads`): `RLS` activo, sin grants a `anon`/`authenticated`, todo a `service_role`.
-- Design no recibe `events.schedule.read`, así que no puede leer `eventos` por RLS. El permiso común de cola/acciones y los límites de autorización por fuente se definen en P1; no crear permisos de pantalla `design.events.*` sin justificarlo en ese contrato.
+- Design no recibe `events.schedule.read`, así que no puede leer `eventos` por RLS. `design.requests.read` habilita la experiencia global; los adaptadores limitan cada lectura y acción a los campos y permisos de su fuente. No crear permisos de pantalla `design.events.*`.
 - Solo `service_role`: `sync_evento_drive_brief`, reservas de brief/entregables y `request_evento_to_design`.
 - La carga de brief es opcional. Si se usa, admite hasta 10 archivos de 100 MB cada uno con los formatos actuales de brief. La solicitud no consulta ni exige un conteo de Drive. Las reservas deben contar cargas activas y completadas de forma atómica.
 - `request_evento_to_design(p_evento_id, p_actor_id)` verifica: actor con rol `events` y `events.schedule.design`; evento no archivado y en `EN_PLANIFICACION` o `PROGRAMADO`; fecha del evento presente; `requiere_diseno`, uno o ambos formatos válidos, instrucciones no vacías y fecha de entrega válidos (hoy o posterior y no posterior al día del evento); sin solicitud previa. Marca `SOLICITADO`, guarda `diseno_solicitado_en`, sube `version` y escribe historial `DISENO`.
@@ -111,21 +115,21 @@ No crear `/design/events` ni una entrada separada **Eventos** en el menú. Event
 
 ## 8. Tandas de implementación
 
-Antes de las tandas de implementación hay dos puertas: **P0 remoto**, verificar el estado con `supabase migration list --linked` y `supabase db diff --linked --schema public`, revisar/conciliar el diff y actualizar el snapshot; **P1 contrato Design**, acordar el DTO de solicitud y el diseño de cola única descritos en §9. No ejecutar `db push` ni `migration repair` hasta comprobar el resultado. `202610150001` está reportada como aplicada pero el esquema remoto no se ha verificado, y la migración de Eventos recrearía `list_events` y `get_event`. Las migraciones nuevas se preparan localmente y no se aplican al remoto hasta que se indique.
+**P0 remoto** quedó conciliado manualmente: el historial remoto ahora contiene las 20 versiones locales; las tablas/columnas se contrastaron con el snapshot y se verificaron puntualmente la función corregida de inventario y los permisos de Eventos/Interno. La CLI no pudo ejecutar `db diff`; por eso, antes de T1 hay que verificar manualmente las firmas y permisos de `list_events` y `get_event`, que la migración nueva recreará. No ejecutar `db push` ni volver a reparar el historial por esta conciliación. **P1 contrato Design** queda definido en §9. Las migraciones nuevas se preparan localmente y no se aplican al remoto hasta que se indique.
 
 **Pasos P0:** partir de una rama limpia y confirmar el `project-ref`; enlazar el proyecto correcto con `supabase link --project-ref <project-ref>`; consultar `supabase migration list --linked`; después ejecutar `supabase db diff --linked --schema public`. Revisar el SQL resultante, incluidas funciones, firmas, permisos y políticas; `docs/supabase-schema-public.md` y `.png` son referencias visuales/documentales, no sustituyen esta consulta. Si hay drift manual, `supabase db pull` genera una migración local para revisar y puede ofrecer registrar esa versión en el historial remoto; no aceptar sin revisar. Si falta solo un asiento de historial, `migration repair --status applied <version>` únicamente corrige el registro y no ejecuta SQL, así que requiere comprobar que el esquema coincide con esa migración. `db push` queda fuera de P0.
 
 | Tanda | Contenido | Depende de |
 |---|---|---|
-| P0 | Conciliar historial y esquema Supabase; validar funciones, grants, policies y constraints | — |
-| P1 | Definir contrato canónico y cola única de Design para Social Media, Interno y Eventos (§9) | — (puede avanzar en paralelo con P0) |
-| T0 | Cerrar el diseño técnico de Eventos sobre el contrato acordado y preparar verificaciones | P0, P1 |
+| P0 | Historial conciliado manualmente; revisión del snapshot y verificaciones puntuales. Antes de T1, comprobar firmas y permisos de las RPC que se recrean | — |
+| P1 | Contrato canónico, carga contextual y experiencia única de Design definidos (§9) | Completo |
+| T0 | Cerrar mapeos y permisos de adaptadores; comprobar las firmas remotas afectadas y preparar verificaciones | P0, P1 |
 | T1 | Migración 1 (columnas, reglas, funciones, historial `DISENO`, permiso) | T0 |
 | T2 | Tipos y lógica pura: `src/lib/eventDesign.ts` + pruebas; ampliar `EventoRow`, `EventoDetalle`, `EventoHistorial` y `validateEventInput` | T1 |
 | T3 | Formulario, marca en calendario, sección de diseño en la ficha (sin Drive) e historial `DISENO` | T2 |
 | T4 | Migración 2 (Drive, solicitud/retiro, RPC y permisos de Design) | T1 |
 | T5 | Lado Eventos con Drive: `actions/events/{drive,design}.ts`, `EventDesignPanel.tsx` | T3, T4 |
-| T6 | Integrar Eventos en la cola/ficha/historial únicos de Design; migrar adaptadores existentes según el alcance acordado | T4, T5, P1 |
+| T6 | Integrar Eventos en la cola/ficha/historial únicos de Design; migrar adaptadores existentes según el contrato de §9 | T4, T5, T0 |
 | T7 | Verificación con cuentas reales y actualización de documentos | T1–T6 |
 
 T3 entrega una versión usable sin Drive: Eventos ya puede registrar qué necesita; T5 y T6 habilitan el envío.
@@ -133,7 +137,7 @@ T3 entrega una versión usable sin Drive: Eventos ya puede registrar qué necesi
 <details><summary>Prompt T1 para Kilo Code</summary>
 
 ```
-Lee AGENTS.md y docs/design/plan-eventos-diseno.md (§3, §4, §9). No empieces T1 hasta completar P0/P1 y documentar el resultado del diff remoto y el contrato canónico. Toma como modelo supabase/migrations/202610180001_internal_store_tasks.sql y 202610150001_events_schedule.sql.
+Lee AGENTS.md y docs/design/plan-eventos-diseno.md (§3, §4, §8, §9). No empieces T1 hasta verificar manualmente que las firmas y permisos remotos de list_events y get_event coinciden con las definiciones existentes que se van a recrear. El historial ya se concilió manualmente y el contrato canónico está definido. Toma como modelo supabase/migrations/202610180001_internal_store_tasks.sql y 202610150001_events_schedule.sql.
 Crea supabase/migrations/202610180005_events_design.sql con las columnas, CHECK, permiso events.schedule.design y los cambios a events_normalize, create_event, update_event, list_events, get_event, events_flags, transition_event_status, archive_event y al CHECK de evento_historial.tipo. list_events y get_event cambian su returns table: usa drop function y vuelve a crear con revoke/grant. No apliques la migración ni toques otros archivos. Al terminar, lista decisiones y lo que no pudiste verificar.
 ```
 </details>
@@ -162,45 +166,56 @@ Adapta las acciones de Eventos para brief opcional, solicitud, retiro y entregab
 ```
 </details>
 
-## 9. Contrato común y cola única de Design (puerta P1)
+## 9. Contrato común y cola única de Design (P1 definido)
 
 ### 9.1 Objetivo
 
 Design debe trabajar desde una única cola, una ficha con la misma jerarquía y un único historial para solicitudes de Social Media, Interno y Eventos. No debe navegar a una pantalla distinta según el rol que originó el pedido. La interfaz presenta siempre los datos comunes en el mismo lugar y distingue el origen con una etiqueta; los datos propios de cada módulo aparecen en un bloque contextual compacto.
 
-### 9.2 Contrato de solicitud propuesto
+### 9.2 Contrato canónico de solicitud
 
-Antes de T1, inventariar los campos y transiciones actuales de Social Media e Interno y acordar un DTO canónico. Propuesta mínima:
+Design consumirá un solo DTO con campos comunes y una carga útil tipada por origen. La estructura es amplia, pero no una fila plana con decenas de columnas opcionales: los datos comunes siempre mantienen los mismos nombres y posición; los datos específicos se agrupan en secciones discriminadas por `source`. La UI de Design muestra u omite cada sección según el origen de la solicitud.
 
-| Campo común | Uso |
+| Campo común | Tipo y regla |
 |---|---|
-| `request_id`, `source`, `source_record_id` | Identidad de la solicitud, origen (`SOCIAL_MEDIA`, `INTERNAL`, `EVENTS`) y registro de origen |
-| `title`, `requested_by`, `requested_at` | Identificación y trazabilidad de quien solicitó |
-| `instructions` | Brief textual obligatorio en toda solicitud |
-| `due_date` | Fecha límite común para ordenar y mostrar urgencia |
-| `deliverable_spec` | Lista de formatos/salidas solicitadas; cada origen puede aportar valores propios sin perder el mismo tipo de estructura |
-| `brief_files` | Lista uniforme de referencias/archivos; puede estar vacía. La obligatoriedad de archivos se mantiene según la regla confirmada para cada flujo hasta decidir una política global |
-| `design_status`, `designer_id`, `started_at`, `delivered_at` | Estado y trazabilidad del trabajo de Design, normalizados para la cola; incluye cancelación |
-| `deliverables` | Entregables de Design con nombre, tipo, tamaño y enlace |
-| `source_context` | Datos adicionales mínimos para el trabajo: copy/canales, tipo/tienda de Interno o tiendas/horario de Evento |
+| `request_id`, `source`, `source_record_id` | Identidad de la solicitud; `source` es `SOCIAL_MEDIA`, `INTERNAL` o `EVENTS` |
+| `title`, `requested_by`, `requested_at` | Título y trazabilidad de origen |
+| `instructions` | Texto obligatorio en toda solicitud enviada a Design |
+| `target_date` | Fecha objetivo de entrega de Design para ordenar y mostrar urgencia; cada adaptador la deriva o captura según el flujo fuente |
+| `requested_outputs[]` | Una o varias salidas solicitadas; cada elemento conserva un `category`, el formato específico del origen y una especificación opcional |
+| `brief_files[]` | Lista uniforme de archivos/referencias; puede estar vacía en el DTO |
+| `design_status`, `designer_id`, `started_at`, `delivered_at` | Estado normalizado (`REQUESTED`, `IN_PROGRESS`, `NEEDS_CHANGES`, `DELIVERED`, `CANCELLED`) y trazabilidad de Design |
+| `delivery_files[]` | Archivos entregados por Design: nombre, MIME/tipo, tamaño y enlace autorizado |
+| `source_context` | Unión discriminada con datos mínimos y pertinentes del origen |
 
-Los campos comunes mantienen nombre, tipo y ubicación visual iguales. `deliverable_spec` y `source_context` permiten diferencias reales entre los encargos sin crear tres fichas distintas. En Eventos, `deliverable_spec` contiene Digital, Impresión o ambas; sus instrucciones son obligatorias y `brief_files` es opcional.
+`requested_outputs` debe preservar vocabularios distintos sin colisiones: Social Media expresa `POST`, `REEL`, `CAROUSEL` o `STORY`; Interno expresa sus salidas aplicables, como `PRINT`, `DIGITAL` o `OTHER`; Eventos expresa `DIGITAL`, `PRINT` o ambos en elementos separados. Cada elemento conserva `source_format_code` y una etiqueta legible; el adaptador no obliga a un origen a adoptar el catálogo de otro.
 
-### 9.3 Estrategia recomendada: fachada canónica y adaptadores
+El estado común describe únicamente el ciclo de trabajo de Design, no el ciclo completo del registro fuente. Por ejemplo, la revisión y aprobación editorial posterior de Social Media no hace que la solicitud vuelva a `IN_PROGRESS`; se mantiene `DELIVERED`. Cada adaptador mapea sus estados propios y declara qué acciones se permiten en cada estado común.
 
-Para la primera entrega, conservar las tablas y flujos fuente existentes y crear adaptadores de lectura/acción que produzcan el DTO común. Una RPC o capa de servidor de Design reúne las tres fuentes en la misma cola; una ficha común despacha iniciar, subir y entregar al adaptador del origen, que conserva sus validaciones y permisos. El estado editorial propio de Social Media no se reemplaza: se mapea al estado de Design que corresponda. Se evita migrar de golpe publicaciones y pendientes a una tabla nueva.
+`source_context` contiene únicamente los campos necesarios para producir la pieza. Social Media puede incluir formato/plataforma, copy y datos editoriales pertinentes; Interno, tipo de pendiente, tienda y cantidad; Eventos, nombre del evento, tiendas, fecha y horario. No incluye datos del evento que Design no necesita, como presupuesto, patrocinadores, materiales, inscripción o cierre.
 
-Antes de desarrollar, completar estas acciones en P1:
+Los archivos de brief pueden estar ausentes en el contrato común. Eso no elimina las reglas de cada origen: Social Media e Interno conservan sus validaciones actuales mientras no se cambien explícitamente; para Eventos el brief es opcional. Las instrucciones sí son obligatorias antes de enviar cualquier solicitud a Design.
 
-1. Comparar campos, permisos, transiciones, cancelación, correcciones y reglas de entrega de Social Media e Interno.
-2. Confirmar el DTO, especialmente la semántica común de fecha límite, `design_status`, archivos de brief y formatos.
-3. Acordar cómo se autorizan acciones en la cola global sin ampliar la lectura de tablas fuente ni filtrar datos del evento.
-4. Diseñar una sola cola con filtros por origen/estado, una sola ficha y un historial global; conservar bloques contextuales y acciones permitidas por origen.
-5. Añadir pruebas de contrato para que cada adaptador devuelva los mismos campos comunes y para que iniciar/entregar mantenga las reglas específicas del origen.
+### 9.3 Experiencia única y estrategia de integración
 
-La opción de migrar en una fase posterior a una tabla física `design_requests` común queda abierta. Solo conviene hacerlo si se decide que una fachada con adaptadores no basta para administrar estados y auditoría. Sería una migración transversal de Social Media e Interno y no es requisito para que Design reciba todos los pedidos en una experiencia unificada.
+Design tendrá una sola cola activa, una sola ficha, un solo historial, filtros compartidos por origen/estado y un indicador visible del origen. La jerarquía y ubicación de los campos comunes no cambian según el origen. La ficha incluye secciones contextuales condicionales y solo habilita acciones válidas para esa fuente y estado.
 
-### 9.4 Decisiones de Eventos confirmadas
+La unificación es de contrato y experiencia. En la primera entrega se conservan las tablas y estados de negocio existentes y se introducen adaptadores de lectura/acción que transforman cada modelo fuente al DTO canónico. La capa de servidor reúne las fuentes y despacha iniciar, subir, entregar, cancelar o solicitar correcciones al adaptador correspondiente; cada adaptador mantiene sus permisos, validaciones, reglas de brief, historial y transiciones. El estado editorial de Social Media no se reemplaza: solo se proyecta a `design_status` para el trabajo de Design.
+
+La cola global usa `design.requests.read`. Los adaptadores verifican en el servidor cada acción contra el permiso y las reglas vigentes de su origen; el DTO combinado no concede lectura directa de las tablas fuente ni expone campos no autorizados. El adaptador de Eventos no requiere `events.schedule.read` para Design. La entrega de Eventos vuelve a comprobar que el evento no esté cancelado, aunque la ficha siga abierta.
+
+La opción de migrar más adelante a una tabla física `design_requests` común permanece abierta, pero no es requisito de esta entrega. Primero se integran los adaptadores sobre las fuentes actuales para evitar migrar simultáneamente los ciclos editoriales de Social Media e Interno.
+
+### 9.4 Trabajo de implementación derivado de P1
+
+1. Inventariar y mapear los campos actuales de Social Media e Interno, incluyendo permisos, estados, correcciones, cancelaciones, briefs y condiciones de entrega.
+2. Definir tipos discriminados y adaptadores para `SOCIAL_MEDIA`, `INTERNAL` y `EVENTS`; comprobar que cada adaptador produce todos los campos comunes y no rellena campos contextuales irrelevantes.
+3. Reunir las tres fuentes en una cola e historial únicos y reemplazar las rutas/vistas paralelas de Design por una ficha común.
+4. Añadir pruebas de contrato y permisos para cada origen, incluidos estados terminales, solicitud cancelada mientras la ficha está abierta y formatos múltiples.
+
+La definición del contrato cierra la decisión de producto P1. Los detalles de mapeo y autorización se concretan en T0 al implementar los adaptadores; no deben reabrir la decisión de que Design tenga una experiencia única.
+
+### 9.5 Decisiones de Eventos confirmadas
 
 | Tema | Decisión |
 |---|---|

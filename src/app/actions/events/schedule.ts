@@ -48,7 +48,9 @@ export async function getEventDetailAction(id: string): Promise<{ success: true;
   const evento = detail.data?.[0] as unknown as EventoDetalle | undefined;
   if (!evento) return { success: false, error: 'No se encontró el evento.' };
   if (history.error) return rpcFailure(history.error);
-  return { success: true, evento, historial: (history.data ?? []) as EventoHistorial[] };
+  const { data: designData, error: designError } = await access.context.supabase.rpc('get_event_design_data', { p_evento_id: id });
+  if (designError) return rpcFailure(designError);
+  return { success: true, evento: { ...evento, ...(designData?.[0] ?? {}) } as EventoDetalle, historial: (history.data ?? []) as EventoHistorial[] };
 }
 
 export async function checkEventOverlapAction(input: { id?: string | null; inicio: string; fin: string; sedeIds: string[] }) {
@@ -65,7 +67,7 @@ export async function createEventAction(input: Record<string, unknown>, confirma
   if (access.error || !access.context) return failAccess(access.error);
   const invalid = validateEventInput(input);
   if (invalid) return { success: false, error: invalid };
-  const { data, error } = await access.context.supabase.rpc('create_event', { p_datos: input as unknown as Json, p_confirmar_cruce: confirmarCruce });
+  const { data, error } = await access.context.supabase.rpc('create_event_with_design', { p_datos: input as unknown as Json, p_confirmar_cruce: confirmarCruce });
   if (error) return rpcFailure(error);
   revalidatePath(EVENTOS_RUTA);
   return { success: true, id: data };
@@ -76,7 +78,7 @@ export async function updateEventAction(input: { id: string; expectedVersion: nu
   if (access.error || !access.context) return failAccess(access.error);
   const invalid = validateEventInput(input.datos);
   if (invalid) return { success: false, error: invalid };
-  const { data, error } = await access.context.supabase.rpc('update_event', {
+  const { data, error } = await access.context.supabase.rpc('update_event_with_design', {
     p_evento_id: input.id, p_expected_version: input.expectedVersion, p_datos: input.datos as unknown as Json,
     p_motivo: input.motivo?.trim() || null, p_confirmar_cruce: input.confirmarCruce === true,
   });

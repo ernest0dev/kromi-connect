@@ -693,6 +693,9 @@ export interface Database {
       request_pendiente_to_design: { Args: { p_pendiente_id: string; p_actor_id: string }; Returns: undefined };
       retract_pendiente_design_request: { Args: { p_pendiente_id: string; p_version: number }; Returns: undefined };
       get_design_internal_queue: { Args: Record<PropertyKey, never>; Returns: { id: string; titulo: string; tipo: string; sede_nombre: string; cantidad: number | null; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null }[] };
+      get_design_event_queue: { Args: Record<PropertyKey, never>; Returns: { id: string; nombre: string; inicio: string | null; fin: string | null; sedes: Json; diseno_formatos: string[]; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; drive_brief_file_count: number }[] };
+      get_design_event_history: { Args: { p_limit?: number; p_offset?: number }; Returns: { id: string; nombre: string; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_entregado_en: string | null }[] };
+      get_design_event_request: { Args: { p_evento_id: string }; Returns: { id: string; nombre: string; inicio: string | null; fin: string | null; sedes: Json; diseno_formatos: string[]; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string; disenador_id: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; drive_brief_file_count: number }[] };
       get_design_internal_request: { Args: { p_pendiente_id: string }; Returns: Json[] };
       get_design_internal_history: { Args: { p_limit?: number; p_offset?: number }; Returns: Json[] };
       get_pendiente_designer_names: { Args: { p_ids: string[] }; Returns: { user_id: string; full_name: string | null }[] };
@@ -765,6 +768,14 @@ export interface Database {
           patrocinadores: string | null; materiales: string | null; cruces: Json; indicadores: Json;
         }[];
       };
+      save_event_design_config: { Args: { p_evento_id: string; p_expected_version: number; p_requiere: boolean; p_formatos: string[]; p_instrucciones: string | null; p_fecha: string | null }; Returns: number };
+      create_event_with_design: { Args: { p_datos: Json; p_confirmar_cruce?: boolean }; Returns: string };
+      update_event_with_design: { Args: { p_evento_id: string; p_expected_version: number; p_datos: Json; p_motivo?: string | null; p_confirmar_cruce?: boolean }; Returns: number };
+      get_event_design_data: { Args: { p_evento_id: string }; Returns: { requiere_diseno: boolean; diseno_formatos: string[]; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null; diseno_estatus: string | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; disenador_id: string | null; disenador_nombre: string | null; drive_folder_id: string | null; drive_brief_folder_id: string | null; drive_deliverables_folder_id: string | null; drive_brief_file_count: number }[] };
+      request_evento_to_design: { Args: { p_evento_id: string }; Returns: undefined };
+      retract_evento_design_request: { Args: { p_evento_id: string; p_expected_version: number }; Returns: number };
+      design_start_event_request: { Args: { p_evento_id: string }; Returns: undefined };
+      design_deliver_event_request: { Args: { p_evento_id: string }; Returns: undefined };
       get_event_history: {
         Args: { p_evento_id: string; p_limit?: number; p_offset?: number };
         Returns: {

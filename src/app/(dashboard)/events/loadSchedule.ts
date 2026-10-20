@@ -17,6 +17,7 @@ export async function loadSchedule(searchParams: EventSearchParams, mode: Schedu
     supabase.rpc('has_permission', { required_permission: 'events.schedule.update' }),
     supabase.rpc('has_permission', { required_permission: 'events.schedule.status.update' }),
     supabase.rpc('has_permission', { required_permission: 'events.schedule.archive' }),
+    supabase.rpc('has_permission', { required_permission: 'events.schedule.design' }),
   ]);
   const sedes = sedesResult.data ?? [];
   const sede = sedes.find((s) => s.id === filters.sede || s.codigo.toLowerCase() === filters.sede.toLowerCase());
@@ -38,7 +39,7 @@ export async function loadSchedule(searchParams: EventSearchParams, mode: Schedu
   if (campaignsResult.error) errorMessage ??= 'No se pudieron cargar las campañas.';
   const permissions: EventoPermisos = {
     create: permissionResults[0].data === true, update: permissionResults[1].data === true,
-    status: permissionResults[2].data === true, archive: permissionResults[3].data === true,
+    status: permissionResults[2].data === true, archive: permissionResults[3].data === true, design: permissionResults[4].data === true,
   };
   return {
     initialRows: (data ?? []) as unknown as EventoRow[], initialError: errorMessage, total: data?.[0]?.total_count ?? 0,

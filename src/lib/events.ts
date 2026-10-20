@@ -1,4 +1,5 @@
 import type { EventoEstatus, EventoIndicadores, EventoTipo, EventoOrigen } from '@/types';
+import { validateEventDesign } from '@/lib/eventDesign';
 
 export const EVENTOS_RUTA = '/events';
 export const EVENTO_ESTATUS: { value: EventoEstatus; label: string }[] = [
@@ -95,5 +96,7 @@ export function validateEventInput(input: Record<string, unknown>): string | nul
   if (Number.isNaN(ini) !== Number.isNaN(fin)) return 'Completa el inicio y el fin, o deja ambas fechas vacías.';
   if (!Number.isNaN(ini) && fin <= ini) return 'El fin debe ser posterior al inicio.';
   for (const key of ['descripcion', 'patrocinadores', 'materiales']) if (typeof input[key] === 'string' && input[key].length > 2000) return `El campo ${key} no puede superar 2000 caracteres.`;
+  const designError = validateEventDesign({ ...input, inicio: input.inicio });
+  if (designError) return designError;
   return null;
 }
