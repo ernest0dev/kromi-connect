@@ -1,6 +1,6 @@
 # Implementación de UI y capacidades
 
-> Estado revisado el 2026-10-12 contra el código y las migraciones locales. La documentación describe la implementación del repositorio; la aplicación real de migraciones remotas solo se afirma cuando el usuario la reportó.
+> Estado revisado el 2026-10-21 contra el código y las migraciones locales (`main`, `6d911ac`). La documentación describe la implementación del repositorio; la aplicación real de migraciones remotas solo se afirma cuando el usuario la reportó.
 
 ## Publicaciones y Grid
 
@@ -13,7 +13,8 @@ El modelo admite cuentas destino y categorías relacionales, copy por Hook/Cuerp
 - Crear publicación genera su estructura de Drive; los archivos de Brief se suben directamente desde el navegador a la carpeta `Brief`, con sesiones resumibles coordinadas por servidor. El contenido no pasa por una petición a Vercel ni se almacena en Supabase.
 - La UI de crear (tras guardar), editar y detalle lista metadatos y enlaces para abrir archivos. Tipos permitidos por política operativa: JPG/JPEG, PNG, WebP, PDF y MP4; máximo 100 MB por archivo y 10 existentes o reservados por publicación. No hay inspección de firma/antimalware, preview embebido ni borrado desde Kromi.
 - La solicitud a Design es validada por acción de servidor contra el contenido real de Drive. La RPC `request_publication_to_design` es solo para `service_role`; la transición genérica no permite establecer `SOLICITADO`.
-- Design ve archivos de `Brief` y `Entregables` en su cola; la carga del entregable final sigue siendo manual en Drive. El servidor exige un archivo en `Entregables` al entregar.
+- Design ve los archivos de `Brief` (solo lectura) y de `Entregables` en la ficha de la solicitud y carga el entregable final desde la app, con sesión resumible directa a Drive (varios archivos, hasta 500 MB cada uno). El servidor exige un archivo en `Entregables` creado después del último paso a `EN_DISENO` al entregar.
+- Instrucciones para Design: texto libre obligatorio al solicitar cuando `requiere_diseno` es verdadero; se editan solo en `PENDIENTE_BRIEF` o `EN_RODAJE`. Los ajustes posteriores llegan como corrección.
 
 ## Flujo de estados
 
@@ -23,7 +24,23 @@ Si `requiere_diseno = false`, el Brief es opcional y no se usa la cola de Design
 
 ## Design
 
-`/design/publications` es una cola compartida filtrada a publicaciones `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION` que requieren diseño. El rol puede abrir solicitudes y entregar piezas, y consultar las listas de Brief/Entregables. No hay asignación individual por `disenador_id`, edición del brief ni carga de archivos dentro de la app.
+Design trabaja con **una sola cola, un solo historial y una sola ficha** para tres orígenes: Social Media, Interno y Eventos.
+
+- **Cola:** `/design/publications`, con secciones "Por tomar" y "En curso", filtro Todas/Mías y filtro por origen. Incluye publicaciones `SOLICITADO`, `EN_DISENO` y `EN_CORRECCION` que requieren diseño, y las solicitudes equivalentes de pendientes de Interno y de eventos.
+- **Historial:** `/design/publications/history`, tabla con diseñador, plazo (SLA), estado y paginación; cada fila enlaza a la ficha.
+- **Ficha:** `/design/requests/[source]/[id]` con `source` en `social_media`, `internal` o `events`. Las rutas anteriores (`/design/publications/[id]`, `/design/internal`, `/design/internal/[id]`, `/design/internal/history`, `/design/events/[id]`) redirigen a las comunes.
+- **Acciones:** tomar y abrir (queda registrado el diseñador y se conserva tras las correcciones), cargar entregables, entregar y reabrir una corrección. Los datos y reglas de visibilidad por origen se adaptan en `src/lib/designRequests.ts`.
+- **Límites conocidos:** la UI omite el nombre del diseñador en Eventos, el motivo de cancelación en el historial, el actor en la línea de tiempo y la campaña/temas en Social Media, porque las RPC actuales no los devuelven. No hay reasignación entre diseñadores, versionado ni vista previa embebida.
+
+Detalle en [`design/plan-rol-design.md`](design/plan-rol-design.md), [`design/plan-ficha-unica-design.md`](design/plan-ficha-unica-design.md) y [`design/plan-restablecer-ui-design.md`](design/plan-restablecer-ui-design.md).
+
+## Eventos
+
+`/events/calendar` es la programación (calendario mensual y semanal); `/events/calendar/list` y `/events/calendar/archive` son sus vistas de listado y archivo, y `/events/list`, `/events/archive` y `/events` redirigen a ellas. `/events/inventory` es el inventario compartido por sede. Un evento puede solicitar diseño a Design (formato digital o impresión, instrucciones, fecha de entrega, brief opcional en Drive), con corrección y retiro de la solicitud; ver [`design/plan-eventos-diseno.md`](design/plan-eventos-diseno.md).
+
+## Interno
+
+`/internal/pendientes` muestra el mapa funcional de tiendas con los pendientes del usuario; `/internal/pendientes/archive` es el archivo. Cada pendiente puede guardar un brief en Drive y solicitar diseño a Design (impresiones u otras piezas). El rol Interno también accede al inventario de Eventos. Ver [`design/plan-rol-interno.md`](design/plan-rol-interno.md) y [`design/implementacion-rol-interno.md`](design/implementacion-rol-interno.md).
 
 ## Otras rutas
 

@@ -1,13 +1,13 @@
 # Perfiles de usuario
 
-Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Revisado contra el repositorio al 2026-10-15; los estados de despliegue se registran según reportes del usuario y no implican consulta directa al proyecto remoto. Para las migraciones de Design ver §13 y §14 de [`supabase-db-migration.md`](supabase-db-migration.md).
+Este documento separa el perfil funcional de los permisos efectivos. Los perfiles y permisos técnicos se definen en las migraciones Supabase y en §7 del [SRS](kromi-connect-srs.md). Revisado contra el repositorio al 2026-10-21; los estados de despliegue se registran según reportes del usuario y no implican consulta directa al proyecto remoto. Para las migraciones de Design ver §13 y §14 de [`supabase-db-migration.md`](supabase-db-migration.md).
 
 ## Estado de perfiles
 
 | Perfil | Rol de acceso | Estado funcional |
 |---|---|---|
 | Social Media / Responsable de Redes Sociales | `social-media` | Perfil operativo principal; administra Grid, brief, flujo editorial, archivo, campañas y efemérides según permisos y alcance por cuentas. |
-| Diseño / Diseñador | `design` | Perfil operativo: cola global, ficha de trabajo, carga de entregables en la app e historial. Pendiente de verificar en producción. |
+| Diseño / Diseñador | `design` | Perfil operativo: una cola global, un historial y una ficha única para Social Media, Interno y Eventos, con carga de entregables en la app y correcciones. Pendiente de verificar en producción. |
 | Eventos | `events` | Dos módulos. **Inventario** compartido por sede en `/events/inventory` (implementado; plan en `design/plan-inventario-eventos.md`). **Programación de eventos** en `/events/calendar`, con sub vistas `/events/calendar/list` y `/events/calendar/archive` (calendario mensual/semanal, ficha, alta/edición, estados, cierre y archivo). El usuario reportó aplicada `202610150001_events_schedule.sql`; faltan `db pull` y verificación de permisos/flujos en remoto. Solo este rol ve y gestiona eventos. |
 | Interno | `internal` | Rol existente. Primera implementación en revisión visual: Mapa con fondo gris, Listado, Archivo, briefs en Drive y solicitudes a Design. El equipo reportó aplicadas las migraciones manualmente; faltan pruebas integrales de UI y flujos. |
 | Atención al cliente | `customer-support` | Rol existente; alcance de `/support` y relación con escucha social pendientes. |
@@ -54,16 +54,16 @@ Las acciones requieren el permiso correspondiente y alcance sobre las cuentas de
 
 ## Design / Diseñador de publicaciones
 
-**Estado:** perfil operativo implementado en el repositorio. Las migraciones `202610120001` y `202610120002` están pendientes de verificar en el proyecto remoto.
+**Estado (2026-10-21):** perfil operativo implementado en el repositorio. Atiende tres orígenes (Social Media, Interno y Eventos) en una sola cola, un solo historial y una sola ficha; el historial remoto confirmado por el usuario incluye las migraciones hasta `20261021030127`. `20261021030128` (correcciones de Interno y Eventos) está pendiente de aplicar. Los permisos son `design.posts.*` (Social Media), `design.internal.*` (Interno) y `design.requests.*` (Eventos y cola unificada).
 
 ### Puede hacer
 
-- Abrir `/design/publications` con `design.posts.read` y ver la cola **global**: solicitudes por tomar (`SOLICITADO`) y en curso (`EN_DISENO`, `EN_CORRECCION`) de cualquier diseñador, con quién la tomó. Solo se excluyen las publicaciones con `requiere_diseno = false`.
-- Abrir la ficha de trabajo (`/design/publications/[id]`): instrucciones de Social Media arriba, archivos de `Brief` (lectura) y `Entregables`, bloque de fechas y SLA, contenido de la publicación, comentarios de corrección e historial de la solicitud.
+- Abrir `/design/publications` y ver la cola **global** de los tres orígenes: solicitudes por tomar (`SOLICITADO`) y en curso (`EN_DISENO`, `EN_CORRECCION`) de cualquier diseñador, con quién la tomó cuando el dato está disponible. Se filtra por Todas/Mías y por origen. Solo se excluyen las publicaciones con `requiere_diseno = false`.
+- Abrir la ficha de trabajo (`/design/requests/[source]/[id]`, con `source` = `social_media`, `internal` o `events`; las rutas anteriores redirigen): instrucciones de Social Media arriba, archivos de `Brief` (lectura) y `Entregables`, bloque de fechas y SLA, contenido de la publicación, comentarios de corrección e historial de la solicitud.
 - **Tomar y abrir** una solicitud o corrección (`design.posts.start`): pasa a `EN_DISENO` y, si no tenía diseñador, queda registrado quién la tomó. Ese registro se conserva tras las correcciones.
 - **Cargar entregables** desde Kromi (`design.posts.upload`) directamente a Drive `Entregables`, solo en `EN_DISENO`. Hasta 20 archivos de 500 MB cada uno. Formatos: imagen (`.jpg`, `.jpeg`, `.png`, `.webp`, `.gif`, `.bmp`, `.tif`, `.tiff`, `.heic`, `.heif`), video (`.mp4`, `.mov`, `.m4v`, `.mpeg`, `.mpg`, `.webm`, `.avi`), audio (`.mp3`, `.wav`, `.m4a`, `.aac`, `.ogg`, `.flac`) y documento (`.pptx`, `.pdf`). La validación es por extensión y tamaño, no por contenido.
 - **Entregar a revisión** (`design.posts.deliver`): el servidor exige al menos un archivo en `Entregables` creado después del último paso a `EN_DISENO`; en una corrección, un archivo posterior a la reapertura.
-- Ver el **historial** (`/design/publications/history`): publicaciones entregadas (de `EN_REVISION_CM` en adelante) y canceladas que llegaron a `SOLICITADO`, con diseñador, resultado de SLA y motivo de cancelación.
+- Ver el **historial** (`/design/publications/history`): publicaciones entregadas (de `EN_REVISION_CM` en adelante) y canceladas que llegaron a `SOLICITADO`, con diseñador, resultado de SLA y paginación. Cada fila enlaza a la ficha. Las RPC de historial aún no devuelven el motivo de cancelación, así que no se muestra.
 
 **Propiedad blanda:** cualquier usuario con `design.posts.deliver` puede entregar un ticket tomado por otro diseñador. La carga y la reanudación de una subida sí quedan limitadas a quien la inició.
 
@@ -73,7 +73,6 @@ Las acciones requieren el permiso correspondiente y alcance sobre las cuentas de
 - Eliminar archivos de Drive, administrar versiones o ver vista previa embebida.
 - Aprobar publicaciones, cambiar estados editoriales de Social Media, cancelar, archivar o restaurar.
 - Reasignar solicitudes entre diseñadores ni responder comentarios.
-- Abrir la ficha de una solicitud ya entregada o cancelada: el historial es una tabla sin detalle.
 
 ### Decisiones tomadas (2026-10-12)
 
@@ -93,7 +92,7 @@ Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
 - Reasignación entre diseñadores, versionado de entregables, vista previa embebida, métricas de carga y notificaciones: fuera del alcance actual.
 - Qué ocurre si Social Media cancela mientras Design trabaja: hoy la siguiente acción devuelve el error de estado y no hay aviso en vivo.
 - La regla de reentrega se valida solo en la acción de servidor, no en la base de datos.
-- Verificar en remoto las migraciones `202610120001` y `202610120002`, y revisar los tickets antiguos en `SOLICITADO` sin instrucciones (riesgo descrito en la §13 de `supabase-db-migration.md`).
+- Revisar los tickets antiguos en `SOLICITADO` sin instrucciones (riesgo descrito en la §13 de `supabase-db-migration.md`).
 
 ## Interno (plan de implementación)
 
@@ -104,8 +103,8 @@ Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
 - Lo usa **una sola persona**. Crea sus pendientes de impresiones, insumos y necesidades por tienda y se los asigna; por ahora no recibe solicitudes de otros.
 - Menú con un solo ítem, **Pendientes** (`/internal/pendientes`), que abre el Mapa; **Listado** y **Archivo** son vistas secundarias. El fondo geográfico se posterga. No usa calendario.
 - Tipos nuevos: **Impresión**, **Sonido interno**, **Reparación** y **Otro**; los pendientes históricos de insumos y necesidades siguen identificados como anteriores. Cualquier pendiente puede guardar brief en Drive (10 archivos, 100 MB cada uno). Con diseño, la fecha de entrega y el límite de brief se calculan a partir de la fecha requerida en tienda; la solicitud exige estado `PENDIENTE`, que pasa a `EN_PROCESO`.
-- Estados del pendiente: `PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`. Estados de la solicitud: `SOLICITADO`, `EN_DISENO`, `ENTREGADO`. Sin ciclo de corrección; se define con el equipo en las pruebas.
-- Permisos `internal.store-tasks.*` (Interno) y `design.internal.*` (Design); Design ve una cola propia en `/design/internal`.
+- Estados del pendiente: `PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`. Estados de la solicitud: `SOLICITADO`, `EN_DISENO`, `ENTREGADO`. La corrección (`EN_CORRECCION`) y la reapertura por Design se añadieron en `20261021030128`, pendiente de aplicar.
+- Permisos `internal.store-tasks.*` (Interno) y `design.internal.*` (Design); las solicitudes de Interno aparecen en la cola unificada de Design (`/design/publications`); `/design/internal` redirige allí.
 
 ### Adoptado por defecto, por confirmar
 
@@ -114,11 +113,15 @@ Con diseño se elige una sola tienda; la casilla viene marcada solo en impresion
 ### Pendiente
 
 - Para una fase posterior: imagen o representación geográfica, fuente, límites y coordenadas verificadas del mapa.
-- Definir con el equipo las correcciones de piezas tras las pruebas.
+- Probar con el equipo el ciclo de corrección de piezas una vez aplicada `20261021030128`.
 
 ### Acceso al inventario de Eventos (2026-10-18)
 
 Por decisión del equipo, el Interno tiene **el mismo acceso al inventario que el rol Eventos, sin limitaciones**: consultar, crear, editar y registrar traslados y ajustes, y crear ubicaciones. Los permisos son los cinco `events.inventory.*` (migración `202610180004_internal_inventory_access.sql`, pendiente de aplicar). En su menú aparece el grupo **Eventos › Inventario**, que abre `/events/inventory`; en esa vista el menú conserva **Interno › Pendientes**. No incluye la programación de eventos. Los movimientos quedan a nombre de quien los registra.
+
+## Eventos: solicitud de diseño (2026-10-21)
+
+Desde la programación (`/events/calendar`), con `events.schedule.design`, un evento puede marcar **Requiere diseño** y capturar formato (digital, impresión o ambos), instrucciones (mínimo 10 caracteres a partir de `20261021030128`) y fecha de entrega (hoy o posterior y no posterior al día del evento). Solo se solicita para eventos activos en `EN_PLANIFICACION` o `PROGRAMADO`. El brief en Drive es opcional (hasta 10 archivos de 100 MB). Puede retirarse mientras esté en `SOLICITADO`, y Design entrega, reabre y recibe correcciones con la misma ficha que los otros orígenes. Ver [`design/plan-eventos-diseno.md`](design/plan-eventos-diseno.md).
 
 ## Perfiles por definir
 

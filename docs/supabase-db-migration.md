@@ -553,3 +553,29 @@ La migración [`202610150001_events_schedule.sql`](../supabase/migrations/202610
 2. Confirmar que el rol `events` tiene los cinco permisos y probar lectura/creación/edición/estados/cierre/archivo con una cuenta real; confirmar denegación para otros roles.
 3. Probar sincronización por hora, cruces entre tiendas y conflictos de versión en Supabase remoto.
 4. Regenerar `supabase-schema-public.md` y `supabase-schema-public.png` a partir de la instancia reconciliada.
+
+## 17. Rol Interno: pendientes por tienda (`202610180001` a `202610180004`)
+
+Migraciones de aplicación manual; el equipo reportó aplicarlas. Las RPC de lectura y escritura son `SECURITY DEFINER` y no se concede escritura directa a `anon` ni `authenticated`.
+
+- **`202610180001_internal_store_tasks.sql`:** tablas `pendientes_tienda` y `pendiente_tienda_historial` (inmutable por el trigger `guard_pendiente_tienda_history`), trigger `touch_pendiente_tienda`, RLS de solo lectura de los pendientes propios, permisos `internal.store-tasks.read|create|update|status.update|archive` para `internal` y las RPC `list_internal_stores`, `list_store_tasks`, `get_store_task`, `create_store_tasks`, `update_store_task`, `transition_store_task_status`, `archive_store_task` y `restore_store_task`, con control de versión optimista.
+- **`202610180002_internal_design_requests.sql`:** tabla `pendiente_drive_uploads` (solo `service_role`), permisos `design.internal.read|start|upload|deliver` para `design`, y las funciones `sync_pendiente_drive_brief`, `reserve_pendiente_brief_upload`, `reserve_pendiente_deliverable_upload` y `request_pendiente_to_design` (solo `service_role`), además de `retract_pendiente_design_request`, `get_design_internal_queue`, `get_design_internal_request`, `get_design_internal_history`, `get_pendiente_designer_names`, `design_start_internal_request` y `design_deliver_internal_request` para `authenticated`. Design no lee `pendientes_tienda` directamente.
+- **`202610180003_internal_task_types.sql`:** amplía el check de `tipo` a `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` y conserva `INSUMO` y `NECESIDAD` como históricos.
+- **`202610180004_internal_inventory_access.sql`:** concede al rol `internal` los cinco permisos `events.inventory.*`. No cambia RLS ni RPC.
+
+## 18. Diseño de Eventos y cola unificada de Design (`20261020011300`, `20261020011301`, `20261020011400`)
+
+- **`20261020011300_events_design.sql`:** añade a `eventos` las columnas `requiere_diseno`, `diseno_formatos` (`DIGITAL` / `IMPRESION`), `instrucciones_diseno` (hasta 4000 caracteres), `fecha_entrega_diseno`, `diseno_estatus`, `diseno_solicitado_en`, `diseno_iniciado_en`, `diseno_entregado_en`, `disenador_id`, `drive_folder_id`, `drive_folder_url`, `drive_brief_folder_id`, `drive_deliverables_folder_id`, `drive_brief_file_count` y `drive_brief_checked_at`, con checks de coherencia. Actualiza `events_flags`, permite el tipo `DISENO` en `evento_historial` y crea los permisos `events.schedule.design`, `design.requests.read`, `design.requests.start` y `design.requests.deliver`.
+- **`20261020011301_unified_design_requests.sql`:** crea `evento_drive_uploads` (carpeta `BRIEF` o `ENTREGABLES`, hasta 500 MB por archivo, estados `RESERVING`, `UPLOADING`, `COMPLETE`, `CANCEL_PENDING`, `CANCELLED` y `EXPIRED`; solo `service_role`) y las RPC `request_evento_to_design`, `retract_evento_design_request`, `get_design_event_queue`, `get_design_event_history`, `get_design_event_request`, `design_start_event_request` y `design_deliver_event_request`, más el trigger `guard_event_design_archive`.
+- **`20261020011400_design_request_details.sql`:** añade `session_uri` a `evento_drive_uploads`, el permiso `design.requests.upload`, el detalle y la línea de tiempo de los tres orígenes (`get_design_publication_request`, `get_design_publication_timeline`, `get_design_publication_channels`, `get_design_event_request`, `get_design_event_timeline`, `get_design_internal_request`, `get_design_internal_timeline`), `reserve_evento_deliverable_upload` y `sync_evento_drive_brief` (solo `service_role`), y redefine `design_deliver_event_request`.
+
+## 19. Correcciones y carga del brief de Eventos (`20261021030127`, `20261021030128`)
+
+- **`20261021030127_fix_postgrest_40001_retry_loop.sql`:** PostgREST 14 reintenta las transacciones que devuelven SQLSTATE `40001`, y las RPC de Interno y Eventos lo usaban para los conflictos de versión optimista, lo que podía crear un bucle de reintentos. Las funciones `update_store_task`, `transition_store_task_status`, `archive_store_task`, `restore_store_task`, `retract_pendiente_design_request` y `retract_evento_design_request` pasan a señalar el conflicto con `PT409` (HTTP 409). Aplicada según el historial remoto confirmado por el usuario.
+- **`20261021030128_event_brief_design_corrections.sql`:** **preparada en el repositorio y pendiente de aplicar.** Admite `EN_CORRECCION` en `diseno_estatus` de `eventos` y `pendientes_tienda`, crea `reserve_evento_brief_upload` (carga del brief opcional de un evento: hasta 10 archivos de 100 MB, solo `service_role`), `request_pendiente_design_correction`, `request_event_design_correction`, `design_reopen_internal_request` y `design_reopen_event_request`, endurece `request_evento_to_design` (instrucciones de al menos 10 caracteres, antes bastaba con que no estuvieran vacías) y redefine `get_design_internal_queue`, `get_design_internal_request`, `get_design_event_queue`, `get_design_event_request`, `save_event_design_config` y `guard_event_design_archive`.
+
+### Comprobaciones pendientes
+
+1. Aplicar `20261021030128` y verificar con cuentas reales los permisos y flujos de corrección de Interno y Eventos.
+2. Ejecutar `supabase db pull` y comparar con las migraciones `202610150001` en adelante.
+3. Regenerar `supabase-schema-public.md` y `supabase-schema-public.png` desde la instancia reconciliada: el archivo actual no refleja `evento_drive_uploads` ni las columnas de diseño de `eventos`.

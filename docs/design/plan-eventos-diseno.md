@@ -4,7 +4,16 @@
 
 ## Estado de implementación (2026-10-20)
 
-Hay una primera integración local de los campos de diseño en Eventos y de una cola/historial unificados. Se añadieron las migraciones locales `20261020011300_events_design.sql` y `20261020011301_unified_design_requests.sql`; todavía no se aplican. La ficha universal entre los tres orígenes y las cargas opcionales/entregables de Drive para Eventos siguen pendientes. Las funciones remotas `list_events` y `get_event` y sus permisos se verificaron manualmente con el usuario; `db diff` sigue sin estar disponible.
+**Actualización (2026-10-21): implementado.** Los campos de diseño de Eventos, la cola y el historial unificados, la ficha única y las cargas de brief y entregables a Drive están en el repositorio. Migraciones: `20261020011300_events_design.sql` (columnas `diseno_*`, permisos `events.schedule.design` y `design.requests.*`), `20261020011301_unified_design_requests.sql` (tabla `evento_drive_uploads`, solicitud, retiro, cola, historial, inicio y entrega), `20261020011400_design_request_details.sql` (detalle, línea de tiempo, carga de entregables, permiso `design.requests.upload`) y `20261021030128_event_brief_design_corrections.sql` (correcciones, reapertura y carga del brief opcional; incluye `EN_CORRECCION` en `diseno_estatus` y exige al menos 10 caracteres de instrucciones). El usuario confirmó el historial remoto hasta `20261021030127`; `20261021030128` está pendiente de aplicar.
+
+**Diferencias respecto a este plan:**
+- El archivo propuesto `202610180006_events_design_requests.sql` no existe; el trabajo quedó repartido en las migraciones anteriores.
+- `request_evento_to_design(p_evento_id)` y `retract_evento_design_request` **no** son exclusivas de `service_role`: se otorgan a `authenticated` y toman el actor de `auth.uid()`, con `events_require('events.schedule.design')`. Solo `sync_evento_drive_brief` y las reservas de carga (`reserve_evento_brief_upload`, `reserve_evento_deliverable_upload`) se restringen a `service_role`.
+- El flujo ya incluye corrección y reapertura (`request_event_design_correction`, `design_reopen_event_request`), que este plan no contemplaba.
+
+Las secciones siguientes conservan el plan original como registro de decisiones. Los estados del plan (2026-10-19/20) y la nota de la §5 sobre la RPC exclusiva de servicio no describen el estado actual del código.
+
+**Estado previo (2026-10-20), conservado como referencia:** primera integración local de los campos de diseño y de la cola/historial unificados, con las migraciones `20261020011300` y `20261020011301` sin aplicar; ficha universal y cargas de Drive pendientes. Las funciones remotas `list_events` y `get_event` y sus permisos se verificaron manualmente con el usuario; `db diff` sigue sin estar disponible.
 
 ## 1. Resultado esperado
 

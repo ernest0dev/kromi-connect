@@ -1,6 +1,6 @@
 # Documentación Técnica: Lógica de Negocio y Server Actions
 
-> **Estado:** descripción histórica de acciones auditadas al 2026-09-19. El anexo 7 registra los flujos de publicaciones añadidos después; los apartados anteriores no deben tomarse como inventario actual completo.
+> **Estado:** descripción histórica de acciones auditadas al 2026-09-19. Los anexos 7 y 8 registran los flujos de publicaciones y de los demás módulos añadidos después (Design, Eventos, Interno e Inventario, al 2026-10-21); los apartados anteriores no deben tomarse como inventario actual completo.
 
 ## 1. Resumen de Implementación
 
@@ -118,3 +118,24 @@ Los apartados anteriores documentan el diseño inicial de Server Actions; el flu
 - La retención/limpieza de Archivo está documentada en la migración `202610100001_publication_workflow_archive.sql` y en §10 de `supabase-db-migration.md`.
 
 Para parámetros, límites operativos y estado reportado de despliegue, consultar [`design/plan-validacion-brief-drive.md`](design/plan-validacion-brief-drive.md) y [`supabase-db-migration.md`](supabase-db-migration.md).
+
+## 8. Acciones de Design, Eventos, Interno e Inventario (2026-10-21)
+
+Inventario de las Server Actions añadidas después del diseño inicial, según `src/app/actions/` en `main` (`6d911ac`). Validan sesión y permiso con `authorizeAction` (`design/requests.ts` no lo hace directamente: despacha a la acción de cada origen, que sí lo hace) y delegan la regla de negocio en RPC de Supabase. Las cargas a Drive son siempre **directas del navegador** mediante una sesión resumible que el servidor autoriza y confirma; el contenido de los archivos no pasa por una Server Action ni por Vercel. Algunas RPC (`request_pendiente_to_design`, `sync_*_drive_brief`, `reserve_*_upload`) solo las ejecuta `service_role`; las acciones que las llaman validan antes al actor y su alcance.
+
+| Archivo | Acciones | Propósito |
+|---|---|---|
+| `design/requests.ts` | `startDesignRequestAction`, `deliverDesignRequestAction`, `reopenDesignRequestAction` | Tomar, entregar y reabrir una solicitud de la cola unificada de Design, despachando por origen (Social Media, Interno, Eventos). |
+| `publicaciones/design-drive.ts` | `listDesignPublicationDriveFilesAction`, `start/finish/resume/cancelDeliverableUploadAction`, `listPublicacionDeliverablesForReviewAction`, `getPublicationDesignerNameAction` | Entregables de Design y vista de revisión para Social Media. |
+| `publicaciones/drive.ts` | `listPublicacionBriefFilesAction`, `listPublicacionDeliverablesAction`, `start/finish/resume/cancelPublicacionBriefUploadAction`, `requestPublicationToDesignAction`, `retryPublicacionDriveFolderAction` | Brief, solicitud validada contra Drive y reintento de la carpeta (ver §7). |
+| `publicaciones/archive.ts` | `archivePublicationAction`, `restorePublicationAction`, `resolveExpiredDrivePurgeAction` | Archivo lógico, restauración y resolución manual de fallos de limpieza de Drive. |
+| `events/schedule.ts` | `getEventScheduleDataAction`, `getEventDetailAction`, `checkEventOverlapAction`, `createEventAction`, `updateEventAction`, `rescheduleEventAction`, `transitionEventAction`, `saveEventClosureAction`, `archiveEventAction`, `restoreEventAction` | Programación de eventos: calendario, cruces entre tiendas, estados, cierre y archivo. |
+| `events/design.ts` | `requestEventDesignAction`, `retractEventDesignAction`, `requestEventDesignCorrectionAction`, `startEventDesignWorkAction`, `reopenEventDesignWorkAction`, `deliverEventDesignWorkAction` | Solicitud de diseño de un evento, retiro, correcciones y trabajo de Design. |
+| `events/drive.ts` | `listEventBriefFilesForRequesterAction`, `start/resume/finish/cancelEventBriefUploadAction`, `listEventDesignFilesAction`, `start/resume/finish/cancelEventDeliverableUploadAction` | Brief opcional y entregables de un evento. |
+| `internal/tasks.ts` | `createStoreTasksAction`, `getStoreTaskDetailAction`, `transitionStoreTaskAction`, `updateStoreTaskAction`, `archiveStoreTaskAction` | Pendientes por tienda del rol Interno. |
+| `internal/drive.ts` | `listInternalBriefFilesAction`, `startInternalBriefUploadAction`, `finishInternalBriefUploadAction`, `requestInternalDesignAction`, `retractInternalDesignAction` | Brief de un pendiente y solicitud o retiro de diseño. |
+| `internal/design-work.ts` | `startInternalDesignWorkAction`, `reopenInternalDesignWorkAction`, `requestInternalDesignCorrectionAction`, `getInternalDesignFilesAction`, `start/finish/resume/cancelInternalDeliverableUploadAction`, `deliverInternalDesignWorkAction` | Trabajo de Design sobre solicitudes de Interno y correcciones. |
+| `inventory/inventory.ts` | `createInventoryItemAction`, `updateInventoryItemAction`, `registerInventoryMovementAction`, `createInventoryLocationAction`, `getInventoryItemActivityAction`, `getInventoryItemAction` | Inventario compartido de Eventos e Interno (movimientos inmutables). |
+| `efemerides/efemerides.ts` | `getEfemeridesByYearAction`, `getEfemeridesInYearRangeAction`, `createEfemerideAction`, `updateEfemerideAction`, `deleteEfemerideAction` | Catálogo anual de efemérides. |
+
+`publicaciones/workflow.ts` sigue siendo el punto de entrada de las transiciones de publicaciones; `transitionPublicationAction` despacha `SOLICITADO` a `requestPublicationToDesignAction`. Las RPC de Interno y Eventos señalan los conflictos de versión optimista con `PT409` (HTTP 409) para evitar el reintento automático de PostgREST con SQLSTATE `40001` (migración `20261021030127`).
