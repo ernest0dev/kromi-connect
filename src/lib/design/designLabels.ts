@@ -5,7 +5,7 @@ export const DESIGN_SOURCE_LABELS: Record<DesignSource, string> = {
 };
 
 export const DESIGN_STATUS_LABELS: Record<DesignStatus, string> = {
-  REQUESTED: 'Por tomar', IN_PROGRESS: 'En diseño', NEEDS_CHANGES: 'Con correcciones',
+  REQUESTED: 'Solicitada', IN_PROGRESS: 'En diseño', NEEDS_CHANGES: 'Devuelta con correcciones',
   DELIVERED: 'Entregada', CANCELLED: 'Cancelada',
 };
 

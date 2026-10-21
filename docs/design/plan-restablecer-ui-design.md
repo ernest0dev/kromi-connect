@@ -1,6 +1,6 @@
 # Plan: restablecer la UI del prototipo en las vistas del rol Design
 
-**Destinatario:** Codex (o cualquier agente que implemente). **Estado:** propuesto, sin implementar.
+**Destinatario:** Codex (o cualquier agente que implemente). **Estado:** implementado localmente; los datos que las RPC actuales no exponen se omiten.
 **Origen:** comparación entre `docs/design/prototypes/design-role/*.dc.html` y el código del commit `3396a3c`. El análisis completo está resumido en la sección 1.
 
 ## 0. Objetivo y regla de oro
@@ -162,7 +162,9 @@ Criterios: la ficha de cada origen sigue mostrando solo los bloques que le aplic
 
 | Tanda | Estado |
 |---|---|
-| U0 | Pendiente |
-| U1 | Pendiente |
-| U2 | Pendiente |
-| U3 | Pendiente |
+| U0 | Implementada: etiquetas, badges y adaptadores compartidos. |
+| U1 | Implementada: cola por secciones, filtros, badges y carga de nombres disponibles. |
+| U2 | Implementada: tabla, filtros y paginación por origen. |
+| U3 | Implementada: ficha, carga cancelable por archivo, validación visual de entrega y limpieza de componentes huérfanos. |
+
+**Límites de datos verificados:** la cola de Eventos y el historial de Eventos no devuelven nombre del diseñador; las RPC de historial no devuelven motivos de cancelación y las RPC de timeline no devuelven actor. Campaña y temas tampoco están en la RPC de detalle de Social Media. La UI deja esos valores vacíos/omitidos, sin inferirlos ni cambiar el esquema remoto. Para incorporarlos se necesita diseñar y desplegar una ampliación aditiva de las RPC de lectura después de conciliar el esquema remoto.

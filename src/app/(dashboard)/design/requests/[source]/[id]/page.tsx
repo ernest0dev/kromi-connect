@@ -7,6 +7,13 @@ import { RequestDetailView } from './view';
 
 export const revalidate = 0;
 
+function timelineEntries(items: { at: string; label: string; note: string | null }[]) {
+  return items.map((item) => ({
+    ...item,
+    actor_name: 'actor_name' in item && typeof item.actor_name === 'string' ? item.actor_name : null,
+  }));
+}
+
 export default async function DesignRequestPage({ params }: { params: Promise<{ source: string; id: string }> }) {
   const { source: sourceParam, id } = await params;
   const source = sourceParam.toUpperCase() as DesignSource;
@@ -29,7 +36,7 @@ export default async function DesignRequestPage({ params }: { params: Promise<{ 
     detail = adaptPublicationDetail(row as unknown as Parameters<typeof adaptPublicationDetail>[0], channelsList, {
       designerName: names?.[0]?.full_name ?? null,
       correction: correction ? { text: correction.texto, at: correction.creado_en } : null,
-      history: (history ?? []).map((item) => ({ at: item.at, label: item.label, note: item.note })),
+      history: timelineEntries(history ?? []),
       canStart: perms[0].data === true, canUpload: perms[1].data === true, canDeliver: perms[2].data === true,
     });
   } else if (source === 'INTERNAL') {
@@ -41,7 +48,7 @@ export default async function DesignRequestPage({ params }: { params: Promise<{ 
       supabase.rpc('has_permission', { required_permission: 'design.internal.deliver' }),
     ]);
     const row = rows?.[0]; if (!row) notFound();
-    detail = adaptInternalDetail(row as unknown as Parameters<typeof adaptInternalDetail>[0], { canStart: canStart === true, canUpload: canUpload === true, canDeliver: canDeliver === true, history: (history ?? []).map((item) => ({ at: item.at, label: item.label, note: item.note })) });
+    detail = adaptInternalDetail(row as unknown as Parameters<typeof adaptInternalDetail>[0], { canStart: canStart === true, canUpload: canUpload === true, canDeliver: canDeliver === true, history: timelineEntries(history ?? []) });
   } else {
     const [{ data: rows }, { data: history }, { data: canStart }, { data: canUpload }, { data: canDeliver }] = await Promise.all([
       supabase.rpc('get_design_event_request', { p_evento_id: id }),
@@ -51,7 +58,7 @@ export default async function DesignRequestPage({ params }: { params: Promise<{ 
       supabase.rpc('has_permission', { required_permission: 'design.requests.deliver' }),
     ]);
     const row = rows?.[0]; if (!row) notFound();
-    detail = adaptEventDetail(row as unknown as Parameters<typeof adaptEventDetail>[0], { canStart: canStart === true, canUpload: canUpload === true, canDeliver: canDeliver === true, history: (history ?? []).map((item) => ({ at: item.at, label: item.label, note: item.note })) });
+    detail = adaptEventDetail(row as unknown as Parameters<typeof adaptEventDetail>[0], { canStart: canStart === true, canUpload: canUpload === true, canDeliver: canDeliver === true, history: timelineEntries(history ?? []) });
   }
   return <RequestDetailView detail={detail} actorId={user.id} today={getCaracasToday()} />;
 }

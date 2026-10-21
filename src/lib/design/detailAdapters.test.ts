@@ -6,13 +6,15 @@ describe('detail adapters', () => {
     expect(detail.requested_by).toBe('u1');
     expect(detail.context).toEqual({ source: 'SOCIAL_MEDIA', format: 'REEL', channels: ['INSTAGRAM'], publication_date: '2026-10-28' });
     expect(detail).not.toHaveProperty('context.store');
+    expect(detail.usage_date).toEqual({ label: 'Publicación', value: '2026-10-28' });
   });
 
   it('preserves Story copy and maps numeric priority', () => {
-    const detail = adaptPublicationDetail({ id: 'p2', titulo: 'Story', formato: 'STORY', estatus: 'SOLICITADO', prioridad: 1, hook_texto: 'Texto story' }, ['INSTAGRAM']);
+    const detail = adaptPublicationDetail({ id: 'p2', titulo: 'Story', formato: 'STORY', estatus: 'EN_DISENO', prioridad: 1, hook_texto: 'Texto story' }, ['INSTAGRAM'], { canUpload: true });
     expect(detail.copy?.hook).toBe('Texto story');
     expect(detail.priority).toBe('HIGH');
     expect(detail.requested_outputs.some((output) => output.label === 'INSTAGRAM')).toBe(false);
+    expect(detail.capabilities.upload?.acceptedExtensions).toContain('.pdf');
   });
 
   it('keeps Internal context isolated from Social Media fields', () => {

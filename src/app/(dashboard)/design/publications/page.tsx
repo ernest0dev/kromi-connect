@@ -13,15 +13,27 @@ export default async function DesignPublicationsPage() {
     supabase.rpc('get_design_internal_queue'),
     supabase.rpc('get_design_event_queue'),
   ]);
+  if (publicationResult.error || internalResult.error || eventResult.error) {
+    throw new Error('No se pudo cargar la cola unificada de Diseño.');
+  }
   const publications = publicationResult.data ?? [];
-  const ids = publications.map((publication) => publication.id);
-  const { data: channelRows } = ids.length
-    ? await supabase.rpc('get_design_publication_channels', { p_ids: ids })
-    : { data: [] };
-  const channels = Object.fromEntries(ids.map((id) => [id, (channelRows ?? []).filter((item) => item.publicacion_id === id).map((item) => item.canal)]));
+  const internal = internalResult.data ?? [];
+  const publicationIds = publications.map((row) => row.id);
+  const internalIds = internal.map((row) => row.id);
+  const [channelResult, publicationNamesResult, internalNamesResult] = await Promise.all([
+    publicationIds.length ? supabase.rpc('get_design_publication_channels', { p_ids: publicationIds }) : Promise.resolve({ data: [], error: null }),
+    publicationIds.length ? supabase.rpc('get_publication_designer_names', { p_ids: publicationIds }) : Promise.resolve({ data: [], error: null }),
+    internalIds.length ? supabase.rpc('get_pendiente_designer_names', { p_ids: internalIds }) : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (channelResult.error || publicationNamesResult.error || internalNamesResult.error) {
+    throw new Error('No se pudieron cargar los datos complementarios de la cola de Diseño.');
+  }
+  const channels = Object.fromEntries(publicationIds.map((id) => [id, (channelResult.data ?? []).filter((item) => item.publicacion_id === id).map((item) => item.canal)]));
+  const publicationNames = Object.fromEntries((publicationNamesResult.data ?? []).map((row) => [row.publicacion_id, row.full_name]));
+  const internalNames = Object.fromEntries((internalNamesResult.data ?? []).map((row) => [row.user_id, row.full_name]));
   const requests = sortDesignRequests([
-    ...publications.map((row) => adaptPublication(row, channels[row.id] ?? [])),
-    ...(internalResult.data ?? []).map((row) => adaptInternal(row)),
+    ...publications.map((row) => ({ ...adaptPublication(row, channels[row.id] ?? []), designer_name: publicationNames[row.id] ?? null })),
+    ...internal.map((row) => ({ ...adaptInternal(row), designer_name: internalNames[row.disenador_id ?? ''] ?? null })),
     ...(eventResult.data ?? []).map((row) => adaptEvent(row)),
   ]);
   return <main className="mx-auto w-full max-w-[1100px] space-y-6 px-4 py-6 text-[#10233F] sm:px-6 sm:py-8">

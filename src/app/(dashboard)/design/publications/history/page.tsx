@@ -15,13 +15,35 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
   ]);
   if (publicationResult.error || internalResult.error || eventResult.error) throw new Error('No se pudo cargar el historial unificado de Diseño.');
   const publications = publicationResult.data ?? [];
-  const ids = publications.map((row) => row.id);
-  const { data: channelRows } = ids.length ? await supabase.rpc('get_design_publication_channels', { p_ids: ids }) : { data: [] };
+  const internal = internalResult.data ?? [];
+  const publicationIds = publications.map((row) => row.id);
+  const internalIds = internal.map((row) => String((row as Record<string, unknown>).id ?? ''));
+  const [channelResult, publicationNamesResult, internalNamesResult] = await Promise.all([
+    publicationIds.length ? supabase.rpc('get_design_publication_channels', { p_ids: publicationIds }) : Promise.resolve({ data: [], error: null }),
+    publicationIds.length ? supabase.rpc('get_publication_designer_names', { p_ids: publicationIds }) : Promise.resolve({ data: [], error: null }),
+    internalIds.some(Boolean) ? supabase.rpc('get_pendiente_designer_names', { p_ids: internalIds.filter(Boolean) }) : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (channelResult.error || publicationNamesResult.error || internalNamesResult.error) {
+    throw new Error('No se pudieron cargar los datos complementarios del historial de Diseño.');
+  }
+  const publicationNames = Object.fromEntries((publicationNamesResult.data ?? []).map((row) => [row.publicacion_id, row.full_name]));
+  const internalNames = Object.fromEntries((internalNamesResult.data ?? []).map((row) => [row.user_id, row.full_name]));
   const requests = [
-    ...publications.map((row) => adaptPublication(row as unknown as Parameters<typeof adaptPublication>[0], (channelRows ?? []).filter((item) => item.publicacion_id === row.id).map((item) => item.canal))),
-    ...(internalResult.data ?? []).map((row) => adaptInternal(row as unknown as Parameters<typeof adaptInternal>[0])),
+    ...publications.map((row) => {
+      const channels = (channelResult.data ?? []).filter((item) => item.publicacion_id === row.id).map((item) => item.canal);
+      return { ...adaptPublication(row, channels), designer_name: publicationNames[row.id] ?? null };
+    }),
+    ...internal.map((row) => {
+      const record = row as unknown as Parameters<typeof adaptInternal>[0];
+      return { ...adaptInternal(record), designer_name: internalNames[record.disenador_id ?? ''] ?? null };
+    }),
     ...(eventResult.data ?? []).map((row) => adaptEvent(row)),
-  ].map((request) => ({ ...request, design_status: request.design_status === 'CANCELLED' ? 'CANCELLED' as const : 'DELIVERED' as const }))
+  ].map((request) => ({
+    ...request,
+    design_status: request.design_status === 'CANCELLED' ? 'CANCELLED' as const : 'DELIVERED' as const,
+    source_status: request.source === 'SOCIAL_MEDIA' ? request.source_status : null,
+  }))
     .sort((a, b) => (b.delivered_at ?? b.requested_at ?? '').localeCompare(a.delivered_at ?? a.requested_at ?? ''));
-  return <main className="mx-auto w-full max-w-[1100px] space-y-6 px-4 py-6 text-[#10233F] sm:px-6 sm:py-8"><UnifiedHistoryView requests={requests} page={page}/></main>;
+  const hasNextPage = [publications, internal, eventResult.data ?? []].some((rows) => rows.length === 100);
+  return <main className="mx-auto w-full max-w-[1100px] space-y-6 px-4 py-6 text-[#10233F] sm:px-6 sm:py-8"><UnifiedHistoryView requests={requests} page={page} hasNextPage={hasNextPage}/></main>;
 }
