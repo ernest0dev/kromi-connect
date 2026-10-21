@@ -12,7 +12,7 @@ export interface EventoRow {
   responsable_id: string | null; responsable_nombre: string | null; presupuesto_estimado: number | null;
   moneda: 'USD'; requiere_inscripcion: boolean; version: number; archivado_en: string | null;
   con_patrocinio: boolean; tiene_materiales: boolean; sedes: EventoSede[]; hay_cruce: boolean;
-  requiere_diseno: boolean; diseno_formatos: ('DIGITAL' | 'IMPRESION')[] | null; fecha_entrega_diseno: string | null; diseno_estatus: 'SOLICITADO' | 'EN_DISENO' | 'ENTREGADO' | 'CANCELADO' | null;
+  requiere_diseno: boolean; diseno_formatos: ('DIGITAL' | 'IMPRESION')[] | null; fecha_entrega_diseno: string | null; diseno_estatus: 'SOLICITADO' | 'EN_DISENO' | 'EN_CORRECCION' | 'ENTREGADO' | 'CANCELADO' | null;
   indicadores: EventoIndicadores; total_count: number;
 }
 
@@ -24,7 +24,7 @@ export interface EventoDetalle extends Omit<EventoRow, 'con_patrocinio' | 'tiene
   modificado_en: string; modificado_por: string | null; modificado_por_nombre: string | null;
   patrocinadores: string | null; materiales: string | null; cruces: EventoCruce[];
   requiere_diseno: boolean; diseno_formatos: ('DIGITAL' | 'IMPRESION')[] | null; instrucciones_diseno: string | null; fecha_entrega_diseno: string | null;
-  diseno_estatus: 'SOLICITADO' | 'EN_DISENO' | 'ENTREGADO' | 'CANCELADO' | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; disenador_id: string | null; disenador_nombre: string | null;
+  diseno_estatus: 'SOLICITADO' | 'EN_DISENO' | 'EN_CORRECCION' | 'ENTREGADO' | 'CANCELADO' | null; diseno_solicitado_en: string | null; diseno_iniciado_en: string | null; diseno_entregado_en: string | null; disenador_id: string | null; disenador_nombre: string | null;
   drive_brief_file_count: number;
 }
 

@@ -77,4 +77,6 @@ Antes de cada prompt: leer `AGENTS.md` y la guía relevante en `node_modules/nex
 
 ### Tanda D
 
-> Lee 3.3 y 3.6 de `docs/design/revision-ficha-unica.md`. Prepara una migración nueva (sin aplicarla) y las acciones/UI para: subir brief de Eventos y correcciones para Interno y Eventos. Parte de `supabase db pull` y revisa constraints, triggers y políticas desplegados antes de escribir SQL.
+> Lee 3.3 y 3.6 de `docs/design/revision-ficha-unica.md`. Prepara una migración nueva (sin aplicarla) y las acciones/UI para subir el brief de Eventos y pedir/reabrir correcciones para Interno y Eventos. Si la CLI no puede conciliar el remoto, usa el historial y las definiciones de `supabase/migrations/` como base confirmada por el usuario; no vuelvas a aplicar migraciones existentes.
+
+**Estado posterior:** el usuario confirmó que el historial remoto llega hasta `20261021030127`. La implementación de D está preparada en `20261021030128_event_brief_design_corrections.sql`; falta aplicarla en Supabase.

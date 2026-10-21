@@ -8,9 +8,11 @@ describe('detail adapters', () => {
     expect(detail).not.toHaveProperty('context.store');
   });
 
-  it('leaves Story copy absent', () => {
-    const detail = adaptPublicationDetail({ id: 'p2', titulo: 'Story', formato: 'STORY', estatus: 'SOLICITADO' }, []);
-    expect(detail.copy).toBeNull();
+  it('preserves Story copy and maps numeric priority', () => {
+    const detail = adaptPublicationDetail({ id: 'p2', titulo: 'Story', formato: 'STORY', estatus: 'SOLICITADO', prioridad: 1, hook_texto: 'Texto story' }, ['INSTAGRAM']);
+    expect(detail.copy?.hook).toBe('Texto story');
+    expect(detail.priority).toBe('HIGH');
+    expect(detail.requested_outputs.some((output) => output.label === 'INSTAGRAM')).toBe(false);
   });
 
   it('keeps Internal context isolated from Social Media fields', () => {
@@ -18,6 +20,14 @@ describe('detail adapters', () => {
     expect(detail.context).toEqual({ source: 'INTERNAL', task_type: 'IMPRESION', store: 'Prebo', quantity: 3, needed_by: '2026-10-30' });
     expect(detail.copy).toBeNull();
     expect(detail.context).not.toHaveProperty('channels');
+  });
+
+  it('exposes an Internal correction and reopen capability', () => {
+    const detail = adaptInternalDetail({ id: 'i2', titulo: 'Corrección', tipo: 'IMPRESION', sede_nombre: 'Prebo', diseno_estatus: 'EN_CORRECCION' }, {
+      canStart: true, history: [{ at: '2026-10-20T12:00:00Z', label: 'EN_CORRECCION', note: 'Ajustar el tamaño' }],
+    });
+    expect(detail.correction).toEqual({ at: '2026-10-20T12:00:00Z', text: 'Ajustar el tamaño' });
+    expect(detail.capabilities.canReopen).toBe(true);
   });
 
   it('keeps Event context and copy absent', () => {

@@ -38,7 +38,7 @@ export function adaptPublication(row: Record<string, any>, channels: string[] = 
     request_id: `SOCIAL_MEDIA:${row.id}`, source: 'SOCIAL_MEDIA', source_record_id: row.id, title: row.titulo,
     requested_by: row.creador_id ?? null, requested_at: row.fecha_solicitud_diseno ?? row.created_at ?? null,
     instructions: row.instrucciones_diseno ?? '', target_date: row.fecha_entrega_diseno_estimada ?? row.fecha_publicacion ?? null,
-    requested_outputs: [{ category: 'SOCIAL_MEDIA', source_format_code: row.formato ?? 'OTHER', label: row.formato ?? 'Pieza' }, ...channels.map((x) => ({ category: 'CHANNEL', source_format_code: x, label: x }))],
+    requested_outputs: [{ category: 'SOCIAL_MEDIA', source_format_code: row.formato ?? 'OTHER', label: row.formato ?? 'Pieza' }],
     brief_files: row.drive_brief_file_count ? [{ count: row.drive_brief_file_count }] : [], design_status: sourceState(row.estatus),
     designer_id: row.disenador_id ?? null, started_at: row.estatus === 'EN_DISENO' ? row.updated_at ?? null : null,
     delivered_at: row.fecha_entrega_diseno_real ?? null, delivery_files: [],

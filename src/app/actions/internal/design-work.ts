@@ -29,6 +29,26 @@ export async function startInternalDesignWorkAction(id: string) {
   return { success: true as const };
 }
 
+export async function reopenInternalDesignWorkAction(id: string) {
+  const access = await authorizeAction('design.internal.start');
+  if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
+  if (!UUID.test(id)) return { success: false as const, error: 'Identificador inválido.' };
+  const { error } = await access.context.supabase.rpc('design_reopen_internal_request', { p_pendiente_id: id });
+  if (error) return { success: false as const, error: error.message };
+  revalidatePath(PATH); revalidatePath(`${PATH}/${id}`); revalidatePath('/internal/pendientes');
+  return { success: true as const };
+}
+
+export async function requestInternalDesignCorrectionAction(id: string, reason: string) {
+  const access = await authorizeAction('internal.store-tasks.status.update');
+  if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
+  if (!UUID.test(id) || reason.trim().length < 1 || reason.trim().length > 500) return { success: false as const, error: 'Describe la corrección (hasta 500 caracteres).' };
+  const { error } = await access.context.supabase.rpc('request_pendiente_design_correction', { p_pendiente_id: id, p_reason: reason.trim() });
+  if (error) return { success: false as const, error: error.message };
+  revalidatePath(PATH); revalidatePath(`${PATH}/${id}`); revalidatePath('/internal/pendientes'); revalidatePath('/design/publications');
+  return { success: true as const };
+}
+
 export async function getInternalDesignFilesAction(id: string) {
   const result = await getRequest(id);
   if ('error' in result) return { success: false as const, error: result.error };
@@ -49,17 +69,18 @@ export async function startInternalDeliverableUploadAction(input: { id: string; 
   if ('error' in result) return { success: false as const, error: result.error };
   if (result.request.diseno_estatus !== 'EN_DISENO' || !result.request.drive_folder_id) return { success: false as const, error: 'La solicitud debe estar en diseño y tener carpeta de Drive.' };
   const rule = getDriveFileRule('ENTREGABLES', input.name);
-  if (!rule || input.mimeType !== rule.mimeType || input.size < 1 || input.size > rule.maxBytes) return { success: false as const, error: 'Formato o tamaño de entregable no permitido.' };
+  const mimeType = rule?.mimeType;
+  if (!rule || !mimeType || input.size < 1 || input.size > rule.maxBytes) return { success: false as const, error: 'Formato o tamaño de entregable no permitido.' };
   try {
     const folders = await ensurePublicacionDriveFolders(result.request.drive_folder_id);
     const admin = getSupabaseAdmin();
     const { data: uploadId, error } = await admin.rpc('reserve_pendiente_deliverable_upload', {
-      p_actor_id: access.context.user.id, p_pendiente_id: input.id, p_file_name: input.name, p_mime_type: input.mimeType, p_file_size: input.size,
+      p_actor_id: access.context.user.id, p_pendiente_id: input.id, p_file_name: input.name, p_mime_type: mimeType, p_file_size: input.size,
     });
     if (error || !uploadId) throw new Error(error?.message || 'No se pudo reservar la carga.');
-    const sessionUri = await createDriveResumableSession({ folderId: folders.deliverables.id, uploadId, name: input.name, mimeType: input.mimeType, size: input.size });
+    const sessionUri = await createDriveResumableSession({ folderId: folders.deliverables.id, uploadId, name: input.name, mimeType, size: input.size });
     await admin.from('pendiente_drive_uploads').update({ session_uri: sessionUri, status: 'UPLOADING' }).eq('id', uploadId);
-    return { success: true as const, uploadId, sessionUri };
+    return { success: true as const, uploadId, sessionUri, mimeType };
   } catch (cause) { return { success: false as const, error: cause instanceof Error ? cause.message : 'No se pudo iniciar la carga.' }; }
 }
 

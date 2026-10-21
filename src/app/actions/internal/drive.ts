@@ -18,7 +18,7 @@ async function getTask(id: string) {
   const access = await authorizeAction('internal.store-tasks.read');
   if (access.error || !access.context) return { error: access.error || 'Inicia sesión para continuar.' } as const;
   const { data, error } = await access.context.supabase.from('pendientes_tienda')
-    .select('id,titulo,sede_id,creado_por,drive_folder_id,drive_folder_url,drive_brief_folder_id,drive_deliverables_folder_id,drive_brief_file_count')
+    .select('id,titulo,sede_id,creado_por,instrucciones_diseno,drive_folder_id,drive_folder_url,drive_brief_folder_id,drive_deliverables_folder_id,drive_brief_file_count')
     .eq('id', id).maybeSingle();
   if (error || !data) return { error: error?.message || 'No se encontró el pendiente.' } as const;
   return { access, task: data } as const;
@@ -111,6 +111,7 @@ export async function finishInternalBriefUploadAction(uploadId: string) {
 export async function requestInternalDesignAction(taskId: string) {
   const result = await getTask(taskId);
   if ('error' in result) return { success: false as const, error: result.error };
+  if ((result.task.instrucciones_diseno ?? '').trim().length < 10) return { success: false as const, error: 'Escribe al menos 10 caracteres de instrucciones para solicitar diseño.' };
   const access = await authorizeAction('internal.store-tasks.status.update');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso para solicitar diseño.' };
   try {

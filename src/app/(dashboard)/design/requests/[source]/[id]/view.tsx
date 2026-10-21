@@ -17,6 +17,11 @@ import { resumeDeliverableUploadAction } from '@/app/actions/publicaciones/desig
 
 type FileInfo = { id: string; name: string; mimeType: string; size: number; webViewLink: string | null; createdTime?: string };
 const card = 'rounded-xl border border-[#E7E4DC] bg-white p-5 sm:p-6';
+const HISTORY_LABELS: Record<DesignRequestDetail['source'], Record<string, string>> = {
+  SOCIAL_MEDIA: { SOLICITADO: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_REVISION_CM: 'Entregado a revisión', RECHAZADO_DISENO: 'Devuelto por Diseño', EN_CORRECCION: 'Corrección solicitada', PROGRAMADO: 'Programado', PUBLICADO: 'Publicado', CANCELADO: 'Cancelado' },
+  INTERNAL: { SOLICITADO: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_CORRECCION: 'Corrección solicitada', ENTREGADO: 'Entregado a Interno', CANCELADO: 'Cancelado', 'Solicitud actualizada': 'Solicitud actualizada' },
+  EVENTS: { SOLICITADO: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_CORRECCION: 'Corrección solicitada', ENTREGADO: 'Entregado a Eventos', CANCELADO: 'Cancelado', 'Solicitud actualizada': 'Solicitud actualizada' },
+};
 function formatTime(value: string | null) { return value ? new Intl.DateTimeFormat('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Caracas' }).format(new Date(value)) : '—'; }
 function sizeLabel(bytes: number) { return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB`; }
 
@@ -25,7 +30,9 @@ function FilesPanel({ detail }: { detail: DesignRequestDetail }) {
   const [pendingUploads, setPendingUploads] = useState<{ id: string; name: string; mimeType: string; size: number }[]>([]);
   const [folderUrl, setFolderUrl] = useState(''); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState<number | null>(null); const [busy, setBusy] = useState(false);
+  const [controller, setController] = useState<AbortController | null>(null);
   const canUpload = detail.capabilities.canUpload; const source = detail.source;
+  const uploadLimit = detail.capabilities.upload;
   const refresh = useCallback(async () => {
     setLoading(true); setError('');
     try {
@@ -43,7 +50,7 @@ function FilesPanel({ detail }: { detail: DesignRequestDetail }) {
   }, [detail.source_record_id, source]);
   useEffect(() => { const timer = setTimeout(() => void refresh(), 0); return () => clearTimeout(timer); }, [refresh]);
 
-  const upload = async (file: File) => {
+  const upload = async (file: File, abortController: AbortController) => {
     setBusy(true); setError(''); setProgress(0);
     try {
       let uploadId = ''; let sessionUri = ''; let mimeType = file.type;
@@ -52,16 +59,26 @@ function FilesPanel({ detail }: { detail: DesignRequestDetail }) {
         if (!result.success) throw new Error(result.error); uploadId = result.data.uploadId; sessionUri = result.data.sessionUri; mimeType = result.data.mimeType;
       } else if (source === 'INTERNAL') {
         const result = await startInternalDeliverableUploadAction({ id: detail.source_record_id, name: file.name, mimeType: file.type, size: file.size });
-        if (!result.success) throw new Error(result.error); uploadId = result.uploadId; sessionUri = result.sessionUri;
+        if (!result.success) throw new Error(result.error); uploadId = result.uploadId; sessionUri = result.sessionUri; mimeType = result.mimeType;
       } else {
         const result = await startEventDeliverableUploadAction({ id: detail.source_record_id, name: file.name, mimeType: file.type, size: file.size });
-        if (!result.success) throw new Error(result.error); uploadId = result.uploadId; sessionUri = result.sessionUri;
+        if (!result.success) throw new Error(result.error); uploadId = result.uploadId; sessionUri = result.sessionUri; mimeType = result.mimeType;
       }
-      await uploadFile(file, sessionUri, mimeType, new AbortController().signal, setProgress);
+      await uploadFile(file, sessionUri, mimeType, abortController.signal, setProgress);
       const finished = source === 'SOCIAL_MEDIA' ? await finishDeliverableUploadAction(uploadId) : source === 'INTERNAL' ? await finishInternalDeliverableUploadAction(uploadId) : await finishEventDeliverableUploadAction(uploadId);
       if (!finished.success) throw new Error(finished.error); setProgress(100); await refresh();
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'No se pudo cargar el entregable.'); await refresh(); }
-    finally { setBusy(false); }
+    finally { setBusy(false); setController(null); }
+  };
+  const uploadMany = async (selected: File[]) => {
+    if (!uploadLimit) return;
+    if (files.length + selected.length > uploadLimit.maxFiles) { setError(`Puedes cargar hasta ${uploadLimit.maxFiles} entregables.`); return; }
+    if (selected.some((file) => file.size > uploadLimit.maxBytes)) { setError(`Cada archivo puede pesar hasta ${sizeLabel(uploadLimit.maxBytes)}.`); return; }
+    for (const file of selected) {
+      const abortController = new AbortController(); setController(abortController);
+      await upload(file, abortController);
+      if (abortController.signal.aborted) break;
+    }
   };
   const resume = async (pending: { id: string; name: string; mimeType: string; size: number }, file: File) => {
     if (file.name !== pending.name || file.size !== pending.size) { setError('Selecciona el mismo archivo y tamaño para reanudar.'); return; }
@@ -82,10 +99,10 @@ function FilesPanel({ detail }: { detail: DesignRequestDetail }) {
   const renderList = (items: FileInfo[], empty: string, warning = false) => items.length ? <ul className="mt-3 divide-y divide-[#F0EDE6]">{items.map((file) => <li key={file.id} className="flex min-h-12 items-center gap-3 py-2"><FileText size={18} className="shrink-0 text-[#5E6680]"/><span className="min-w-0 flex-1 truncate text-sm font-medium">{file.name}</span><span className="text-xs text-[#5E6680]">{sizeLabel(file.size)}</span>{file.webViewLink && <a href={file.webViewLink} target="_blank" rel="noopener noreferrer" aria-label={`Abrir ${file.name} en Drive`} className="grid h-10 w-10 place-items-center rounded-md text-[#0066D2]"><ExternalLink size={16}/></a>}</li>)}</ul> : <p className={`mt-3 text-sm ${warning ? 'text-amber-800' : 'text-[#5E6680]'}`}>{loading ? 'Consultando archivos…' : empty}</p>;
   return <div className="space-y-4">
     <section className={card}><div className="flex items-center justify-between gap-2"><h2 className="font-bold">Brief <span className="font-medium text-[#5E6680]">· {brief.length} archivos</span></h2></div>{renderList(brief, source === 'EVENTS' ? 'No hay archivos de referencia; el brief es opcional.' : 'Faltan archivos de brief.', source !== 'EVENTS')}</section>
-    <section className={card}><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold">Entregables <span className="font-medium text-[#5E6680]">· {files.length} / 20</span></h2>{folderUrl && <a href={folderUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-[#0066D2]">Abrir carpeta <ExternalLink size={14}/></a>}</div>
-      {canUpload && <label className="mt-4 flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#9DBDE6] bg-[#F4F8FD] p-4 text-center"><UploadCloud className="text-[#0066D2]"/><span className="text-sm font-semibold text-[#002F80]">Agregar entregable</span><span className="text-xs text-[#5E6680]">Hasta 500 MB por archivo</span><input type="file" className="sr-only" disabled={busy || files.length >= 20} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ''; if (file) void upload(file); }}/></label>}
+    <section className={card}><div className="flex flex-wrap items-center justify-between gap-2"><h2 className="font-bold">Entregables <span className="font-medium text-[#5E6680]">· {files.length} / {uploadLimit?.maxFiles ?? 20}</span></h2>{folderUrl && <a href={folderUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-9 items-center gap-1 text-sm font-semibold text-[#0066D2]">Abrir carpeta <ExternalLink size={14}/></a>}</div>
+      {canUpload && uploadLimit && <label className="mt-4 flex min-h-24 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#9DBDE6] bg-[#F4F8FD] p-4 text-center"><UploadCloud className="text-[#0066D2]"/><span className="text-sm font-semibold text-[#002F80]">Agregar entregables</span><span className="text-xs text-[#5E6680]">Hasta {uploadLimit.maxFiles} archivos · {sizeLabel(uploadLimit.maxBytes)} por archivo</span><input type="file" multiple className="sr-only" disabled={busy || files.length >= uploadLimit.maxFiles} onChange={(e) => { const selected = Array.from(e.currentTarget.files ?? []); e.currentTarget.value = ''; if (selected.length) void uploadMany(selected); }}/></label>}
       {canUpload && pendingUploads.map((pending) => <div key={pending.id} className="mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3"><span className="min-w-0 flex-1 truncate text-sm">Carga pausada: {pending.name}</span><label className="cursor-pointer rounded-md border border-[#C9C3B6] px-3 py-2 text-xs font-semibold">Reanudar<input type="file" className="sr-only" disabled={busy} onChange={(e) => { const file = e.currentTarget.files?.[0]; e.currentTarget.value = ''; if (file) void resume(pending, file); }}/></label><button type="button" onClick={() => void cancel(pending.id)} disabled={busy} className="rounded-md px-3 py-2 text-xs font-semibold text-red-800">Cancelar</button></div>)}
-      {progress !== null && <div className="mt-3" role="status"><div className="h-2 overflow-hidden rounded-full bg-[#E6F0FB]"><div className="h-full bg-[#0066D2]" style={{ width: `${progress}%` }}/></div><p className="mt-1 text-xs text-[#5E6680]">{progress === 100 ? 'Carga confirmada' : `${progress}% · La carga se puede reanudar si se interrumpe.`}</p></div>}{renderList(files, 'No hay entregables.')}</section>
+      {progress !== null && <div className="mt-3" role="status"><div className="h-2 overflow-hidden rounded-full bg-[#E6F0FB]"><div className="h-full bg-[#0066D2]" style={{ width: `${progress}%` }}/></div><div className="mt-1 flex items-center justify-between"><p className="text-xs text-[#5E6680]">{progress === 100 ? 'Carga confirmada' : `${progress}% · La carga se puede reanudar si se interrumpe.`}</p>{controller && <button type="button" onClick={() => controller.abort()} className="text-xs font-semibold text-red-800">Cancelar carga</button>}</div></div>}{renderList(files, 'No hay entregables.')}</section>
     {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">{error}</p>}
   </div>;
 }
@@ -117,12 +134,12 @@ export function RequestDetailView({ detail, actorId, today }: { detail: DesignRe
   const dueTone = getDesignDueTone(detail.target_date, today);
   return <main className="mx-auto w-full max-w-[1100px] space-y-5 px-4 pb-28 pt-5 text-[#10233F] sm:px-6 sm:pt-7 md:pb-10">
     <header className="space-y-3"><Link href="/design/publications" className="inline-flex min-h-9 items-center text-sm font-semibold text-[#0066D2]">← Solicitudes</Link><div className="flex flex-wrap items-start justify-between gap-4"><div><h1 className="text-[26px] font-bold leading-tight sm:text-[28px]">{detail.title}</h1><div className="mt-2 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#F3F0E9] px-2.5 py-1 text-xs font-semibold">{sourceLabel}</span><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusTone}`}>{DESIGN_STATUS_LABELS[detail.design_status]}</span>{detail.requested_outputs.map((out) => <span key={`${out.category}-${out.source_format_code}`} className="rounded-full bg-[#F3F0E9] px-2.5 py-1 text-xs font-semibold">{designOutputLabel(out.label)}</span>)}{channels.map((channel) => <span key={channel} className="rounded-full bg-[#F3F0E9] px-2.5 py-1 text-xs">{designOutputLabel(channel)}</span>)}</div><p className="mt-2 text-sm text-[#5E6680]">Tomada por <strong className="text-[#10233F]">{detail.designer?.name || (detail.designer ? 'Diseño' : 'Sin asignar')}{detail.designer?.id === actorId ? ' (tú)' : ''}</strong></p></div><div className="hidden md:block"><ActionBar detail={detail} actorId={actorId}/></div></div></header>
-    {showCorrection && detail.correction && <section className="rounded-xl border border-[#F0C98A] bg-[#FFF6E8] p-4 text-[#7A3E00]"><div className="flex gap-3"><AlertCircle size={19}/><div><h2 className="font-bold">Social Media pidió correcciones</h2><p className="mt-2 whitespace-pre-line text-sm">{detail.correction.text}</p><time className="mt-2 block text-xs">{formatTime(detail.correction.at)}</time></div></div></section>}
+    {showCorrection && detail.correction && <section className="rounded-xl border border-[#F0C98A] bg-[#FFF6E8] p-4 text-[#7A3E00]"><div className="flex gap-3"><AlertCircle size={19}/><div><h2 className="font-bold">{sourceLabel} pidió correcciones</h2><p className="mt-2 whitespace-pre-line text-sm">{detail.correction.text}</p><time className="mt-2 block text-xs">{formatTime(detail.correction.at)}</time></div></div></section>}
     <section className="grid gap-5 lg:grid-cols-[minmax(0,.95fr)_minmax(0,1.4fr)]"><article className={`${card} border-t-4 border-t-[#0066D2]`}><h2 className="font-bold">Instrucciones</h2><p className={`mt-3 whitespace-pre-line text-sm leading-6 ${detail.instructions ? 'text-[#3C4663]' : 'text-amber-800'}`}>{detail.instructions || 'No se registraron instrucciones.'}</p></article><FilesPanel detail={detail}/></section>
     <section className={`${card}`}><h2 className="font-bold">Fechas y plazo</h2><div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">{dateRows.map(([label,value]) => <div key={label}><p className="text-xs text-[#5E6680]">{label}</p><p className="mt-1 text-sm font-semibold">{formatDesignDate(value)}</p>{label === 'Entrega objetivo' && <span className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs ${dueTone === 'late' ? 'bg-red-50 text-red-800' : dueTone === 'soon' ? 'bg-amber-50 text-amber-800' : 'bg-[#F3F0E9] text-[#3C4663]'}`}>{getDesignDueLabel(value, today)}</span>}</div>)}</div></section>
     {showCopy && <section className={`${card}`}><h2 className="font-bold">Contenido de la publicación</h2>{detail.copy && Object.values(detail.copy).some((v) => Array.isArray(v) ? v.length : !!v) ? <div className="mt-3 space-y-3 text-sm">{detail.copy.hook && <p><strong>Hook:</strong> {detail.copy.hook}</p>}{detail.copy.body && <p className="whitespace-pre-line"><strong>Cuerpo:</strong> {detail.copy.body}</p>}{detail.copy.cta && <p><strong>CTA:</strong> {detail.copy.cta}</p>}{detail.copy.hashtags?.length ? <p>{detail.copy.hashtags.join(' ')}</p> : null}</div> : <p className="mt-3 text-sm text-amber-800">Sin definir</p>}</section>}
     <section className={`${card}`}><h2 className="font-bold">Datos</h2><dl className="mt-3 grid gap-3 sm:grid-cols-3">{dataRows.filter(([,value]) => value).map(([label,value]) => <div key={label}><dt className="text-xs text-[#5E6680]">{label}</dt><dd className="mt-1 text-sm font-semibold">{value}</dd></div>)}</dl></section>
-    <section className={`${card}`}><h2 className="font-bold">Historial</h2>{detail.history.length ? <ol className="mt-3 space-y-3">{detail.history.map((item,index) => <li key={`${item.at}-${index}`} className="border-l-2 border-[#C9DDF5] pl-3"><p className="text-sm font-semibold">{DESIGN_STATUS_LABELS[item.label === 'EN_DISENO' ? 'IN_PROGRESS' : item.label === 'EN_CORRECCION' ? 'NEEDS_CHANGES' : item.label === 'CANCELADO' ? 'CANCELLED' : item.label === 'SOLICITADO' ? 'REQUESTED' : 'DELIVERED'] ?? item.label}</p><time className="text-xs text-[#5E6680]">{formatTime(item.at)}</time>{item.note && <p className="mt-1 whitespace-pre-line text-sm text-[#5E6680]">{item.note}</p>}</li>)}</ol> : <p className="mt-3 text-sm text-[#5E6680]">Todavía no hay movimientos.</p>}</section>
+    <section className={`${card}`}><h2 className="font-bold">Historial</h2>{detail.history.length ? <ol className="mt-3 space-y-3">{detail.history.map((item,index) => <li key={`${item.at}-${index}`} className="border-l-2 border-[#C9DDF5] pl-3"><p className="text-sm font-semibold">{HISTORY_LABELS[detail.source][item.label] ?? item.label}</p><time className="text-xs text-[#5E6680]">{formatTime(item.at)}</time>{item.note && <p className="mt-1 whitespace-pre-line text-sm text-[#5E6680]">{item.note}</p>}</li>)}</ol> : <p className="mt-3 text-sm text-[#5E6680]">Todavía no hay movimientos.</p>}</section>
     <div className="fixed inset-x-0 bottom-0 z-20 border-t border-[#E7E4DC] bg-white/95 p-3 backdrop-blur md:hidden"><div className="mx-auto flex max-w-[1100px] items-center justify-between gap-3"><span className="text-sm font-semibold">{DESIGN_STATUS_LABELS[detail.design_status]}</span><ActionBar detail={detail} actorId={actorId}/></div></div>
   </main>;
 }

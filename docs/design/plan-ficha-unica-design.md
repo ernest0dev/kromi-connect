@@ -1,6 +1,6 @@
 # Plan: ficha única de solicitud para Design
 
-**Estado (2026-10-19):** implementación local de D0–D6 preparada. El usuario confirmó aplicadas las migraciones `20261020011300_events_design.sql` y `20261020011301_unified_design_requests.sql`. La migración adicional `20261020011400_design_request_details.sql` está preparada localmente y pendiente de aplicación. Las afirmaciones previas del punto de partida describen el estado histórico del commit indicado; no representan el estado actual del código.
+**Estado (2026-10-20):** implementación local de D0–D6 preparada. El usuario confirmó que el historial remoto contiene las migraciones hasta `20261021030127`, incluida `20261020011400_design_request_details.sql`. La migración `20261021030128_event_brief_design_corrections.sql` añade brief de Eventos y correcciones para Interno/Eventos; está preparada localmente y pendiente de aplicación. Las afirmaciones previas del punto de partida describen el estado histórico del commit indicado; no representan el estado actual del código.
 
 ## 1. Punto de partida
 
@@ -140,7 +140,7 @@ No se reescriben las RPC. Se agrega una capa fina en `src/app/actions/design/req
 | D5 | Eventos con Drive: migración §7.1, acciones, carga y entrega | D4 | Design entrega un evento de punta a punta |
 | D6 | Borrar las tres fichas antiguas; e2e Playwright por origen; actualizar `docs/design/README.md` y `UI_IMPLEMENTATION.md` | D2–D5 | Sin rutas ni componentes duplicados |
 
-**Estado local:** D0–D5 implementados en código; D6 incluye la redirección de rutas antiguas, la eliminación de fichas duplicadas y la actualización de este documento y el README. Se añadieron pruebas unitarias de adaptadores. Falta añadir/ejecutar Playwright por origen. La migración `20261020011400_design_request_details.sql` debe aplicarse antes de usar la ruta nueva. No existe un archivo `UI_IMPLEMENTATION.md` en este repositorio. La verificación end-to-end con cuentas reales y Drive queda pendiente de ejecutar con el entorno conectado.
+**Estado local:** D0–D5 implementados en código; D6 incluye la redirección de rutas antiguas, la eliminación de fichas duplicadas y la actualización de este documento y el README. Se añadieron pruebas unitarias de adaptadores. Falta añadir/ejecutar Playwright por origen. El usuario confirmó aplicada `20261020011400_design_request_details.sql`. La migración `20261021030128_event_brief_design_corrections.sql` debe aplicarse para habilitar brief de Eventos y correcciones en Interno/Eventos. No existe un archivo `UI_IMPLEMENTATION.md` en este repositorio. La verificación end-to-end con cuentas reales y Drive queda pendiente de ejecutar con el entorno conectado.
 
 <details><summary>Prompt D0–D1 para Kilo Code</summary>
 
@@ -180,5 +180,5 @@ Mueve el cargador resumible de design/publications/[id]/detail.tsx (líneas 23�
 
 - **Cargas resumibles:** mover el cargador puede romper la subida de archivos grandes. Mover primero sin cambiar lógica y probar con archivos mayores de 8 MB (tamaño del fragmento).
 - **Permisos:** la ficha lee con `design.requests.read`, pero cada acción debe seguir validando el permiso de su origen (§9.3 del plan de Eventos). Social Media hoy usa `getSupabaseAdmin()` para historial y canales, lo que salta RLS; al migrarlo, pasar esas lecturas a RPC con `design_can_see_publication`.
-- **Migración adicional sin aplicar:** la ruta única necesita aplicar `20261020011400_design_request_details.sql` para las lecturas terminales, cronologías, el permiso de carga de Eventos y las sesiones resumibles.
+- **Migración adicional:** `20261020011400_design_request_details.sql` figura aplicada en el historial remoto confirmado por el usuario; `20261021030128_event_brief_design_corrections.sql` queda pendiente de aplicación para las nuevas acciones.
 - **Sin verificación remota:** nada de §7 se contrastó con el proyecto vivo; antes de D2 conviene un `db diff` o consulta manual de las firmas de las RPC que se modifican.

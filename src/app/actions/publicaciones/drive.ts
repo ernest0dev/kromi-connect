@@ -182,7 +182,7 @@ export async function cancelPublicacionBriefUploadAction(uploadId: string) {
 export async function requestPublicationToDesignAction(publicationId: string) {
   const result = await getAuthorizedPublication(publicationId, 'social-media.posts.status.update');
   if ('error' in result) return { success: false as const, error: result.error };
-  if (result.publication.requiere_diseno && !result.publication.instrucciones_diseno?.trim()) return { success: false as const, error: 'Escribe las instrucciones para Diseño antes de solicitar la pieza.' };
+  if (result.publication.requiere_diseno && (result.publication.instrucciones_diseno?.trim().length ?? 0) < 10) return { success: false as const, error: 'Escribe al menos 10 caracteres de instrucciones para solicitar diseño.' };
   try {
     const folders = await ensureFolders(publicationId, result.publication.drive_folder_id!, result.publication.drive_brief_folder_id, result.publication.drive_deliverables_folder_id);
     const count = await countDriveFolderFiles(folders.briefId);
