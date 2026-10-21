@@ -9,7 +9,7 @@ import { designOutputLabel, DESIGN_SOURCE_LABELS } from '@/lib/design/designLabe
 import { DesignStatusBadge, OriginChip } from '../../components/DesignBadges';
 import { shouldRenderDetailField } from '@/lib/design/fieldRules';
 import { formatDesignDate, getDesignDueLabel, getDesignDueTone } from '@/lib/designSla';
-import { uploadFile } from '@/lib/driveResumableUpload';
+import { uploadFile } from '../../../../../../lib/drive-resumable-upload';
 import { startDesignRequestAction, deliverDesignRequestAction, reopenDesignRequestAction } from '@/app/actions/design/requests';
 import { listDesignPublicationDriveFilesAction, startDeliverableUploadAction, finishDeliverableUploadAction, cancelDeliverableUploadAction } from '@/app/actions/publicaciones/design-drive';
 import { getInternalDesignFilesAction, startInternalDeliverableUploadAction, finishInternalDeliverableUploadAction, resumeInternalDeliverableUploadAction, cancelInternalDeliverableUploadAction } from '@/app/actions/internal/design-work';

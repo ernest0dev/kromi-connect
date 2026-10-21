@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { finishInternalBriefUploadAction, listInternalBriefFilesAction, requestInternalDesignAction, retractInternalDesignAction, startInternalBriefUploadAction } from '@/app/actions/internal/drive';
 import type { StoreTaskRow } from '@/lib/internalTasks';
-import { uploadFile } from '@/lib/driveResumableUpload';
+import { uploadFile } from '../../../../lib/drive-resumable-upload';
 
 type FileRow = { id: string; name: string; mimeType: string; size: number; webViewLink: string | null };
 

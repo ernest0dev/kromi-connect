@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, FileText, UploadCloud } from 'lucide-react';
 import { cancelEventBriefUploadAction, finishEventBriefUploadAction, listEventBriefFilesForRequesterAction, resumeEventBriefUploadAction, startEventBriefUploadAction } from '@/app/actions/events/drive';
-import { uploadFile } from '@/lib/driveResumableUpload';
+import { uploadFile } from '../../../../lib/drive-resumable-upload';
 
 type BriefFile = { id: string; name: string; mimeType: string; size: number; webViewLink: string | null };
 type Pending = { id: string; name: string; mimeType: string; size: number };
