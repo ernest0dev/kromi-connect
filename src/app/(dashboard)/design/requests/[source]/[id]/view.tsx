@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { AlertCircle, ExternalLink, FileText, UploadCloud } from 'lucide-react';
 import type { DesignRequestDetail } from '@/lib/designRequests';
 import { designOutputLabel, DESIGN_SOURCE_LABELS } from '@/lib/design/designLabels';
-import { DesignStatusBadge, OriginChip } from '../../components/DesignBadges';
+import { DesignStatusBadge, OriginChip } from '../../../components/DesignBadges';
 import { shouldRenderDetailField } from '@/lib/design/fieldRules';
 import { formatDesignDate, getDesignDueLabel, getDesignDueTone } from '@/lib/designSla';
 import { uploadFile } from '../../../../../../lib/drive-resumable-upload';

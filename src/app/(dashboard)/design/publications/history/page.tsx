@@ -35,7 +35,8 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
     }),
     ...internal.map((row) => {
       const record = row as unknown as Parameters<typeof adaptInternal>[0];
-      return { ...adaptInternal(record), designer_name: internalNames[record.disenador_id ?? ''] ?? null };
+      const request = adaptInternal(record);
+      return { ...request, designer_name: request.designer_id ? internalNames[request.designer_id] ?? null : null };
     }),
     ...(eventResult.data ?? []).map((row) => adaptEvent(row)),
   ].map((request) => ({
