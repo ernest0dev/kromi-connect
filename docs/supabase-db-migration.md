@@ -560,6 +560,12 @@ Migraciones de aplicación manual; el equipo reportó aplicarlas. Las RPC de lec
 
 - **`202610180001_internal_store_tasks.sql`:** tablas `pendientes_tienda` y `pendiente_tienda_historial` (inmutable por el trigger `guard_pendiente_tienda_history`), trigger `touch_pendiente_tienda`, RLS de solo lectura de los pendientes propios, permisos `internal.store-tasks.read|create|update|status.update|archive` para `internal` y las RPC `list_internal_stores`, `list_store_tasks`, `get_store_task`, `create_store_tasks`, `update_store_task`, `transition_store_task_status`, `archive_store_task` y `restore_store_task`, con control de versión optimista.
 - **`202610180002_internal_design_requests.sql`:** tabla `pendiente_drive_uploads` (solo `service_role`), permisos `design.internal.read|start|upload|deliver` para `design`, y las funciones `sync_pendiente_drive_brief`, `reserve_pendiente_brief_upload`, `reserve_pendiente_deliverable_upload` y `request_pendiente_to_design` (solo `service_role`), además de `retract_pendiente_design_request`, `get_design_internal_queue`, `get_design_internal_request`, `get_design_internal_history`, `get_pendiente_designer_names`, `design_start_internal_request` y `design_deliver_internal_request` para `authenticated`. Design no lee `pendientes_tienda` directamente.
+
+## 18. Importación histórica de solicitudes de Diseño (`20261026000300`)
+
+[`20261026000300_design_solicitudes_historicas.sql`](../supabase/migrations/20261026000300_design_solicitudes_historicas.sql) registra el SQL proporcionado para importar el histórico de Excel en `public.design_solicitudes_historicas`. Crea la tabla independiente con clave de idempotencia `(import_batch, source_row_number)`, conserva el estado original y `raw_payload`, y habilita lectura para `authenticated` únicamente cuando `public.has_permission('design.requests.read')` lo permite mediante RLS. No modifica tablas ni estados operativos.
+
+El usuario reporta que este SQL ya se ejecutó en Supabase. Se conserva aquí para historial y reproducibilidad; **no volver a ejecutarlo en la base que ya contiene el lote**. El archivo se incorporó al historial local sin ejecutar el SQL ni verificar el estado remoto.
 - **`202610180003_internal_task_types.sql`:** amplía el check de `tipo` a `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` y conserva `INSUMO` y `NECESIDAD` como históricos.
 - **`202610180004_internal_inventory_access.sql`:** concede al rol `internal` los cinco permisos `events.inventory.*`. No cambia RLS ni RPC.
 

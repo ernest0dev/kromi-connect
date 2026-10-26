@@ -102,6 +102,35 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['solicitud_diseno_historial']['Insert']>;
         Relationships: [];
       };
+      design_solicitudes_historicas: {
+        Row: {
+          id: number;
+          title: string;
+          source_timestamp: string | null;
+          due_date: string | null;
+          objective: string | null;
+          publication_request: string | null;
+          designer_name_raw: string | null;
+          requester_name_raw: string | null;
+          priority_raw: string | null;
+          status_raw: string | null;
+          completed_at: string | null;
+          department_raw: string | null;
+          reference_url: string | null;
+          print_request: string | null;
+          area_raw: string | null;
+          design_quantity_raw: string | null;
+          medium_raw: string | null;
+          pieces_quantity_raw: string | null;
+          publication_details_2: string | null;
+          print_details_2: string | null;
+          material: string | null;
+          dimensions: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
       catalogo_tipos_solicitud: {
         Row: { id: string; codigo: string; nombre: string; activo: boolean; orden: number; alias: string[]; creado_en: string };
         Insert: { id?: string; codigo: string; nombre: string; activo?: boolean; orden?: number; alias?: string[]; creado_en?: string };
