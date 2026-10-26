@@ -43,3 +43,10 @@ next-env.d.ts
 
 cspell.config.yaml
 .cspell.json
+
+# Sensitive Design request source; provide it outside the repository when needed.
+/docs/Solicitudes para el equipo de diseño gráfico.xlsx
+
+# Python test and tool artifacts
+__pycache__/
+*.py[cod]

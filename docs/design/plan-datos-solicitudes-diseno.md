@@ -1,6 +1,6 @@
 # Plan de datos y seguridad: solicitudes de Diseño
 
-**Estado (2026-10-26):** propuesta para revisión; ajustado por D-21 (vínculo formal diferido, `referencia_manual` en la v1). Ningún objeto de este documento existe en `main` ni en Supabase. Los nombres de tablas, columnas, funciones y permisos son **propuestas**; los fragmentos SQL de §13 son ilustrativos y no están aprobados. Etiquetas de evidencia: ver [`plan-solicitudes-diseno.md` §0](./plan-solicitudes-diseno.md#0-cómo-leer-este-documento).
+**Estado (2026-10-26):** implementado localmente en las migraciones `20261026000100` y `20261026000200`; el usuario reporta que ambas se aplicaron en Supabase. Esta sesión no consultó la base ni verificó el historial remoto. El detalle sigue sujeto a validación contra la base desplegada. Etiquetas de evidencia: ver [`plan-solicitudes-diseno.md` §0](./plan-solicitudes-diseno.md#0-cómo-leer-este-documento).
 
 Contexto funcional en [`plan-solicitudes-diseno.md`](./plan-solicitudes-diseno.md). Mapeo de la hoja en [`plan-importacion-solicitudes-diseno.md`](./plan-importacion-solicitudes-diseno.md).
 
@@ -16,8 +16,7 @@ Contexto funcional en [`plan-solicitudes-diseno.md`](./plan-solicitudes-diseno.m
 | `publicacion_estatus_historial` no tiene trigger de inmutabilidad en las migraciones; solo tiene `GRANT SELECT`. | `[REPO]` | `202610100001_publication_workflow_archive.sql` |
 | Los conflictos de versión optimista usan `PT409` y no `40001`, porque PostgREST 14 reintenta `40001`. | `[REPO]` | `20261021030127_fix_postgrest_40001_retry_loop.sql` |
 | `inventory_import_batches` **no se crea en ninguna migración**; la crea el script `supabase/imports/20261013_control_inventario_mercadeo.sql`. Columnas: `batch_key`, `source_name`, `imported_at`, `imported_rows`, `source_rows`. | `[REPO]` | script y `docs/supabase-schema-public.md` |
-| `docs/supabase-schema-public.md` está desactualizado (no refleja `evento_drive_uploads` ni las columnas `diseno_*` de `eventos`). | `[REPO]` | `docs/supabase-db-migration.md` §19 |
-| Migraciones aplicadas en remoto hasta `20261021030127`; `20261021030128` pendiente; `202610150001` sin `db pull`. | `[REPORTADO]` | `docs/design/README.md` |
+| El usuario confirma que este plan se elaboró después de conciliar el esquema con Supabase; `supabase/migrations/` contiene el historial actualizado y `docs/supabase-schema-public.md` / `docs/supabase-schema-auth.md` contienen los esquemas conciliados. | `[REPORTADO]` | Confirmación del usuario, 2026-10-26; archivos presentes en el repositorio |
 
 Principios de diseño `[PROPUESTA]`:
 
@@ -101,6 +100,7 @@ Deliberadamente **ausentes**: fechas de solicitud a Diseño, inicio, entrega rea
 | `orden` | `smallint` | sí | único por solicitud |
 | `pieza` | `text` | sí | nombre de la pieza; por defecto el título de la solicitud |
 | `categoria` | `text` | no | `CHECK in ('DIGITAL','IMPRESO')` o `NULL` |
+| `campo_origen` | `text` | no | `CHECK in ('PUBLICACION_PRINCIPAL','PUBLICACION_ADICIONAL','IMPRESION_PRINCIPAL','IMPRESION_ADICIONAL')`; `NULL` para entregables manuales. Conserva la procedencia del campo importado y distingue los campos con sufijo `2` sin fusionarlos. |
 | `formato_id` / `formato_original` | `uuid` FK / `text` | no | «¿Qué se publica?» o «¿Qué se imprime?» |
 | `medio_id` / `medio_original` | `uuid` FK / `text` | no | «¿A que medio pertenece?» |
 | `cantidad_piezas` | `integer` | no | `CHECK > 0`; solo si es numérica y confiable |
@@ -152,28 +152,29 @@ Tablas `catalogo_tipos_solicitud`, `catalogo_departamentos_solicitud`, `catalogo
 
 ### 3.6 Importación
 
-`solicitud_diseno_importaciones` (lote): `id`, `clave_lote text` único, `archivo_nombre`, `archivo_sha256`, `hoja`, `filas_origen`, `modo` (`SIMULACION`/`REAL`), `estado` (`EN_CURSO`/`COMPLETADO`/`FALLIDO`/`REVERTIDO`), `iniciado_en/por`, `finalizado_en`, `resumen jsonb`.
+`solicitud_diseno_importaciones` (lote): `id`, `clave_lote text` único, `intento integer`, `archivo_nombre`, `archivo_sha256`, `hoja`, `filas_origen`, `modo` (`SIMULACION`/`REAL`), `estado` (`EN_CURSO`/`COMPLETADO`/`FALLIDO`/`REVERTIDO`), `iniciado_en/por`, `finalizado_en`, `resumen jsonb`. La combinación `archivo_sha256` + `hoja` + `intento` identifica la ejecución; un lote revertido es terminal y una reimportación deliberada requiere un nuevo intento.
 
-`solicitud_diseno_importacion_filas`: `id`, `lote_id` FK, `hoja`, `fila_origen integer`, `huella text`, `datos_originales jsonb` (las 22 columnas, tal cual), `resultado text`, `advertencias jsonb`, `errores jsonb`, `solicitud_id uuid` FK nullable, `creado_en`. Resultados en import §9.
+`solicitud_diseno_importacion_filas`: `id`, `lote_id` FK, `hoja`, `fila_origen integer`, `huella text`, `datos_originales jsonb` (las 22 columnas, tal cual), `resultado text`, `resultado_previo_reversion text` nullable, `advertencias jsonb`, `errores jsonb`, `solicitud_id uuid` FK nullable, `solicitud_id_revertida uuid` nullable y sin FK (solo auditoría), `creado_en`. Resultados en import §9. En una reversión, se guarda el resultado previo, se pone `resultado = 'REVERTIDA'`, `solicitud_id` se pone en `NULL` antes de retirar la solicitud y se conserva su UUID en `solicitud_id_revertida`.
 
 ## 4. Relaciones y cardinalidades
 
 | Relación | Cardinalidad | Borrado |
 |---|---|---|
 | Lote → filas | 1:N | `RESTRICT` |
-| Fila → solicitud | 1:0..1 | `RESTRICT` |
+| Fila → solicitud | 1:0..1 | `RESTRICT`; la reversión privilegiada primero conserva el UUID en `solicitud_id_revertida` y pone la FK en `NULL` |
 | Solicitud → entregables | 1:N (0..n) | `RESTRICT` |
 | Solicitud → historial | 1:N | cascada solo si el padre ya no existe |
 | Solicitud → vínculos | 1:N | `RESTRICT` |
 | Vínculo → publicación/evento/pendiente | N:1 | `RESTRICT`; las entidades existentes ya archivan en vez de borrar |
 | Catálogo → solicitud/entregable | 1:N | `RESTRICT`; los catálogos se desactivan, no se borran |
 
-No se prevé borrado físico de solicitudes en la primera versión; se archiva (D-18).
+No se prevé borrado físico en el flujo operativo. Excepción técnica: la reversión de importación, autorizada solo a `service_role`, puede eliminar en una transacción las solicitudes y entregables creados por un lote si se cumplen las condiciones de D-20. Se conserva el lote, sus filas, los datos originales y los UUID de solicitudes retiradas. No es una operación de borrado disponible a usuarios ni una forma de corregir solicitudes manuales.
 
 ## 5. Claves, restricciones e índices recomendados
 
 | Objeto | Definición `[PROPUESTA]` |
 |---|---|
+| `uq_import_lote_intento` | `unique (archivo_sha256, hoja, intento)` |
 | `uq_import_fila_origen` | `unique (lote_id, hoja, fila_origen)` |
 | `idx_import_huella` | índice no único por `huella` para detectar duplicados entre lotes |
 | `uq_solicitud_fila` | `unique (importacion_fila_id)` donde no es nulo |
@@ -196,18 +197,18 @@ La detección de duplicados por similitud de título se hace en el importador (c
 | Dominio | Catálogo funcional | Enum o texto técnico existente | Decisión |
 |---|---|---|---|
 | Tipos de solicitud | `catalogo_tipos_solicitud` | — | Nuevo; ampliable `[CONFIRMADA]`. Valores iniciales: D-17. |
-| Departamentos | `catalogo_departamentos_solicitud` | `departamento_enum` (5 valores, es del inbox de terceros) | Catálogo propio; el enum no se toca `[CONFIRMADA]`. |
+| Departamentos | `catalogo_departamentos_solicitud` | `departamento_enum` (5 valores, es del inbox de terceros) | Catálogo propio; el enum no se toca. Sembrar los ocho valores observados en la hoja y revisar valores no reconocidos manualmente `[CONFIRMADA]`. |
 | Áreas/perfiles | `catalogo_areas_solicitud` | roles de acceso (`social-media`, `internal`, `events`) | Catálogo propio; «Digital» identifica el perfil de Social Media pero no implica publicación `[CONFIRMADA]`. |
 | Medios | `catalogo_medios` | — | Nuevo (Digital, Impreso; «Digital e impreso» se resuelve en dos entregables o categoría mixta, ver import §8). |
-| Formatos | `catalogo_formatos_entregable` | `formato_enum` de publicaciones | Catálogo propio; `formato_enum` es editorial. |
+| Formatos | `catalogo_formatos_entregable` | `formato_enum` de publicaciones | Catálogo propio; `formato_enum` es editorial. Alias exactos; valores desconocidos se conservan para revisión manual. |
 | Estados | texto con `CHECK` | `estatus_enum` (editorial) | No reutilizar `[CONFIRMADA]`. |
 | Prioridad | texto con `CHECK` | `publicaciones.prioridad` (smallint 1/2/3) | No reutilizar (D-05). |
 
-El valor original siempre se conserva en la columna `*_original`. Los alias del catálogo sirven al importador; una coincidencia por alias es exacta tras normalizar (minúsculas, sin tildes, sin espacios sobrantes) y no usa similitud difusa.
+El valor original siempre se conserva en la columna `*_original`. Los alias del catálogo sirven al importador; una coincidencia por alias es exacta tras normalizar (minúsculas, sin tildes, sin espacios sobrantes) y no usa similitud difusa. Un valor sin alias reconocido se conserva y queda pendiente de revisión manual; no se crea ni activa un alias automáticamente.
 
 ## 7. Estados y transiciones del entregable
 
-Estado del entregable `[PROPUESTA]` (D-04, D-10). Las transiciones de la solicitud están en [`plan-solicitudes-diseno.md` §8](./plan-solicitudes-diseno.md#8-estados-y-transiciones).
+Estado del entregable `[CONFIRMADA]` (D-04, D-10). Las transiciones de la solicitud están en [`plan-solicitudes-diseno.md` §8](./plan-solicitudes-diseno.md#8-estados-y-transiciones).
 
 | Desde \ Hacia | PENDIENTE | EN_CURSO | COMPLETADO | CANCELADO |
 |---|---|---|---|---|
@@ -224,7 +225,7 @@ Reglas: cada transición genera historial `tipo = 'ENTREGABLE'`; `completado_en`
 
 **Valores originales.** Doble copia: (1) `datos_originales jsonb` en la fila de importación, con las 22 columnas sin tocar; (2) pares `*_original` en la solicitud y el entregable para lo que se consulta con frecuencia. Ningún valor normalizado sustituye al original.
 
-**Datos personales.** El correo del solicitante («Dirección de correo electrónico») se conserva solo en `datos_originales` y en la resolución de identidad (D-14). No se expone en listados ni en el contrato de Diseño.
+**Datos personales.** «Dirección de correo electrónico» identifica al remitente del formulario, no necesariamente al solicitante. Se conserva solo en `datos_originales`; por decisión del usuario todos los usuarios autenticados con acceso a la aplicación pueden leer ese campo junto con el resto de la fila original (D-08/D-14). No se usa para resolver identidades. Las escrituras de importación siguen restringidas al proceso con `service_role`.
 
 **Referencias externas.** «Imagen referencial» puede contener enlaces a Drive u otros sitios. Riesgos: enlaces privados o muertos, contenido ajeno al control de Kromi, redirecciones a sitios no confiables, y exposición de archivos si se mostraran incrustados. Reglas: se guarda como texto; solo se extraen URLs `http(s)`; no se descargan, no se previsualizan, no se modifican permisos de Drive; en la interfaz se muestran como enlaces con `rel="noopener noreferrer"` y una indicación de enlace externo.
 
@@ -232,25 +233,26 @@ Reglas: cada transición genera historial `tipo = 'ENTREGABLE'`; `completado_en`
 
 ## 9. Matriz de permisos
 
-Todos los permisos son **nuevos** `[PROPUESTA]`, bajo el prefijo `design.` que ya admite `AppPermission` (`design.${string}`) `[REPO]`, sin cambiar el tipo. Los roles de la columna «Concesión inicial» son una propuesta pendiente de D-07 y D-08; ningún permiso se concede a `admin` ni a roles sin necesidad funcional.
+Todos los permisos son **nuevos** `[PROPUESTA]`, bajo el prefijo `design.` que ya admite `AppPermission` (`design.${string}`) `[REPO]`, sin cambiar el tipo. El usuario confirmó lectura del registro y de los datos originales para todos los roles autenticados. Las escrituras operativas se mantienen bajo permisos de `design`; la importación por CLI solo usa `service_role` y nunca expone esa credencial.
 
 | Permiso | Operación | Concesión inicial propuesta | Alcance de lectura / condición de escritura | Validación en servidor | Validación en base de datos | Historial | Datos de importación |
 |---|---|---|---|---|---|---|---|
-| `design.solicitudes.read` | Listar y ver solicitudes y entregables | `design` | Todas (D-08) | `authorizeAction` antes de cualquier consulta | Política `SELECT` con `has_permission` | No | No |
+| `design.solicitudes.read` | Listar y ver solicitudes y entregables | Todos los roles autenticados | Todas (D-08) | `authorizeAction` antes de cualquier consulta | Política `SELECT` con `has_permission` | No | No |
 | `design.solicitudes.create` | Crear solicitud nueva | `design` (D-08) | Solo `origen = 'KROMI'` | `authorizeAction`; no acepta `origen` del cliente | RPC con `*_require`; fija `origen` | Escribe `CREACION` | No |
 | `design.solicitudes.update` | Editar campos | `design` | No sobre `HISTORICA` salvo reabrir; versión obligatoria | `authorizeAction`; valida versión | RPC valida estado, versión (`PT409`) | Escribe `EDICION` | No |
 | `design.solicitudes.assign` | Asignar o reasignar responsable | `design` (D-07) | Solo `ABIERTA`/`EN_CURSO` | `authorizeAction` | RPC; verifica que el destino sea usuario con rol `design` | Escribe `ASIGNACION` | No |
 | `design.solicitudes.status` | Cambiar estado de solicitud o entregable | `design` | Según matrices de §7 y del documento funcional §8 | `authorizeAction` | RPC valida transición y motivo | Escribe `ESTADO` / `ENTREGABLE` | No |
 | `design.solicitudes.history.read` | Consultar historial | `design` | Solo de solicitudes que el usuario puede leer | `authorizeAction` | Política `SELECT` con `has_permission` | Sí | No |
-| `design.solicitudes.link` | Vincular con publicación/evento/pendiente | `social-media` (publicaciones) y `design` (D-08) | Además exige el permiso de lectura de la entidad destino y, en publicaciones, acceso a todas sus cuentas (`user_has_all_publication_accounts`) | `authorizeAction` + comprobación del destino | RPC valida ambos permisos | Escribe `VINCULO` | No |
-| `design.solicitudes.import.read` | Ver lotes, filas y datos originales | Ninguno por defecto; concesión explícita (D-09) | Lotes y filas | `authorizeAction` | Sin privilegios de tabla; solo RPC | No | Sí |
-| `design.solicitudes.import.run` | Ejecutar o simular importación | Ninguno por defecto; concesión explícita (D-09) | — | `authorizeAction`; el cliente admin solo se usa tras autorizar | Funciones de importación solo `service_role` | Escribe `IMPORTACION` | Sí |
+| `design.solicitudes.import.read` | Ver lotes, filas y datos originales | Todos los roles autenticados | Lotes, filas y originales, incluido correo (D-08/D-14) | `authorizeAction` | Política `SELECT` con `has_permission`; sin privilegios de escritura | No | Sí |
+| `design.solicitudes.import.run` | Ejecutar o simular importación | Operador técnico designado, no concedido a un rol general | Solo script de servidor/CLI, fuera del navegador | Revisión de operador y acceso al secreto de ejecución | Escritura masiva exclusiva de `service_role`; credencial no se expone ni versiona | Escribe `IMPORTACION` | Sí |
 | `design.solicitudes.catalogs.manage` | Administrar catálogos | `design` (D-08) | Catálogos | `authorizeAction` | RPC | Opcional | No |
 | (sin permiso) `admin` | — | — | `admin` no hereda nada | — | — | — | — |
 
+La tabla `solicitud_diseno_vinculos` y el permiso `design.solicitudes.link` no forman parte de la v1. La referencia manual es un campo de texto en la solicitud, gestionado mediante el permiso de edición correspondiente. Un vínculo formal requerirá una decisión y una migración posteriores. El permiso `design.solicitudes.import.read` otorga lectura de originales y correo a todos los roles autenticados por decisión expresa del usuario.
+
 ## 10. Diseño de RLS y operaciones privilegiadas
 
-1. **Tablas.** `ENABLE ROW LEVEL SECURITY`; `REVOKE ALL … FROM anon, authenticated`; `GRANT SELECT` solo en solicitudes, entregables, historial y catálogos, con políticas basadas en `has_permission`. Cero privilegios de escritura. Lotes y filas de importación: sin ningún privilegio para `authenticated`; acceso solo por RPC con `design.solicitudes.import.read`. Sin políticas permisivas (`using (true)`), ni siquiera temporales `[CONFIRMADA]`.
+1. **Tablas.** `ENABLE ROW LEVEL SECURITY`; `REVOKE ALL … FROM anon, authenticated`; `GRANT SELECT` solo en solicitudes, entregables, historial, catálogos y tablas de importación. Las políticas usan `has_permission`; todos los roles autenticados pueden leer solicitudes, lotes, filas y datos originales, incluido el correo (D-08/D-14). Cero privilegios de escritura para `authenticated`. Sin políticas permisivas (`using (true)`), ni siquiera temporales `[CONFIRMADA]`.
 2. **Escrituras.** Funciones `security definer`, `set search_path = ''`, que llaman a un helper `design_solicitudes_require(permiso)` (no otorgado a `authenticated`), validan estado, versión y alcance, escriben historial en la misma transacción y se otorgan solo a `authenticated` (revocadas a `public` y `anon`), igual que las RPC de Eventos `[REPO]`.
 3. **Server Actions.** Cada acción llama a `authorizeAction(permiso)` antes de usar cualquier cliente. El cliente administrativo (`getSupabaseAdmin`, Service Role, omite RLS) se reserva a la importación y a Drive, y nunca recibe `origen`, `estado` ni identidades del cliente sin validar `[REPO]` (patrón de `src/app/actions/solicitudes/convert.ts`).
 4. **Importación.** Funciones de escritura masiva exclusivas de `service_role`; el actor del lote se registra como dato, no como permiso implícito.
@@ -269,23 +271,19 @@ Todos los permisos son **nuevos** `[PROPUESTA]`, bajo el prefijo `design.` que y
 | `src/app/(dashboard)/design/shell.tsx` | Único archivo de UI existente que se edita: un ítem de menú (§11.1 del plan funcional, D-21). |
 | `UnifiedQueueView.tsx`, `UnifiedHistoryView.tsx`, `DesignWorkspaceNav.tsx`, ficha única, `fieldRules.ts`, `DesignBadges.tsx` | Ninguno; no se amplían `DesignSource` ni `DesignStatus` en la v1. |
 | `src/types/database.types.ts` | Se regenera tras la migración. |
-| `docs/supabase-schema-public.md` y `.png` | Ya desactualizados; regenerar desde el remoto reconciliado (comprobación pendiente `[REPO]`). |
+| `docs/supabase-schema-public.md`, `docs/supabase-schema-auth.md` y diagramas | Referencias existentes de la conciliación reportada; no regenerar ni repetir `db pull` sin evidencia de cambios posteriores en Supabase. |
 | `AGENTS.md` | Next.js con cambios incompatibles: leer `node_modules/next/dist/docs/` antes de escribir cualquier código de interfaz o acciones (aplica desde F4). |
 | Convención de nombres de migración | Hay versiones de 12 y 14 dígitos; usar 14 dígitos para las nuevas. |
 
-## 12. Objetos remotos que requieren comprobación antes de crear migraciones
+## 12. Comprobaciones antes de aplicar las migraciones en Supabase
 
-Ninguno está verificado en remoto `[PENDIENTE]`:
+El usuario reportó que aplicó manualmente la migración base en producción. Esta sesión no consultó la base ni comprobó el historial remoto. Antes de avanzar:
 
-1. Lista de migraciones aplicadas (`supabase migration list --linked`) frente a los 25 archivos de `supabase/migrations/`; confirmar si `20261021030128` se aplicó.
-2. `supabase db pull` y diferencia con `202610150001_events_schedule.sql` en adelante.
-3. Que no existan ya objetos con los nombres propuestos (`solicitudes_diseno`, `solicitud_diseno_*`, `catalogo_*`, `design_solicitudes_require`).
-4. Filas reales de `app_permissions` y `role_permissions` (colisión con `design.solicitudes.*` y concesiones actuales por rol).
-5. Existencia, `security definer` y grants de `has_permission`, `has_role`, `user_has_all_publication_accounts`, `events_require`.
-6. `set_publication_design_requirement` y su trigger (pendiente en el README de diseño).
-7. Estructura real de `inventory_import_batches` (no hay migración que la cree) y que no sea reutilizada.
-8. Disponibilidad de `pg_trgm` solo si se decide mover la detección de duplicados a SQL.
-9. Privilegios por defecto sobre tablas nuevas en `public`: `supabase/config.toml` deja `auto_expose_new_tables` sin definir `[REPO]`, y su comentario indica que el valor por defecto en la nube es `true`, es decir, una tabla nueva queda accesible a `anon`, `authenticated` y `service_role` sin `GRANT` explícito. Cada migración nueva debe habilitar RLS y hacer `REVOKE ALL … FROM anon, authenticated` en la misma transacción que crea la tabla (como hacen las migraciones actuales), y hay que confirmar el valor efectivo del proyecto remoto.
+1. Consultar `supabase migration list --linked` y contrastar el estado remoto con `20261026000100_design_requests_registry.sql` y el historial local. La ejecución desde SQL Editor puede no registrar la versión.
+2. Si la migración base no aparece en el historial, no ejecutar `db push` ni volver a aplicar el SQL a ciegas. Comparar primero el esquema desplegado con la migración exacta y reconciliar el historial solo tras confirmar que corresponde.
+3. Revisar los objetos concretos de las migraciones 001/002 y cualquier cambio remoto posterior: tablas y funciones `solicitud_diseno_*`, catálogos, permisos y políticas RLS; helper `has_permission` y sus grants.
+4. Revisar los grants por defecto sobre tablas nuevas. La migración base habilita RLS y revoca acceso a `anon` y `authenticated`; la migración 002 concede `SELECT` a usuarios autenticados y la política lo condiciona a los permisos concedidos a todos los roles.
+5. Aplicar únicamente la migración de soporte `20261026000200_design_request_import_support.sql` después de revisar el SQL. Esta sesión no la ejecutó.
 
 ## 13. Fragmentos ilustrativos (no aprobados)
 

@@ -21,6 +21,105 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      catalogo_departamentos_solicitud: {
+        Row: { id: string; codigo: string; nombre: string; activo: boolean; orden: number; alias: string[]; creado_en: string };
+        Insert: { id?: string; codigo: string; nombre: string; activo?: boolean; orden?: number; alias?: string[]; creado_en?: string };
+        Update: Partial<Database['public']['Tables']['catalogo_departamentos_solicitud']['Insert']>;
+        Relationships: [];
+      };
+      catalogo_areas_solicitud: {
+        Row: { id: string; codigo: string; nombre: string; activo: boolean; orden: number; alias: string[]; creado_en: string };
+        Insert: { id?: string; codigo: string; nombre: string; activo?: boolean; orden?: number; alias?: string[]; creado_en?: string };
+        Update: Partial<Database['public']['Tables']['catalogo_areas_solicitud']['Insert']>;
+        Relationships: [];
+      };
+      solicitud_diseno_importaciones: {
+        Row: {
+          id: string; clave_lote: string; intento: number; archivo_nombre: string; archivo_sha256: string;
+          hoja: string; filas_origen: number; modo: string; estado: string; iniciado_en: string;
+          iniciado_por: string | null; finalizado_en: string | null; resumen: Json;
+        };
+        Insert: Partial<Database['public']['Tables']['solicitud_diseno_importaciones']['Row']> & {
+          clave_lote: string; intento: number; archivo_nombre: string; archivo_sha256: string;
+          hoja: string; filas_origen: number; modo: string; estado: string;
+        };
+        Update: Partial<Database['public']['Tables']['solicitud_diseno_importaciones']['Insert']>;
+        Relationships: [];
+      };
+      solicitud_diseno_importacion_filas: {
+        Row: {
+          id: string; lote_id: string; hoja: string; fila_origen: number; huella: string; datos_originales: Json;
+          resultado: string; resultado_previo_reversion: string | null; advertencias: Json; errores: Json;
+          solicitud_id: string | null; solicitud_id_revertida: string | null; creado_en: string;
+        };
+        Insert: Partial<Database['public']['Tables']['solicitud_diseno_importacion_filas']['Row']> & {
+          lote_id: string; hoja: string; fila_origen: number; huella: string; datos_originales: Json; resultado: string;
+        };
+        Update: Partial<Database['public']['Tables']['solicitud_diseno_importacion_filas']['Insert']>;
+        Relationships: [];
+      };
+      solicitudes_diseno: {
+        Row: {
+          id: string; titulo: string; objetivo: string | null; alcance_original: string | null; origen: string;
+          importacion_fila_id: string | null; solicitante_usuario_id: string | null; solicitante_nombre_original: string | null;
+          departamento_id: string | null; departamento_original: string | null; area_id: string | null; area_original: string | null;
+          tipo_id: string | null; prioridad: string | null; prioridad_original: string | null;
+          solicitada_en_original: string | null; fecha_objetivo: string | null; fecha_objetivo_original: string | null;
+          estado: string; estado_historico_original: string | null; fecha_termino_historica: string | null;
+          fecha_termino_original: string | null; ejecutor_historico_nombre: string | null;
+          ejecutor_historico_usuario_id: string | null; responsable_actual_id: string | null;
+          referencias_originales: string | null; referencias_urls: string[]; referencia_manual: string | null;
+          requiere_revision: boolean; motivos_revision: string[]; motivo_cierre: string | null; version: number;
+          creado_en: string; creado_por: string | null; modificado_en: string; modificado_por: string | null;
+        };
+        Insert: Partial<Database['public']['Tables']['solicitudes_diseno']['Row']> & { titulo: string; origen: string; estado: string };
+        Update: Partial<Database['public']['Tables']['solicitudes_diseno']['Insert']>;
+        Relationships: [];
+      };
+      solicitud_diseno_entregables: {
+        Row: {
+          id: string; solicitud_id: string; orden: number; pieza: string; categoria: string | null; campo_origen: string | null;
+          formato_id: string | null; formato_original: string | null; medio_id: string | null; medio_original: string | null;
+          cantidad_piezas: number | null; cantidad_formatos: number | null; alcance_texto: string | null; material: string | null;
+          medidas: string | null; fecha_objetivo: string | null; estado: string; completado_en: string | null;
+          datos_adicionales: Json; version: number; creado_en: string; creado_por: string | null;
+          modificado_en: string; modificado_por: string | null;
+        };
+        Insert: Partial<Database['public']['Tables']['solicitud_diseno_entregables']['Row']> & {
+          solicitud_id: string; orden: number; pieza: string; estado: string;
+        };
+        Update: Partial<Database['public']['Tables']['solicitud_diseno_entregables']['Insert']>;
+        Relationships: [];
+      };
+      solicitud_diseno_historial: {
+        Row: {
+          id: string; solicitud_id: string; entregable_id: string | null; tipo: string; anterior: Json; nuevo: Json;
+          motivo: string | null; cambiado_por: string | null; cambiado_en: string;
+        };
+        Insert: Partial<Database['public']['Tables']['solicitud_diseno_historial']['Row']> & {
+          solicitud_id: string; tipo: string;
+        };
+        Update: Partial<Database['public']['Tables']['solicitud_diseno_historial']['Insert']>;
+        Relationships: [];
+      };
+      catalogo_tipos_solicitud: {
+        Row: { id: string; codigo: string; nombre: string; activo: boolean; orden: number; alias: string[]; creado_en: string };
+        Insert: { id?: string; codigo: string; nombre: string; activo?: boolean; orden?: number; alias?: string[]; creado_en?: string };
+        Update: Partial<Database['public']['Tables']['catalogo_tipos_solicitud']['Insert']>;
+        Relationships: [];
+      };
+      catalogo_medios: {
+        Row: { id: string; codigo: string; nombre: string; activo: boolean; orden: number; alias: string[]; creado_en: string };
+        Insert: { id?: string; codigo: string; nombre: string; activo?: boolean; orden?: number; alias?: string[]; creado_en?: string };
+        Update: Partial<Database['public']['Tables']['catalogo_medios']['Insert']>;
+        Relationships: [];
+      };
+      catalogo_formatos_entregable: {
+        Row: { id: string; codigo: string; nombre: string; categoria: string; activo: boolean; orden: number; alias: string[]; creado_en: string };
+        Insert: { id?: string; codigo: string; nombre: string; categoria: string; activo?: boolean; orden?: number; alias?: string[]; creado_en?: string };
+        Update: Partial<Database['public']['Tables']['catalogo_formatos_entregable']['Insert']>;
+        Relationships: [];
+      };
       pendientes_tienda: {
         Row: {
           id: string; sede_id: string; tipo: string; titulo: string; detalle: string | null;
@@ -673,6 +772,27 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
+      create_solicitud_diseno: { Args: { p_data: Json }; Returns: string };
+      update_solicitud_diseno: { Args: { p_id: string; p_expected_version: number; p_data: Json }; Returns: number };
+      list_solicitud_diseno_responsables: { Args: Record<PropertyKey, never>; Returns: { user_id: string; full_name: string | null }[] };
+      add_solicitud_diseno_entregable: { Args: { p_solicitud_id: string; p_data: Json }; Returns: string };
+      set_solicitud_diseno_responsable: { Args: { p_id: string; p_expected_version: number; p_responsable_id: string | null }; Returns: number };
+      transition_solicitud_diseno: { Args: { p_id: string; p_expected_version: number; p_estado: string; p_motivo?: string | null }; Returns: number };
+      transition_solicitud_diseno_entregable: { Args: { p_id: string; p_expected_version: number; p_estado: string; p_motivo?: string | null }; Returns: number };
+      import_solicitud_diseno_fila: {
+        Args: {
+          p_lote_id: string;
+          p_fila_origen: number;
+          p_huella: string;
+          p_datos_originales: Json;
+          p_resultado: string;
+          p_advertencias: Json;
+          p_errores: Json;
+          p_solicitud: Json;
+          p_entregables: Json;
+        };
+        Returns: Json;
+      };
       get_design_publication_request: { Args: { p_id: string }; Returns: Database['public']['Tables']['publicaciones']['Row'][] };
       get_design_publication_timeline: { Args: { p_id: string }; Returns: { at: string; label: string; note: string | null }[] };
       get_design_publication_channels: { Args: { p_ids: string[] }; Returns: { publicacion_id: string; canal: string }[] };
