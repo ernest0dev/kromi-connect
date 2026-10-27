@@ -1,0 +1,4 @@
+﻿ID_revision,prioridad,tema,hoja_origen,filas,interpretacion_aplicada,accion_requerida
+"REV-001","ALTA","Sede","NAVIDAD 2026","9;10;11;12;13;14;15;16;17;18;19;20;21;22;23;24;25;26;27;28;29;30;31;32;33","Se conserva como PENDIENTE_CONFIRMAR; no se asignó una sede inventada.","Confirmar sede antes de migrar las 25 filas."
+"REV-002","ALTA","Ubicación","GUATAPARO","9;10;11;12;13;14;15;16;17;18;19;20;21","TERRAZA se interpreta desde OBSERVACION, presente de forma consistente en la hoja.","Confirmar que TERRAZA es ubicación y no nota descriptiva."
+"REV-003","MEDIA","Categoría y tipo de control","Todas","151","Decoración para hojas navideñas identificadas; lotes/unidades y DISPONIBLE como supuestos.","Revisar categorías, condición, control y unidad antes de carga definitiva."
