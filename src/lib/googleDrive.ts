@@ -159,6 +159,30 @@ export async function listDriveFolderFiles(folderId: string): Promise<DriveBrief
   return (response.data.files || []).flatMap((file) => file.id ? [{ id: file.id, name: file.name || 'Archivo', mimeType: file.mimeType || 'application/octet-stream', size: Number(file.size || 0), createdTime: file.createdTime || '', webViewLink: file.webViewLink || `https://drive.google.com/open?id=${file.id}`, thumbnailLink: file.thumbnailLink || null }] : []);
 }
 
+/** Sends a file to Drive trash only if it belongs directly to the expected folder. */
+export async function trashDriveFileInFolder(fileId: string, expectedFolderId: string): Promise<void> {
+  if (!/^[a-zA-Z0-9_-]{10,200}$/.test(fileId) || !/^[a-zA-Z0-9_-]{10,200}$/.test(expectedFolderId)) {
+    throw new Error('Identificador de archivo o carpeta no válido.');
+  }
+  const drive = getDriveClient();
+  const response = await drive.files.get({
+    fileId,
+    fields: 'id,name,mimeType,parents,trashed',
+    supportsAllDrives: true,
+  });
+  const file = response.data;
+  if (!file.id || file.trashed) throw new Error('El archivo ya no existe o ya está en la papelera.');
+  if (file.mimeType === FOLDER_MIME || !(file.parents || []).includes(expectedFolderId)) {
+    throw new Error('El archivo no pertenece a la carpeta de material de esta publicación.');
+  }
+  await drive.files.update({
+    fileId,
+    requestBody: { trashed: true },
+    supportsAllDrives: true,
+    fields: 'id,trashed',
+  });
+}
+
 export async function countDriveFolderFiles(folderId: string): Promise<number> {
   const response = await getDriveClient().files.list({ q: `'${folderId}' in parents and trashed = false and mimeType != '${FOLDER_MIME}'`, pageSize: 1000, fields: 'files(id)', supportsAllDrives: true, includeItemsFromAllDrives: true });
   return response.data.files?.length || 0;
