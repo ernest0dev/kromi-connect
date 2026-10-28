@@ -1,8 +1,7 @@
 'use client';
 
-import { AlertTriangle, Pencil, FolderOpen, Eye, Archive, Ban } from 'lucide-react';
+import { Pencil, FolderOpen, Eye, Archive, Ban } from 'lucide-react';
 import { TicketDetailCardProps } from '../types/grid';
-import { useSLA } from '../hooks/useSLA';
 import { FORMATO_LABEL_UPPER } from '../utils/constants';
 import { StatusSelect } from './StatusSelect';
 import { DesignerAttribution } from './DesignerAttribution';
@@ -26,9 +25,6 @@ export function TicketDetailCard({
   onEdit,
   onStatusChange,
 }: TicketDetailCardProps) {
-  const { calcularSlaState, SLA_META } = useSLA();
-  const slaState = calcularSlaState(publicacion.fecha_limite_brief);
-  const slaMeta = SLA_META[slaState];
   const briefCheckedAt = publicacion.drive_brief_checked_at ? new Date(publicacion.drive_brief_checked_at).getTime() : 0;
   const canRequestDesign = publicacion.drive_brief_file_count > 0 && briefCheckedAt > Date.now() - 5 * 60 * 1000 && !!publicacion.instrucciones_diseno?.trim();
 
@@ -83,28 +79,9 @@ export function TicketDetailCard({
         </div>
       </div>
 
-      {/* SLA: etiqueta secundaria + valor destacado */}
+      {/* card-bottom: acciones + assets de Google Drive (el SLA se consulta en el detalle y en Editar → Flujo y SLA) */}
       <div
         className="flex items-center justify-between gap-2 border-t pt-[9px] text-[10px]"
-        style={{
-        borderColor: 'var(--borde)' }}
-      >
-        <span style={{color: 'var(--gris)' }} aria-label={!publicacion.requiere_diseno ? 'SLA del brief: no aplica' : `Fecha límite del brief: ${formatDate(publicacion.fecha_limite_brief)}`}>SLA del brief</span>
-        <span
-          className="flex items-center gap-1 rounded-[5px] px-1.5 py-1 text-right font-semibold"
-          style={{background: slaMeta.bgVar, color: slaMeta.textVar }}
-        >
-          {publicacion.requiere_diseno && (slaState === 'vencido' || slaState === 'hoy') && (
-            <AlertTriangle size={11} aria-hidden="true" />
-          )}
-          {publicacion.requiere_diseno ? slaMeta.label : 'No aplica'}
-          {publicacion.requiere_diseno && publicacion.fecha_limite_brief && ` · ${formatDate(publicacion.fecha_limite_brief)}`}
-        </span>
-      </div>
-
-      {/* card-bottom: editar + assets de Google Drive */}
-      <div
-        className="mt-[10px] flex items-center justify-between gap-2 border-t pt-[9px] text-[10px]"
         style={{
         borderColor: 'var(--borde)' }}
       >

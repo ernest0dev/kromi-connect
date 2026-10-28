@@ -168,32 +168,36 @@ export default function KanbanClientView({ publicacionesIniciales }: Props) {
                 </h3>
 
                 <div className="space-y-3">
-                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                    <span className="text-[10px] font-bold text-indigo-400 block mb-1 uppercase">
-                      🪝 Hook (Gancho Visual)
-                    </span>
-                    <p className="text-xs text-slate-200 whitespace-pre-wrap">
-                      {ticketSeleccionado.hook_texto || 'Sin hook definido.'}
-                    </p>
-                  </div>
+                  {ticketSeleccionado.hook_texto && (
+                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                      <span className="text-[10px] font-bold text-indigo-400 block mb-1 uppercase">
+                        🪝 Hook (Gancho Visual)
+                      </span>
+                      <p className="text-xs text-slate-200 whitespace-pre-wrap">
+                        {ticketSeleccionado.hook_texto}
+                      </p>
+                    </div>
+                  )}
 
                   <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span className="text-[10px] font-bold text-emerald-400 block mb-1 uppercase">
-                      📝 Body (Cuerpo del mensaje)
+                      📝 Copy (texto de la publicación)
                     </span>
                     <p className="text-xs text-slate-200 whitespace-pre-wrap">
-                      {ticketSeleccionado.body_texto || 'Sin cuerpo definido.'}
+                      {ticketSeleccionado.body_texto || 'Sin copy definido.'}
                     </p>
                   </div>
 
-                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                    <span className="text-[10px] font-bold text-amber-400 block mb-1 uppercase">
-                      📢 CTA (Llamada a la Acción)
-                    </span>
-                    <p className="text-xs text-slate-200">
-                      {ticketSeleccionado.cta_texto || 'Sin CTA definido.'}
-                    </p>
-                  </div>
+                  {ticketSeleccionado.cta_texto && (
+                    <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
+                      <span className="text-[10px] font-bold text-amber-400 block mb-1 uppercase">
+                        📢 CTA (Llamada a la Acción)
+                      </span>
+                      <p className="text-xs text-slate-200 whitespace-pre-wrap">
+                        {ticketSeleccionado.cta_texto}
+                      </p>
+                    </div>
+                  )}
 
                   {ticketSeleccionado.hashtags && ticketSeleccionado.hashtags.length > 0 && (
                     <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">

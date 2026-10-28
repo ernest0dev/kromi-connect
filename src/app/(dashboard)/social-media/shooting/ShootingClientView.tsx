@@ -99,10 +99,10 @@ export default function ShootingClientView({ pautasIniciales }: Props) {
               {/* Hook y Detalles de la Toma */}
               <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800 space-y-2">
                 <span className="text-[10px] font-bold text-indigo-400 block uppercase">
-                  🪝 Hook / Idea Principal:
+                  🪝 Idea principal:
                 </span>
                 <p className="text-xs text-slate-200 font-medium">
-                  {item.hook_texto || "Sin hook especificado."}
+                  {item.hook_texto || item.body_texto?.split("\n").find((line) => line.trim()) || "Sin idea principal especificada."}
                 </p>
               </div>
 

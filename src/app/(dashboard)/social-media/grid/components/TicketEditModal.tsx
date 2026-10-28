@@ -62,9 +62,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
   }));
   const [fechaPublicacion, setFechaPublicacion] = useState(publicacion.fecha_publicacion);
   const [horaPublicacion, setHoraPublicacion] = useState(publicacion.hora_publicacion?.slice(0, 5) || '');
-  const [hook, setHook] = useState(publicacion.hook_texto || '');
-  const [body, setBody] = useState(publicacion.body_texto || '');
-  const [cta, setCta] = useState(publicacion.cta_texto || '');
+  const [copy, setCopy] = useState(() => [publicacion.hook_texto, publicacion.body_texto, publicacion.cta_texto].map((part) => part?.trim()).filter(Boolean).join('\n\n'));
   const [hashtags, setHashtags] = useState((publicacion.hashtags || []).join(', '));
   const [campanaId, setCampanaId] = useState(publicacion.campana_id || '');
   const [socialAccountIds, setSocialAccountIds] = useState(publicacion.social_account_ids);
@@ -116,9 +114,9 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
       fecha_entrega_diseno_real: publicacion.fecha_entrega_diseno_real,
       fecha_aprobacion_gerencia: publicacion.fecha_aprobacion_gerencia,
       estatus: publicacion.estatus,
-      hook_texto: hook,
-      body_texto: body,
-      cta_texto: cta,
+      hook_texto: formato === 'STORY' ? publicacion.hook_texto : null,
+      body_texto: formato === 'STORY' ? publicacion.body_texto : copy,
+      cta_texto: formato === 'STORY' ? publicacion.cta_texto : null,
       hashtags: parseHashtags(hashtags),
       campana_id: campanaId || null,
     };
@@ -134,7 +132,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
   };
 
   const copyCaption = async () => {
-    const caption = [hook, body, cta, parseHashtags(hashtags).join(' ')].filter(Boolean).join('\n\n');
+    const caption = [copy, parseHashtags(hashtags).join(' ')].filter(Boolean).join('\n\n');
     try {
       await navigator.clipboard.writeText(caption);
       setCopyFeedback('Texto copiado.');
@@ -176,24 +174,20 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
               </div>
               <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
               <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} disableYoutube={formato === 'STORY'} />
-              {requiereDiseno && <section className="space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">{puedeCambiarRequisitoDiseno ? 'Escritas por Social Media' : 'Fijas después de solicitar'}</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} disabled={!puedeCambiarRequisitoDiseno} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} className="w-full resize-y rounded-lg border border-[#D2CCC0] bg-[#FAF8F4] px-3 py-2 text-sm leading-6 text-[#10233F] focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE] disabled:bg-[#F7F5F0] disabled:text-[#5E6680]" placeholder="Objetivo, referencias y detalles de la pieza."/><p className="flex flex-wrap justify-between gap-2 text-xs text-[#5E6680]"><span>{puedeCambiarRequisitoDiseno ? 'Al solicitar, cualquier cambio posterior se envía como corrección.' : 'Para cambiarlas, devuelve la solicitud a Brief o pide una corrección.'}</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
               <section className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <label className={`flex items-start gap-2 text-sm font-medium text-slate-800 ${puedeCambiarRequisitoDiseno ? 'cursor-pointer' : 'cursor-not-allowed opacity-70'}`}>
                   <input type="checkbox" checked={requiereDiseno} disabled={!puedeCambiarRequisitoDiseno} onChange={(event) => setRequiereDiseno(event.target.checked)} />
                   <span><span className="block">Requiere diseño de Design</span><span className="mt-0.5 block text-xs font-normal text-slate-600">{puedeCambiarRequisitoDiseno ? 'Si lo desactivas, Social Media podrá avanzar directamente a aprobación. Los archivos del brief son opcionales.' : 'La decisión queda fija una vez solicitada o iniciada la pieza. Devuélvela a Brief si Design todavía no la ha abierto.'}</span></span>
                 </label>
                 {!requiereDiseno && <p className="mt-2 text-xs font-semibold text-blue-800">Sin diseño de Design · el SLA de diseño no aplica.</p>}
+                {requiereDiseno && <section className="mt-3 space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">{puedeCambiarRequisitoDiseno ? 'Escritas por Social Media' : 'Fijas después de solicitar'}</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} disabled={!puedeCambiarRequisitoDiseno} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} className="w-full resize-y rounded-lg border border-[#D2CCC0] bg-[#FAF8F4] px-3 py-2 text-sm leading-6 text-[#10233F] focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE] disabled:bg-[#F7F5F0] disabled:text-[#5E6680]" placeholder="Objetivo, referencias y detalles de la pieza."/><p className="flex flex-wrap justify-between gap-2 text-xs text-[#5E6680]"><span>{puedeCambiarRequisitoDiseno ? 'Al solicitar, cualquier cambio posterior se envía como corrección.' : 'Para cambiarlas, devuelve la solicitud a Brief o pide una corrección.'}</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
               </section>
               {publicacion.drive_folder_id && <PublicationDriveFiles publicationId={publicacion.id} onBriefState={(count,checkedAt)=>onDriveState({...publicacion,drive_brief_file_count:Math.min(count,10),drive_brief_checked_at:checkedAt})} />}
               {formato === 'STORY' ? <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-800">Las Stories no llevan copy</p><p className="mt-1 text-xs text-slate-600">El texto que ya exista se conserva, pero no aplica a este formato.</p></div> : <section className="space-y-4 border-t border-slate-200 pt-5">
-                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Brief de copy</h3>
-                {field('Hook', <input value={hook} onChange={(event) => setHook(event.target.value)} className={controlClass} style={controlStyle} />, true)}
-                <div className="grid gap-4 md:grid-cols-2">
-                  {field('Cuerpo', <textarea rows={8} value={body} onChange={(event) => setBody(event.target.value)} className={`${controlClass} resize-y`} style={controlStyle} />)}
-                  {field('CTA', <textarea rows={8} value={cta} onChange={(event) => setCta(event.target.value)} className={`${controlClass} resize-y`} style={controlStyle} />)}
-                </div>
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Copy de la publicación</h3>
+                {field('Texto (gancho, mensaje y llamada a la acción)', <div className="space-y-1.5"><textarea rows={10} value={copy} onChange={(event) => setCopy(event.target.value)} className={`${controlClass} resize-y`} style={controlStyle} /><p className="text-right text-[11px] text-slate-500">{copy.length} caracteres</p></div>, true)}
                 {field('Hashtags · separar por espacio o coma', <div className="space-y-2"><input value={hashtags} onChange={(event) => setHashtags(event.target.value)} placeholder="#Uno #Dos, #Tres" className={controlClass} style={controlStyle} /><div className="flex flex-wrap gap-1.5">{parseHashtags(hashtags).map((tag) => <span key={tag.toLowerCase()} className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-800">{tag}</span>)}</div></div>, true)}
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-100 px-4 py-3 text-xs text-slate-700"><span>Caption armado: hook + cuerpo + CTA + hashtags · {[hook, body, cta, parseHashtags(hashtags).join(' ')].filter(Boolean).join(' ').length} caracteres</span><button type="button" onClick={() => void copyCaption()} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-semibold text-blue-700">Vista previa y copiar</button>{copyFeedback && <span role="status" className="text-slate-500">{copyFeedback}</span>}</div>
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-slate-100 px-4 py-3 text-xs text-slate-700"><span>Caption armado: copy + hashtags · {[copy, parseHashtags(hashtags).join(' ')].filter(Boolean).join(' ').length} caracteres</span><button type="button" onClick={() => void copyCaption()} className="rounded-md border border-slate-300 bg-white px-3 py-1.5 font-semibold text-blue-700">Vista previa y copiar</button>{copyFeedback && <span role="status" className="text-slate-500">{copyFeedback}</span>}</div>
               </section>}
             </div>}
 
@@ -240,7 +234,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
 
           <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3 sm:px-7">
             <p className="hidden text-[11px] text-slate-500 sm:block">Creado {formatTimestamp(publicacion.created_at)} · Actualizado {formatTimestamp(publicacion.updated_at)}</p>
-            <div className="ml-auto flex gap-2"><button type="button" disabled={isPending} onClick={onClose} className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50">Cancelar</button><button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{isPending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}{isPending ? 'Guardando…' : 'Guardar cambios'}</button></div>
+            <div className="ml-auto flex gap-2"><button type="button" disabled={isPending} onClick={onClose} className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50">Cerrar</button><button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{isPending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}{isPending ? 'Guardando…' : 'Guardar cambios'}</button></div>
           </footer>
         </form>
       </section>

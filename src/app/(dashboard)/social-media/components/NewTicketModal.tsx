@@ -59,9 +59,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
   const [fechaPublicacion, setFechaPublicacion] = useState(initialDate || '');
   const [horaPublicacion, setHoraPublicacion] = useState('');
 
-  const [hookTexto, setHookTexto] = useState('');
-  const [bodyTexto, setBodyTexto] = useState('');
-  const [ctaTexto, setCtaTexto] = useState('');
+  const [copyTexto, setCopyTexto] = useState('');
   const [hashtagsRaw, setHashtagsRaw] = useState('');
   const [categoryIds, setCategoryIds] = useState<string[]>([]);
   const [campanaId, setCampanaId] = useState('');
@@ -115,9 +113,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         requiere_rodaje: requiereRodaje,
         sedes,
         prioridad,
-        hook_texto: formato === 'STORY' ? undefined : hookTexto || undefined,
-        body_texto: formato === 'STORY' ? undefined : bodyTexto || undefined,
-        cta_texto: formato === 'STORY' ? undefined : ctaTexto || undefined,
+        body_texto: formato === 'STORY' ? undefined : copyTexto || undefined,
         hashtags: formato === 'STORY' ? [] : hashtagsArray,
       });
 
@@ -125,9 +121,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         setTitulo('');
         setFechaPublicacion('');
         setHoraPublicacion('');
-        setHookTexto('');
-        setBodyTexto('');
-        setCtaTexto('');
+        setCopyTexto('');
         setHashtagsRaw('');
         setCategoryIds([]);
         setCampanaId('');
@@ -255,11 +249,11 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
             {briefVencido && fechaLimiteBrief && <p role="status" className="rounded-lg border border-amber-300 bg-amber-50 p-2 text-xs text-amber-900 md:col-span-2">El brief debía estar listo el {formatDate(fechaLimiteBrief)}. Puedes continuar y guardar igualmente.</p>}
             <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
             <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} disableYoutube={formato === 'STORY'} />
-            {requiereDiseno && <section className="space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4 md:col-span-2"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">Obligatorias al solicitar a Design</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} placeholder="Describe el objetivo, las referencias, el formato o los detalles que debe respetar Diseño." className="w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-6 focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE]" style={inputStyle}/><p className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#5E6680]"><span>Al solicitar, las instrucciones quedan fijas. Los cambios posteriores se envían como corrección.</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
           </div>
 
-          <details className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-bold text-slate-800">Producción <span className="ml-1 text-xs font-normal text-slate-500">Opcional</span></summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <details open className="rounded-xl border border-slate-200 bg-white p-4"><summary className="cursor-pointer text-sm font-bold text-slate-800">Producción y diseño</summary><div className="mt-4 grid gap-4 sm:grid-cols-2">
             <label className="flex items-start gap-2 text-sm font-medium text-slate-700 sm:col-span-2"><input type="checkbox" checked={requiereDiseno} onChange={(event) => setRequiereDiseno(event.target.checked)} /><span><span className="block">Requiere diseño de Design</span><span className="mt-0.5 block text-xs font-normal text-slate-500">Desactívalo si Social Media ya tiene el material. La publicación podrá avanzar directamente a aprobación; los archivos de Drive son opcionales.</span></span></label>
+            {requiereDiseno && <section className="space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4 sm:col-span-2"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">Obligatorias para solicitar a Design</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} placeholder="Describe el objetivo, las referencias, el formato o los detalles que debe respetar Diseño." className="w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm leading-6 focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE]" style={inputStyle}/><p className="flex flex-wrap items-center justify-between gap-2 text-xs text-[#5E6680]"><span>Al solicitar, las instrucciones quedan fijas. Los cambios posteriores se envían como corrección.</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
             <label className="flex items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={requiereRodaje} onChange={(event) => setRequiereRodaje(event.target.checked)} />Requiere rodaje</label>
             {requiereRodaje && <div className="text-xs text-slate-600">Fecha sugerida de rodaje: {fechaPublicacion ? new Date(new Date(`${fechaPublicacion}T00:00:00Z`).getTime() - 3 * 86400000).toISOString().slice(0, 10) : 'se calcula al seleccionar publicación'}</div>}
             <fieldset className="space-y-2 sm:col-span-2"><legend className="text-xs font-semibold text-slate-700">Tiendas donde se graba</legend><div className="flex flex-wrap gap-2">{(['PREBO', 'MANONGO'] as const).map((sede) => { const selected = sedes.includes(sede); return <button key={sede} type="button" aria-pressed={selected} onClick={() => setSedes((current) => selected ? current.filter((item) => item !== sede) : [...current, sede])} className={`rounded-full border px-3 py-1.5 text-xs font-medium ${selected ? 'border-blue-700 bg-blue-50 text-blue-800' : 'border-slate-300 bg-white text-slate-700'}`}>{sede === 'MANONGO' ? 'Mañongo' : 'Prebo'}</button>; })}</div><p className="text-[11px] text-slate-500">Puedes elegir más de una tienda.</p></fieldset>
@@ -269,73 +263,42 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
           {/* Bloque 2: Copy */}
           {formato !== 'STORY' && <div className="space-y-3 pt-4 border-t" style={{ borderColor: 'var(--borde)' }}>
             <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--gris)' }}>
-              Brief de copy
+              Copy de la publicación
             </h3>
 
             <div className="space-y-1.5">
-              <label htmlFor={`${formId}-hook`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
-                Hook
+              <label htmlFor={`${formId}-copy`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Texto (gancho, mensaje y llamada a la acción)
               </label>
-              <input
-                id={`${formId}-hook`}
-                type="text"
-                placeholder="3 cortes de carne que estás comprando mal"
-                value={hookTexto}
-                onChange={(e) => setHookTexto(e.target.value)}
-                className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
+              <textarea
+                id={`${formId}-copy`}
+                rows={8}
+                placeholder={'3 cortes de carne que estás comprando mal\n\nDetalle de las ofertas…\n\nVisítanos en Prebo o Mañongo'}
+                value={copyTexto}
+                onChange={(e) => setCopyTexto(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none resize-y"
                 style={inputStyle}
               />
+              <p className="flex justify-between gap-2 text-[11px] text-slate-500"><span>Escríbelo tal como se publicará. Separa los párrafos con una línea en blanco.</span><span className="shrink-0">{copyTexto.length} caracteres</span></p>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor={`${formId}-body`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
-                Cuerpo del mensaje
+              <label htmlFor={`${formId}-hashtags`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
+                Hashtags
               </label>
-              <textarea
-                id={`${formId}-body`}
-                rows={3}
-                placeholder="Detalle de las ofertas…"
-                value={bodyTexto}
-                onChange={(e) => setBodyTexto(e.target.value)}
-                className="w-full rounded-lg px-3.5 py-2.5 text-sm border focus:outline-none resize-none"
+              <input
+                id={`${formId}-hashtags`}
+                type="text"
+                placeholder="#KromiMarket #Prebo, #Ofertas"
+                value={hashtagsRaw}
+                onChange={(e) => setHashtagsRaw(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
                 style={inputStyle}
               />
+              <p className="text-[11px] text-slate-500">Separa con espacios o comas. Se agrega # y se quitan duplicados.</p>
+              <div className="flex flex-wrap gap-1">{parseHashtags(hashtagsRaw).map((tag) => <span key={tag.toLowerCase()} className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-800">{tag}</span>)}</div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <label htmlFor={`${formId}-cta`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
-                  CTA
-                </label>
-                <input
-                  id={`${formId}-cta`}
-                  type="text"
-                  placeholder="Visítanos en Prebo o Mañongo"
-                  value={ctaTexto}
-                  onChange={(e) => setCtaTexto(e.target.value)}
-                  className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
-                  style={inputStyle}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor={`${formId}-hashtags`} className="text-xs font-semibold" style={{ color: 'var(--tinta)' }}>
-                  Hashtags
-                </label>
-                <input
-                  id={`${formId}-hashtags`}
-                  type="text"
-                  placeholder="#KromiMarket #Prebo, #Ofertas"
-                  value={hashtagsRaw}
-                  onChange={(e) => setHashtagsRaw(e.target.value)}
-                  className="w-full rounded-lg px-3.5 py-2 text-sm border focus:outline-none"
-                style={inputStyle}
-              />
-                <p className="text-[11px] text-slate-500">Separa con espacios o comas. Se agrega # y se quitan duplicados.</p>
-                <div className="flex flex-wrap gap-1">{parseHashtags(hashtagsRaw).map((tag) => <span key={tag.toLowerCase()} className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-medium text-blue-800">{tag}</span>)}</div>
-              </div>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"><b>Vista previa</b><p className="mt-2 whitespace-pre-wrap">{[hookTexto, bodyTexto, ctaTexto, parseHashtags(hashtagsRaw).join(' ')].filter(Boolean).join('\n\n') || 'El texto de la publicación aparecerá aquí.'}</p><p className="mt-2 text-[10px] text-slate-500">Hook: {hookTexto.length} caracteres. Los límites se validarán según la plataforma cuando se defina la configuración oficial.</p></div>
+            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"><b>Vista previa</b><p className="mt-2 whitespace-pre-wrap">{[copyTexto, parseHashtags(hashtagsRaw).join(' ')].filter(Boolean).join('\n\n') || 'El texto de la publicación aparecerá aquí.'}</p><p className="mt-2 text-[10px] text-slate-500">Los límites de caracteres se validarán según la plataforma cuando se defina la configuración oficial.</p></div>
           </div>}
 
           {/* Acciones */}
