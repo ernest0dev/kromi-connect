@@ -1,6 +1,6 @@
 # Plan de implementación: espejo automático de Kromi Connect en Google Sheets
 
-**Estado:** Primera implementación preparada en rama `feat/google-sheets-design-mirror`; pendiente de build y validación en Preview antes de integrar en `main`.
+**Estado:** Implementación integrada en `main`. Build de Vercel Preview correcto para el commit de implementación `b6db824`; pendiente configurar y probar el Spreadsheet real.
 **Destino:** `main` — `docs/integraciones/plan-google-sheets-espejo.md`
 **Objetivo:** mantener una hoja de Google Sheets actualizada automáticamente desde Kromi Connect para consulta, filtros e informes. Kromi Connect/Supabase sigue siendo la única fuente de verdad.
 
@@ -197,4 +197,4 @@ La carga inicial se ejecuta al activar el cron: el worker crea las pestañas que
 - Revisar las rutas/cron actuales y las restricciones de Supabase para integrar la outbox sin duplicar mecanismos.
 - Validar el modelo de permisos y el nivel de sensibilidad de cada columna.
 
-**Estado de validación:** código preparado en rama `feat/google-sheets-design-mirror`; todavía no se ha confirmado un build exitoso ni un despliegue funcional. Mantener `GOOGLE_SHEETS_SYNC_ENABLED=false` hasta validar Google Cloud, el Spreadsheet y la ejecución del worker.
+**Estado de validación:** `pnpm run build` completado correctamente en Vercel Preview (commit `b6db824`), incluyendo compilación, TypeScript y generación de páginas. Esto valida el build, no la conexión real a Google Sheets. Mantener `GOOGLE_SHEETS_SYNC_ENABLED=false` hasta configurar Google Cloud, compartir el Spreadsheet y ejecutar una prueba manual del worker.
