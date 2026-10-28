@@ -66,7 +66,7 @@ function cleanCell(value: unknown): Cell {
   return String(value);
 }
 
-function row(values: unknown[]): Cell[] {
+function row(values: readonly unknown[]): Cell[] {
   return values.map(cleanCell);
 }
 
@@ -220,7 +220,8 @@ async function getLegacyHistoryRows() {
     'medium_raw', 'design_quantity_raw', 'pieces_quantity_raw', 'material', 'dimensions',
     'reference_url', 'review_required', 'review_reasons', 'imported_at',
   ].join(',');
-  const result = await admin.from('design_solicitudes_historicas')
+  const legacyTable = (admin as any).from('design_solicitudes_historicas');
+  const result = await legacyTable
     .select(columns)
     .order('source_timestamp', { ascending: false, nullsFirst: false })
     .order('id', { ascending: true });
