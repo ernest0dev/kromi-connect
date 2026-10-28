@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CheckCircle2, ExternalLink, FileText, Loader2, RefreshCw, UploadCloud, XCircle } from 'lucide-react';
+import { CheckCircle2, ExternalLink, FileText, Loader2, RefreshCw, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import {
+  trashPublicacionBriefFileAction,
   cancelPublicacionBriefUploadAction,
   finishPublicacionBriefUploadAction,
   listPublicacionBriefFilesAction,
@@ -60,6 +61,7 @@ export function PublicationDriveFiles({
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState('');
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const [uploads, setUploads] = useState<UploadRow[]>([]);
   const [refresh, setRefresh] = useState(0);
   const controllers = useRef(new Map<string, AbortController>());
@@ -188,6 +190,27 @@ export function PublicationDriveFiles({
     }
   };
 
+  const onDeleteFile = async (file: DriveBriefFile) => {
+    if (!canUpload || deletingFileId) return;
+    const confirmed = window.confirm(`¿Enviar “${file.name}” a la papelera de Google Drive? Podrás recuperarlo desde la papelera de Drive.`);
+    if (!confirmed) return;
+    setDeletingFileId(file.id);
+    setError('');
+    try {
+      const result = await trashPublicacionBriefFileAction(publicationId, file.id);
+      if (!result.success) {
+        setError(result.error || 'No se pudo enviar el archivo a la papelera.');
+        return;
+      }
+      await load();
+      if (result.warning) setError(result.warning);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo enviar el archivo a la papelera.');
+    } finally {
+      setDeletingFileId(null);
+    }
+  };
+
   const onChooseFiles = async (list: FileList | null) => {
     if (!list?.length) return;
     setPending(true);
@@ -310,7 +333,15 @@ export function PublicationDriveFiles({
                   <span className="text-[10px] text-slate-500">{formatSize(file.size)} · {formatDate(file.createdTime)}</span>
                 </span>
               </span>
-              {file.webViewLink && <a href={file.webViewLink} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-blue-700">Abrir <ExternalLink size={12} /></a>}
+              <span className="flex shrink-0 items-center gap-3">
+                {file.webViewLink && <a href={file.webViewLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs font-semibold text-blue-700">Abrir <ExternalLink size={12} /></a>}
+                {canUpload && <button type="button" onClick={() => void onDeleteFile(file)} disabled={deletingFileId !== null}
+                  aria-label={`Enviar ${file.name} a la papelera`} title="Enviar a la papelera"
+                  className="inline-flex items-center gap-1 rounded-md p-1 text-slate-500 hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50">
+                  {deletingFileId === file.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  <span className="sr-only">Enviar a la papelera</span>
+                </button>}
+              </span>
             </li>
           ))}
         </ul>
