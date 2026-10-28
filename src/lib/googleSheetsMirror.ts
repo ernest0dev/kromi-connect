@@ -6,7 +6,7 @@ const MANAGED_SHEETS = [
     title: 'Cola de producción',
     headers: [
       'ID Kromi Connect', 'Origen', 'Solicitud', 'Estado', 'Formato / tipo',
-      'Fecha solicitada', 'Fecha objetivo', 'Fecha entrega', 'Diseñador ID',
+      'Fecha solicitada', 'Fecha objetivo', 'Fecha entrega', 'Diseñador ID', 'Diseñador nombre', 'Diseñador email',
       'Instrucciones', 'Actualizado en Kromi Connect',
     ],
   },
