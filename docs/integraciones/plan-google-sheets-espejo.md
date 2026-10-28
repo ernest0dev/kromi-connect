@@ -83,10 +83,9 @@ Variables propuestas (los nombres definitivos deben quedar consistentes entre el
 
 - `GOOGLE_SHEETS_SPREADSHEET_ID`: ID del Spreadsheet de destino.
 - `GOOGLE_SHEETS_SYNC_ENABLED`: interruptor para activar/desactivar la integración (`false` por defecto hasta completar pruebas).
-- `GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL`: correo de la cuenta de servicio.
-- `GOOGLE_SHEETS_PRIVATE_KEY`: clave privada de la cuenta de servicio, almacenada como secreto. Si el proveedor requiere escapar saltos de línea, normalizarlos al inicializar el cliente.
+- El cliente de Sheets reutiliza `GOOGLE_SERVICE_ACCOUNT_EMAIL` y `GOOGLE_PRIVATE_KEY`, ya configuradas para Google Drive. No se añaden variables de credenciales duplicadas.
 
-No usar prefijo `NEXT_PUBLIC_` para estas variables. No guardar la clave privada en el código, en archivos de configuración versionados, en el Spreadsheet ni en registros. Si se decide reutilizar las variables existentes de la cuenta de servicio de Drive, documentar explícitamente esa decisión y probar los permisos de Sheets antes de eliminar variables duplicadas.
+No usar prefijo `NEXT_PUBLIC_` para estas variables. No guardar la clave privada en el código, en archivos de configuración versionados, en el Spreadsheet ni en registros.
 
 Configurar los mismos secretos en local y en el proveedor de despliegue (por ejemplo, Vercel → Project → Settings → Environment Variables), seleccionando los entornos necesarios. Reiniciar o redesplegar para que las funciones servidor reciban las variables nuevas.
 
