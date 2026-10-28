@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { authorizeAction } from '@/lib/auth/dal';
 import { createPublicacionDriveFolder } from '@/lib/googleDrive';
-import { countDriveFolderFiles, createDriveResumableSession, ensurePublicacionDriveFolders, findDriveUploadedFile, listDriveFolderFiles, revokeDriveResumableSession } from '@/lib/googleDrive';
+import { countDriveFolderFiles, createDriveResumableSession, ensurePublicacionDriveFolders, findDriveUploadedFile, listDriveFolderFiles, revokeDriveResumableSession, trashDriveFileInFolder } from '@/lib/googleDrive';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 
 const UUID = /^[0-9a-f-]{36}$/i;
@@ -93,6 +93,28 @@ export async function listDesignPublicationDriveFilesAction(publicationIds: stri
     }catch(cause){return [publication.id,{briefFiles:[],deliverableFiles:[],briefUrl:null,deliverablesUrl:null,error:cause instanceof Error?cause.message:'No se pudieron consultar los archivos.'}] as const;}
   }));
   return {success:true as const,error:undefined,data:Object.fromEntries(entries)};
+}
+
+export async function trashPublicacionBriefFileAction(publicationId: string, fileId: string) {
+  if (!/^[a-zA-Z0-9_-]{10,200}$/.test(fileId)) return { success: false as const, error: 'Identificador de archivo no válido.' };
+  const result = await getAuthorizedPublication(publicationId, 'social-media.posts.edit');
+  if ('error' in result) return { success: false as const, error: result.error };
+  try {
+    const folders = await ensureFolders(publicationId, result.publication.drive_folder_id!, result.publication.drive_brief_folder_id, result.publication.drive_deliverables_folder_id);
+    // The Drive helper verifies the file is directly inside this publication's Brief folder.
+    await trashDriveFileInFolder(fileId, folders.briefId);
+    const count = await countDriveFolderFiles(folders.briefId);
+    const { error: syncError } = await getSupabaseAdmin().rpc('sync_publication_drive_brief', {
+      p_publication_id: publicationId,
+      p_brief_folder_id: folders.briefId,
+      p_deliverables_folder_id: folders.deliverablesId,
+      p_file_count: Math.min(count, 10),
+    });
+    revalidatePath('/social-media/grid');
+    return { success: true as const, data: { count }, warning: syncError ? 'El archivo se envió a la papelera, pero no se pudo sincronizar el contador. Actualiza la lista para reintentar.' : undefined };
+  } catch (cause) {
+    return { success: false as const, error: cause instanceof Error ? cause.message : 'No se pudo enviar el archivo a la papelera de Drive.' };
+  }
 }
 
 export async function startPublicacionBriefUploadAction(input: { publicationId: string; name: string; mimeType: string; size: number }) {
