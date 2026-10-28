@@ -5,7 +5,7 @@ import { Loader2, X } from 'lucide-react';
 import { EstatusEnum, FormatoEnum, PublicacionConCuentas, SocialAccountOption } from '@/types';
 import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
 import { editPublicacionAction, EditPublicacionInput } from '@/app/actions/publicaciones/edit';
-import { ESTATUS_STYLE, FORMATO_LABEL_UPPER, getFormatoDisplayLabel } from '../utils/constants';
+import { ESTATUS_STYLE, FORMATO_LABEL_UPPER, getEstatusLabel, getFormatoDisplayLabel } from '../utils/constants';
 import { ContentCategorySelector } from './ContentCategorySelector';
 import type { ContentCategoryOption } from './ContentCategorySelector';
 import { SocialAccountSelector } from '../../components/SocialAccountSelector';
@@ -45,15 +45,17 @@ interface Props {
   onClose: () => void;
   onSaved: (publicacion: PublicacionConCuentas) => void;
   onDriveState: (publicacion: PublicacionConCuentas) => void;
+  /** Abre el diálogo de confirmación de cancelación del grid (se muestra por encima de este modal). */
+  onRequestCancel?: () => void;
 }
 
-export function TicketEditModal({ publicacion, campanas, categories, accounts, onClose, onSaved, onDriveState }: Props) {
+export function TicketEditModal({ publicacion, campanas, categories, accounts, onClose, onSaved, onDriveState, onRequestCancel }: Props) {
   const formId = useId();
   const [activeTab, setActiveTab] = useState<EditTab>('Contenido');
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState('');
   const [correctionReason, setCorrectionReason] = useState('');
-  const [cancelReason, setCancelReason] = useState('');
+  const [confirmingClose, setConfirmingClose] = useState(false);
   const [titulo, setTitulo] = useState(publicacion.titulo);
   const [formato, setFormato] = useState(publicacion.formato);
   const [categoryIds, setCategoryIds] = useState(() => (publicacion.linea_contenido || '').split(', ').flatMap((name) => {
@@ -72,6 +74,15 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
   const puedeCambiarRequisitoDiseno = ['PENDIENTE_BRIEF', 'EN_RODAJE'].includes(publicacion.estatus);
   const slaWillChange = publicacion.fecha_publicacion !== fechaPublicacion;
   const selectedAccounts = socialAccountIds.map((id) => accounts.find((account) => account.id === id)?.platform);
+  const snapshot = JSON.stringify({ titulo, formato, categoryIds: [...categoryIds].sort(), fechaPublicacion, horaPublicacion, copy, hashtags, campanaId, socialAccountIds: [...socialAccountIds].sort(), requiereDiseno, instruccionesDiseno });
+  const [initialSnapshot] = useState(snapshot);
+  const isDirty = snapshot !== initialSnapshot;
+
+  const requestClose = () => {
+    if (isPending) return;
+    if (isDirty) { setConfirmingClose(true); return; }
+    onClose();
+  };
 
   const field = (label: string, control: ReactNode, full = false) => (
     <div className={`space-y-1.5 ${full ? 'sm:col-span-2' : ''}`}>
@@ -143,7 +154,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
 
 
   return (
-    <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 p-3 sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !isPending) onClose(); }}>
+    <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 p-3 sm:p-5" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose(); }}>
       <section role="dialog" aria-modal="true" aria-labelledby={`${formId}-title`} className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
         <header className="shrink-0 border-b border-slate-200 px-5 pt-4 sm:px-7">
           <div className="flex items-start justify-between gap-4">
@@ -151,11 +162,11 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
               <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Editar publicación</p>
               <h2 id={`${formId}-title`} className="mt-1 break-words text-xl font-bold text-slate-900">{publicacion.titulo}</h2>
               <div className="mt-2 flex flex-wrap gap-2 pb-3">
-                <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: ESTATUS_STYLE[publicacion.estatus].bgVar, color: ESTATUS_STYLE[publicacion.estatus].textVar }}>{ESTATUS_STYLE[publicacion.estatus].label}</span>
+                <span className="rounded-full px-2.5 py-1 text-xs font-semibold" style={{ background: ESTATUS_STYLE[publicacion.estatus].bgVar, color: ESTATUS_STYLE[publicacion.estatus].textVar }}>{getEstatusLabel(publicacion.estatus, publicacion.requiere_diseno)}</span>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-700">{getFormatoDisplayLabel(formato, selectedAccounts)} · {formatDate(fechaPublicacion)}</span>
               </div>
             </div>
-            <button type="button" disabled={isPending} onClick={onClose} aria-label="Cerrar" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"><X size={18} /></button>
+            <button type="button" disabled={isPending} onClick={requestClose} aria-label="Cerrar" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"><X size={18} /></button>
           </div>
           <nav aria-label="Secciones de edición" role="tablist" className="-mb-px flex gap-5 overflow-x-auto">
             {TABS.map(({ label, enabled }) => <button key={label} type="button" role="tab" aria-selected={activeTab === label} aria-disabled={!enabled} disabled={!enabled} title={!enabled ? 'Fuera del alcance actual' : undefined} onClick={() => enabled && setActiveTab(label)} className={`shrink-0 border-b-2 px-1 py-3 text-sm font-semibold transition ${activeTab === label ? 'border-blue-700 text-slate-900' : enabled ? 'border-transparent text-slate-500 hover:text-slate-800' : 'cursor-not-allowed border-transparent text-slate-300'}`}>{label}</button>)}
@@ -172,6 +183,10 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
                 {field('Formato *', <select value={formato} onChange={(event) => { const value = event.target.value as FormatoEnum; setFormato(value); if (value === 'STORY') setSocialAccountIds((ids) => ids.filter((id) => accounts.find((account) => account.id === id)?.platform !== 'YOUTUBE')); }} className={controlClass} style={controlStyle}>{FORMATOS.map((value) => <option key={value} value={value}>{value === 'REEL' ? getFormatoDisplayLabel(value, selectedAccounts) : FORMATO_LABEL_UPPER[value]}</option>)}</select>)}
                 {field('Campaña', <select value={campanaId} onChange={(event) => setCampanaId(event.target.value)} className={controlClass} style={controlStyle}><option value="">Sin campaña</option>{campanas.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.nombre}{campaign.estatus === 'ARCHIVADA' ? ' · Archivada' : ''}</option>)}</select>)}
               </div>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {field('Fecha de publicación *', <input type="date" required value={fechaPublicacion} onChange={(event) => setFechaPublicacion(event.target.value)} className={controlClass} style={controlStyle} />)}
+                {field('Hora de publicación (opcional)', <input type="time" value={horaPublicacion} onChange={(event) => setHoraPublicacion(event.target.value)} className={controlClass} style={controlStyle} />)}
+              </div>
               <ContentCategorySelector categories={categories} selectedIds={categoryIds} onChange={setCategoryIds} />
               <SocialAccountSelector accounts={accounts} selectedIds={socialAccountIds} onChange={setSocialAccountIds} disableYoutube={formato === 'STORY'} />
               <section className="rounded-lg border border-slate-200 bg-slate-50 p-3">
@@ -182,7 +197,7 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
                 {!requiereDiseno && <p className="mt-2 text-xs font-semibold text-blue-800">Sin diseño de Design · el SLA de diseño no aplica.</p>}
                 {requiereDiseno && <section className="mt-3 space-y-3 rounded-xl border border-[#E7E4DC] border-t-4 border-t-[#0066D2] bg-white p-4"><div className="flex flex-wrap items-baseline justify-between gap-2"><label htmlFor={`${formId}-design-instructions`} className="text-sm font-bold text-[#10233F]">Instrucciones para Diseño</label><span className="text-xs text-[#5E6680]">{puedeCambiarRequisitoDiseno ? 'Escritas por Social Media' : 'Fijas después de solicitar'}</span></div><textarea id={`${formId}-design-instructions`} rows={4} maxLength={4000} disabled={!puedeCambiarRequisitoDiseno} value={instruccionesDiseno} onChange={(event) => setInstruccionesDiseno(event.target.value)} className="w-full resize-y rounded-lg border border-[#D2CCC0] bg-[#FAF8F4] px-3 py-2 text-sm leading-6 text-[#10233F] focus:border-[#0066D2] focus:outline-none focus:ring-2 focus:ring-[#A9C8EE] disabled:bg-[#F7F5F0] disabled:text-[#5E6680]" placeholder="Objetivo, referencias y detalles de la pieza."/><p className="flex flex-wrap justify-between gap-2 text-xs text-[#5E6680]"><span>{puedeCambiarRequisitoDiseno ? 'Al solicitar, cualquier cambio posterior se envía como corrección.' : 'Para cambiarlas, devuelve la solicitud a Brief o pide una corrección.'}</span><span className="shrink-0">{instruccionesDiseno.length}/4000</span></p></section>}
               </section>
-              {publicacion.drive_folder_id && <PublicationDriveFiles publicationId={publicacion.id} onBriefState={(count,checkedAt)=>onDriveState({...publicacion,drive_brief_file_count:Math.min(count,10),drive_brief_checked_at:checkedAt})} />}
+              {publicacion.drive_folder_id && <PublicationDriveFiles publicationId={publicacion.id} designRequired={requiereDiseno} onBriefState={(count,checkedAt)=>onDriveState({...publicacion,drive_brief_file_count:Math.min(count,10),drive_brief_checked_at:checkedAt})} />}
               {formato === 'STORY' ? <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-800">Las Stories no llevan copy</p><p className="mt-1 text-xs text-slate-600">El texto que ya exista se conserva, pero no aplica a este formato.</p></div> : <section className="space-y-4 border-t border-slate-200 pt-5">
                 <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Copy de la publicación</h3>
                 {field('Texto (gancho, mensaje y llamada a la acción)', <div className="space-y-1.5"><textarea rows={10} value={copy} onChange={(event) => setCopy(event.target.value)} className={`${controlClass} resize-y`} style={controlStyle} /><p className="text-right text-[11px] text-slate-500">{copy.length} caracteres</p></div>, true)}
@@ -192,12 +207,8 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
             </div>}
 
             {activeTab === 'Flujo y SLA' && <div className="space-y-6">
-              <section className="grid gap-4 border-b border-slate-200 pb-5 sm:grid-cols-2">
-                {field('Fecha de publicación *', <input type="date" required value={fechaPublicacion} onChange={(event) => setFechaPublicacion(event.target.value)} className={controlClass} style={controlStyle} />)}
-                {field('Hora de publicación (opcional)', <input type="time" value={horaPublicacion} onChange={(event) => setHoraPublicacion(event.target.value)} className={controlClass} style={controlStyle} />)}
-              </section>
               <section className="rounded-xl border border-slate-200 p-4 sm:p-5">
-                <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Estado actual</p><p className="mt-1 text-base font-bold text-slate-900">{ESTATUS_STYLE[publicacion.estatus].label}</p></div></div>
+                <div className="flex flex-wrap items-center justify-between gap-3"><div><p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Estado actual</p><p className="mt-1 text-base font-bold text-slate-900">{getEstatusLabel(publicacion.estatus, requiereDiseno)}</p></div></div>
                 {publicacion.estatus === 'EN_REVISION_CM' && <div className="mt-4 space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
                   <DeliverablesReview publicationId={publicacion.id} deliveredAt={publicacion.fecha_entrega_diseno_real} estimatedAt={publicacion.fecha_entrega_diseno_estimada} />
                   <label className="block space-y-1 text-xs font-semibold text-amber-950">Observación para Design<textarea rows={3} value={correctionReason} onChange={(event) => setCorrectionReason(event.target.value)} className={controlClass} placeholder="Describe los cambios necesarios." /></label>
@@ -210,21 +221,25 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
                 {publicacion.estatus === 'PENDIENTE_APROBACION_GERENCIA' && <button type="button" disabled={isPending} onClick={() => startTransition(() => transition('APROBADO'))} className="mt-3 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold">Registrar aprobación recibida</button>}
                 {publicacion.estatus === 'APROBADO' && <div className="mt-3 flex flex-wrap gap-2"><button type="button" disabled={isPending} onClick={() => startTransition(() => transition('PROGRAMADO'))} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold">Programado</button><button type="button" disabled={isPending} onClick={() => startTransition(() => transition('PUBLICADO'))} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold">Publicado</button></div>}
                 {publicacion.estatus === 'PROGRAMADO' && <button type="button" disabled={isPending} onClick={() => startTransition(() => transition('PUBLICADO'))} className="mt-3 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold">Confirmar publicado</button>}
-                {publicacion.estatus !== 'CANCELADO' && <div className="mt-4 space-y-2 rounded-lg border border-red-200 p-3"><label className="block space-y-1 text-xs font-semibold text-red-800">Motivo de cancelación<textarea rows={2} value={cancelReason} onChange={(event) => setCancelReason(event.target.value)} className={controlClass} placeholder="Motivo obligatorio para cancelar desde cualquier estado." /></label><button type="button" disabled={isPending || !cancelReason.trim()} onClick={() => startTransition(() => transition('CANCELADO', cancelReason))} className="rounded-lg bg-red-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50">Cancelar publicación</button></div>}
+                {publicacion.estatus !== 'CANCELADO' && onRequestCancel && <button type="button" disabled={isPending} onClick={onRequestCancel} className="mt-4 block text-xs font-semibold text-red-700 underline disabled:opacity-50">Cancelar publicación…</button>}
                 <p className="mt-4 text-xs text-slate-500">Las fechas reales se registran automáticamente al solicitar, entregar o aprobar; no se editan aquí.</p>
               </section>
-              <section><h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">SLA de producción</h3><div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-lg bg-emerald-50 p-3"><p className="text-xs font-semibold text-emerald-900">Brief</p><p className="mt-1 text-sm font-bold text-emerald-950">{!requiereDiseno ? 'No aplica' : formatDate(slaWillChange ? null : publicacion.fecha_limite_brief)}</p><p className="text-xs text-emerald-800">{!requiereDiseno ? 'Material opcional' : slaWillChange ? 'Se recalcula al guardar' : 'Límite calculado'}</p></div>
-                <div className="rounded-lg bg-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Rodaje</p><p className="mt-1 text-sm font-bold text-slate-900">{publicacion.requiere_rodaje ? formatDate(publicacion.fecha_rodaje) : 'No requerido'}</p><p className="text-xs text-slate-600">{publicacion.requiere_rodaje ? 'Fecha sugerida' : 'Actívalo en Producción'}</p></div>
-                <div className="rounded-lg bg-amber-50 p-3"><p className="text-xs font-semibold text-amber-900">Diseño</p><p className="mt-1 text-sm font-bold text-amber-950">{!requiereDiseno ? 'No aplica' : publicacion.fecha_solicitud_diseno ? formatDate(publicacion.fecha_entrega_diseno_estimada) : 'Sin solicitud'}</p><p className="text-xs text-amber-800">{!requiereDiseno ? 'Flujo directo a aprobación' : publicacion.fecha_solicitud_diseno ? 'Entrega estimada' : 'Se calcula al solicitar'}</p></div>
-              </div></section>
+              <section><h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">SLA de producción</h3>
+                {!requiereDiseno && !publicacion.requiere_rodaje ? <p className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600">Esta publicación no pasa por Design ni requiere rodaje: no tiene SLA de producción. Activa alguno desde Contenido o al crearla.</p> : <div className="grid gap-3 sm:grid-cols-3">
+                {requiereDiseno && <div className="rounded-lg bg-emerald-50 p-3"><p className="text-xs font-semibold text-emerald-900">Brief</p><p className="mt-1 text-sm font-bold text-emerald-950">{formatDate(slaWillChange ? null : publicacion.fecha_limite_brief)}</p><p className="text-xs text-emerald-800">{slaWillChange ? 'Se recalcula al guardar' : 'Límite calculado'}</p></div>}
+                {publicacion.requiere_rodaje && <div className="rounded-lg bg-slate-100 p-3"><p className="text-xs font-semibold text-slate-700">Rodaje</p><p className="mt-1 text-sm font-bold text-slate-900">{formatDate(publicacion.fecha_rodaje)}</p><p className="text-xs text-slate-600">Fecha sugerida</p></div>}
+                {requiereDiseno && <div className="rounded-lg bg-amber-50 p-3"><p className="text-xs font-semibold text-amber-900">Diseño</p><p className="mt-1 text-sm font-bold text-amber-950">{publicacion.fecha_solicitud_diseno ? formatDate(publicacion.fecha_entrega_diseno_estimada) : 'Sin solicitud'}</p><p className="text-xs text-amber-800">{publicacion.fecha_solicitud_diseno ? 'Entrega estimada' : 'Se calcula al solicitar'}</p></div>}
+              </div>}
+              </section>
               <section><h3 className="mb-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Fechas del flujo · hora de Caracas</h3><dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   ['Publicación', formatDate(fechaPublicacion)],
-                  ['Límite del brief · automático', !requiereDiseno ? 'No aplica' : slaWillChange ? 'Se recalculará al guardar' : formatDate(publicacion.fecha_limite_brief)],
-                  ['Solicitud de diseño · real', requiereDiseno ? formatTimestamp(publicacion.fecha_solicitud_diseno) : 'No aplica'],
-                  ['Entrega de diseño · estimada', requiereDiseno ? formatDate(publicacion.fecha_entrega_diseno_estimada) : 'No aplica'],
-                  ['Entrega de diseño · real', requiereDiseno ? formatTimestamp(publicacion.fecha_entrega_diseno_real) : 'No aplica'],
+                  ...(requiereDiseno ? [
+                    ['Límite del brief · automático', slaWillChange ? 'Se recalculará al guardar' : formatDate(publicacion.fecha_limite_brief)],
+                    ['Solicitud de diseño · real', formatTimestamp(publicacion.fecha_solicitud_diseno)],
+                    ['Entrega de diseño · estimada', formatDate(publicacion.fecha_entrega_diseno_estimada)],
+                    ['Entrega de diseño · real', formatTimestamp(publicacion.fecha_entrega_diseno_real)],
+                  ] : []),
                   ['Aprobación · real', formatTimestamp(publicacion.fecha_aprobacion_gerencia)],
                 ].map(([label, value]) => <div key={label} className="rounded-lg border border-slate-200 p-3"><dt className="text-xs font-semibold text-slate-500">{label}</dt><dd className="mt-1 text-sm text-slate-900">{value}</dd></div>)}
               </dl></section>
@@ -232,9 +247,11 @@ export function TicketEditModal({ publicacion, campanas, categories, accounts, o
 
           </main>
 
-          <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3 sm:px-7">
-            <p className="hidden text-[11px] text-slate-500 sm:block">Creado {formatTimestamp(publicacion.created_at)} · Actualizado {formatTimestamp(publicacion.updated_at)}</p>
-            <div className="ml-auto flex gap-2"><button type="button" disabled={isPending} onClick={onClose} className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50">Cerrar</button><button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{isPending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}{isPending ? 'Guardando…' : 'Guardar cambios'}</button></div>
+          <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-5 py-3 sm:px-7">
+            {confirmingClose ? <p role="alert" className="text-xs font-semibold text-amber-900">Tienes cambios sin guardar. ¿Cerrar sin guardarlos?</p> : isDirty ? <p role="status" className="text-xs font-semibold text-amber-800">Cambios sin guardar</p> : <p className="hidden text-[11px] text-slate-500 sm:block">Creado {formatTimestamp(publicacion.created_at)} · Actualizado {formatTimestamp(publicacion.updated_at)}</p>}
+            {confirmingClose
+              ? <div className="ml-auto flex gap-2"><button type="button" onClick={() => setConfirmingClose(false)} className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700">Seguir editando</button><button type="button" onClick={onClose} className="rounded-lg bg-red-700 px-4 py-2 text-xs font-bold text-white">Descartar cambios</button></div>
+              : <div className="ml-auto flex gap-2"><button type="button" disabled={isPending} onClick={requestClose} className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50">Cerrar</button><button type="submit" disabled={isPending} className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{isPending && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}{isPending ? 'Guardando…' : 'Guardar cambios'}</button></div>}
           </footer>
         </form>
       </section>

@@ -23,9 +23,10 @@ import { archivePublicationAction } from "@/app/actions/publicaciones/archive";
 import { transitionPublicationAction } from "@/app/actions/publicaciones/workflow";
 import { retryPublicacionDriveFolderAction } from "@/app/actions/publicaciones/drive";
 import { PublicationDriveFiles } from "./components/PublicationDriveFiles";
+import { DetailActionsMenu } from "./components/DetailActionsMenu";
 import type { ContentCategoryOption } from "./components/ContentCategorySelector";
 import { ESTATUS_STYLE } from "./utils/constants";
-import { getFormatoDisplayLabel } from "./utils/constants";
+import { getEstatusLabel, getFormatoDisplayLabel } from "./utils/constants";
 import {
   PublicationCommentsSection,
   PublicationStatusHistorySection,
@@ -239,6 +240,9 @@ export default function GridView({
         item?.id === publicationToCancel.id
           ? { ...item, estatus: "CANCELADO" }
           : item,
+      );
+      setEditingPublication((item) =>
+        item?.id === publicationToCancel.id ? null : item,
       );
       setPublicationToCancel(null);
       setCancelReason("");
@@ -508,6 +512,11 @@ export default function GridView({
           categories={categoriasContenidoIniciales}
           accounts={cuentasSocialesIniciales}
           onClose={() => setEditingPublication(null)}
+          onRequestCancel={() => {
+            setPublicationToCancel(editingPublication);
+            setCancelReason("");
+            setActionError("");
+          }}
           onDriveState={(updatedPublication) => {
             setPublicaciones((current) =>
               current.map((publication) =>
@@ -735,29 +744,21 @@ export default function GridView({
                         : "Crear carpeta"}
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => {
+                  <DetailActionsMenu
+                    onArchive={() => {
                       setPublicationToArchive(selectedPublication);
                       setSelectedPublication(null);
                     }}
-                    className="rounded-lg border border-slate-200 px-3.5 py-2 text-xs font-semibold text-slate-700"
-                  >
-                    Archivo
-                  </button>
-                  {selectedPublication.estatus !== "CANCELADO" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPublicationToCancel(selectedPublication);
-                        setCancelReason("");
-                        setSelectedPublication(null);
-                      }}
-                      className="rounded-lg border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-700"
-                    >
-                      Cancelar
-                    </button>
-                  )}
+                    onCancel={
+                      selectedPublication.estatus !== "CANCELADO"
+                        ? () => {
+                            setPublicationToCancel(selectedPublication);
+                            setCancelReason("");
+                            setSelectedPublication(null);
+                          }
+                        : undefined
+                    }
+                  />
                   <button
                     type="button"
                     onClick={() => setSelectedPublication(null)}
@@ -777,7 +778,10 @@ export default function GridView({
                       color: ESTATUS_STYLE[selectedPublication.estatus].textVar,
                     }}
                   >
-                    {ESTATUS_STYLE[selectedPublication.estatus].label}
+                    {getEstatusLabel(
+                      selectedPublication.estatus,
+                      selectedPublication.requiere_diseno,
+                    )}
                   </span>
                   <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
                     {formatForDestinations(
@@ -900,14 +904,6 @@ export default function GridView({
                     )}
                     {selectedPublication.instrucciones_diseno && <section className="rounded-lg border border-blue-100 bg-blue-50 p-3"><h3 className="text-xs font-bold text-blue-900">Instrucciones para Diseño</h3><p className="mt-1 whitespace-pre-wrap text-sm text-slate-800">{selectedPublication.instrucciones_diseno}</p></section>}
                   </section>
-                  {selectedPublication.formato === "STORY" && (
-                    <section className="rounded-lg border border-dashed border-slate-300 p-4 text-sm text-slate-600">
-                      <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Hashtags
-                      </h3>
-                      Las Stories no usan copy ni hashtags.
-                    </section>
-                  )}
                   <PublicationCommentsSection
                     data={selectedPublicationHistory}
                   />
@@ -917,6 +913,8 @@ export default function GridView({
                   <section className="space-y-4">
                     <PublicationDriveFiles
                       publicationId={selectedPublication.id}
+                      designRequired={selectedPublication.requiere_diseno}
+                      showFolderLink={false}
                       onBriefState={(count, checkedAt) => {
                         setSelectedPublication((current) =>
                           current?.id === selectedPublication.id
@@ -940,14 +938,6 @@ export default function GridView({
                         );
                       }}
                     />
-                    <div>
-                      <p className="text-xs font-semibold text-slate-500">
-                        Fecha de publicación
-                      </p>
-                      <p className="mt-1 text-sm font-semibold text-slate-900">
-                        {displayLongDate(selectedPublication.fecha_publicacion)}
-                      </p>
-                    </div>
                     <div>
                       <p className="text-xs font-semibold text-slate-500">
                         Campaña
@@ -1026,23 +1016,14 @@ export default function GridView({
                             : "Normal"}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-500">
-                        Carpeta de Drive
-                      </p>
-                      {selectedPublication.drive_folder_url ? (
-                        <a
-                          href={selectedPublication.drive_folder_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="mt-1 inline-block text-sm font-semibold text-blue-700 underline"
-                        >
-                          Abrir carpeta de assets
-                        </a>
-                      ) : (
+                    {!selectedPublication.drive_folder_url && (
+                      <div>
+                        <p className="text-xs font-semibold text-slate-500">
+                          Carpeta de Drive
+                        </p>
                         <div className="mt-1">
                           <p className="text-sm text-amber-800">
-                            Carpeta pendiente
+                            Carpeta pendiente · usa “Crear carpeta” arriba
                           </p>
                           {driveRetryError && (
                             <p
@@ -1053,8 +1034,8 @@ export default function GridView({
                             </p>
                           )}
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </section>
 
                   <section className="border-t border-slate-200 pt-4">
@@ -1063,49 +1044,52 @@ export default function GridView({
                     </h3>
                     <ol className="space-y-3">
                       {[
-                        {
-                          label: "Límite del brief",
-                          value: selectedPublication.requiere_diseno ? displayDate(
-                            selectedPublication.fecha_limite_brief,
-                          ) : "No aplica",
-                          detail: selectedPublication.requiere_diseno ? "Fecha calculada" : "Material de Drive opcional",
-                        },
-                        {
-                          label: "Solicitud de diseño",
-                          value: selectedPublication.requiere_diseno ? displayTimestamp(
-                            selectedPublication.fecha_solicitud_diseno,
-                          ) : "No aplica",
-                          detail: !selectedPublication.requiere_diseno
-                            ? "Publicación sin flujo de Design"
-                            : selectedPublication.fecha_solicitud_diseno
-                            ? "Fecha real"
-                            : selectedPublication.estatus ===
-                                  "PENDIENTE_BRIEF" ||
-                                selectedPublication.estatus === "EN_RODAJE"
-                              ? "Pendiente"
-                              : "Sin registro",
-                        },
-                        {
-                          label: "Entrega de diseño",
-                          value: !selectedPublication.requiere_diseno
-                            ? "No aplica"
-                            :
-                            displayTimestamp(
-                              selectedPublication.fecha_entrega_diseno_real,
-                            ) ||
-                            displayDate(
-                              selectedPublication.fecha_entrega_diseno_estimada,
-                            ),
-                          detail: !selectedPublication.requiere_diseno
-                            ? "Publicación sin flujo de Design"
-                            : selectedPublication.fecha_entrega_diseno_real
-                            ? "Entrega real"
-                            : selectedPublication.fecha_entrega_diseno_estimada
-                              ? "Fecha estimada"
-                              : selectedPublication.fecha_solicitud_diseno
-                                ? "Pendiente"
-                                : "Sin solicitud registrada",
-                        },
+                        ...(selectedPublication.requiere_diseno
+                          ? [
+                              {
+                                label: "Límite del brief",
+                                value: displayDate(
+                                  selectedPublication.fecha_limite_brief,
+                                ),
+                                detail: "Fecha calculada",
+                                done: !["PENDIENTE_BRIEF", "EN_RODAJE"].includes(
+                                  selectedPublication.estatus,
+                                ),
+                              },
+                              {
+                                label: "Solicitud de diseño",
+                                value: displayTimestamp(
+                                  selectedPublication.fecha_solicitud_diseno,
+                                ),
+                                detail: selectedPublication.fecha_solicitud_diseno
+                                  ? "Fecha real"
+                                  : ["PENDIENTE_BRIEF", "EN_RODAJE"].includes(
+                                        selectedPublication.estatus,
+                                      )
+                                    ? "Pendiente"
+                                    : "Sin registro",
+                                done: !!selectedPublication.fecha_solicitud_diseno,
+                              },
+                              {
+                                label: "Entrega de diseño",
+                                value:
+                                  displayTimestamp(
+                                    selectedPublication.fecha_entrega_diseno_real,
+                                  ) ||
+                                  displayDate(
+                                    selectedPublication.fecha_entrega_diseno_estimada,
+                                  ),
+                                detail: selectedPublication.fecha_entrega_diseno_real
+                                  ? "Entrega real"
+                                  : selectedPublication.fecha_entrega_diseno_estimada
+                                    ? "Fecha estimada"
+                                    : selectedPublication.fecha_solicitud_diseno
+                                      ? "Pendiente"
+                                      : "Sin solicitud registrada",
+                                done: !!selectedPublication.fecha_entrega_diseno_real,
+                              },
+                            ]
+                          : []),
                         {
                           label: "Aprobación",
                           value: displayTimestamp(
@@ -1119,6 +1103,7 @@ export default function GridView({
                                 ].includes(selectedPublication.estatus)
                               ? "Pendiente"
                               : "Sin registro",
+                          done: !!selectedPublication.fecha_aprobacion_gerencia,
                         },
                         {
                           label: "Publicación",
@@ -1131,13 +1116,20 @@ export default function GridView({
                               : selectedPublication.estatus === "PROGRAMADO"
                                 ? "Programado"
                                 : "Fecha prevista",
+                          done: selectedPublication.estatus === "PUBLICADO",
                         },
                       ].map((item) => (
                         <li key={item.label} className="flex gap-3">
-                          <span className="mt-1.5 size-2 shrink-0 rounded-full bg-blue-600" />
+                          <span
+                            aria-hidden="true"
+                            className={`mt-1 size-2.5 shrink-0 rounded-full ${item.done ? "bg-emerald-600" : "border-2 border-slate-300 bg-white"}`}
+                          />
                           <div>
                             <p className="text-xs font-semibold text-slate-800">
                               {item.label}
+                              <span className="sr-only">
+                                {item.done ? " · completado" : " · pendiente"}
+                              </span>
                             </p>
                             <p className="mt-0.5 text-xs text-slate-600">
                               {item.value || "Sin fecha registrada"}

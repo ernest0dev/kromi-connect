@@ -1,7 +1,7 @@
 'use client';
 
 import { EstatusEnum } from '@/types';
-import { ESTATUS_STYLE } from '../utils/constants';
+import { ESTATUS_STYLE, getEstatusLabel } from '../utils/constants';
 import { StatusSelectProps } from '../types/grid';
 
 export function StatusSelect({ currentStatus, onChange, disabled, canRequestDesign = false, requiresDesign = true, requiresShooting = false }: StatusSelectProps) {
@@ -30,7 +30,7 @@ export function StatusSelect({ currentStatus, onChange, disabled, canRequestDesi
       className="w-full text-[11px] font-semibold rounded-lg px-2.5 py-1.5 border-0 cursor-pointer ui-focus-ring"
       style={{ background: estatusStyle.bgVar, color: estatusStyle.textVar }}
     >
-      <option value="">{ESTATUS_STYLE[currentStatus].label}</option>
+      <option value="">{getEstatusLabel(currentStatus, requiresDesign)}</option>
       {choices.map((est) => est === 'SOLICITADO' && !canRequestDesign
         ? <option key={est} value={est} disabled title="Completa el Brief y escribe las instrucciones para Diseño">Solicitado · faltan requisitos</option>
         : <option key={est} value={est}>{ESTATUS_STYLE[est].label}</option>)}

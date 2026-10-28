@@ -31,6 +31,8 @@ const FORMATO_OPCIONES: { value: FormatoEnum; label: string; hint: string }[] = 
   { value: 'STORY', label: 'Story', hint: '9:16' },
 ];
 
+const LAST_ACCOUNTS_KEY = 'kromi:last-social-account-ids';
+
 const inputStyle: React.CSSProperties = {
   background: 'var(--hueso)',
   borderColor: 'var(--borde)',
@@ -80,6 +82,21 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
     return () => window.clearTimeout(timer);
   }, [initialDate, isOpen]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const timer = window.setTimeout(() => {
+      if (accounts.length === 1) { setSocialAccountIds([accounts[0].id]); return; }
+      try {
+        const saved = JSON.parse(window.localStorage.getItem(LAST_ACCOUNTS_KEY) || '[]');
+        const valid = Array.isArray(saved) ? saved.filter((id): id is string => typeof id === 'string' && accounts.some((account) => account.id === id)) : [];
+        setSocialAccountIds(valid);
+      } catch {
+        setSocialAccountIds([]);
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [accounts, isOpen]);
+
   if (!isOpen) return null;
 
   if (createdBriefPost) return <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"><section role="dialog" aria-modal="true" aria-labelledby={`${formId}-brief-title`} className="w-full max-w-2xl space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-xl"><header><h2 id={`${formId}-brief-title`} className="text-lg font-bold text-slate-900">Publicación creada</h2><p className="mt-1 text-sm text-slate-600">{createdBriefPost.titulo} · agrega los archivos del brief ahora o continúa después desde el detalle.</p></header><PublicationDriveFiles publicationId={createdBriefPost.id} onBriefState={(count,checkedAt)=>{const updated={...createdBriefPost,drive_brief_file_count:Math.min(count,10),drive_brief_checked_at:checkedAt};setCreatedBriefPost(updated);onCreated?.(updated);}}/><div className="flex justify-end"><button type="button" onClick={()=>{setCreatedBriefPost(null);onClose();}} className="rounded-lg bg-blue-700 px-4 py-2 text-sm font-bold text-white">Listo</button></div></section></div>;
@@ -118,6 +135,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
       });
 
       if (res.success) {
+        try { window.localStorage.setItem(LAST_ACCOUNTS_KEY, JSON.stringify(socialAccountIds)); } catch { /* preferencia opcional */ }
         setTitulo('');
         setFechaPublicacion('');
         setHoraPublicacion('');
@@ -133,7 +151,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
         setPrioridad(2);
         if (res.data) onCreated?.(res.data);
         if (res.data && !res.data.drive_folder_id) setDrivePendingPost(res.data);
-        else if (res.data) setCreatedBriefPost(res.data);
+        else if (res.data && requiereDiseno) setCreatedBriefPost(res.data);
         else onClose();
       } else {
         setErrorMessage(res.error || 'Ocurrió un error al crear la publicación.');
@@ -148,7 +166,8 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
       if (!result.success) { setErrorMessage(result.error); return; }
       onCreated?.({ ...drivePendingPost, drive_folder_id: result.data.drive_folder_id, drive_folder_url: result.data.drive_folder_url });
       setDrivePendingPost(null);
-      setCreatedBriefPost({ ...drivePendingPost, drive_folder_id: result.data.drive_folder_id, drive_folder_url: result.data.drive_folder_url });
+      if (drivePendingPost.requiere_diseno) setCreatedBriefPost({ ...drivePendingPost, drive_folder_id: result.data.drive_folder_id, drive_folder_url: result.data.drive_folder_url });
+      else onClose();
     });
   };
 
@@ -179,17 +198,9 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
           </button>
         </div>
 
-        {/* Formulario */}
-        <form onSubmit={handleSubmit} className="p-6 overflow-y-auto space-y-5">
-          {errorMessage && (
-            <div
-              className="p-3 text-xs rounded-lg flex items-start gap-2 border"
-              style={{ background: '#FCEBEB', borderColor: '#F09595', color: '#A32D2D' }}
-            >
-              <TriangleAlert size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
+        {/* Formulario: el contenido hace scroll; error y acciones quedan fijos abajo */}
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-6">
           {drivePendingPost && <div role="status" className="flex items-center justify-between gap-3 rounded-lg border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900"><span>La publicación quedó guardada. Drive está pendiente; puedes reintentar la carpeta ahora o cerrar.</span><button type="button" disabled={isPending} onClick={retryDrive} className="shrink-0 rounded-lg bg-amber-700 px-3 py-2 font-bold text-white disabled:opacity-50">{isPending ? 'Creando…' : 'Reintentar Drive'}</button></div>}
 
           {/* Bloque 1: Información principal */}
@@ -301,8 +312,21 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
             <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700"><b>Vista previa</b><p className="mt-2 whitespace-pre-wrap">{[copyTexto, parseHashtags(hashtagsRaw).join(' ')].filter(Boolean).join('\n\n') || 'El texto de la publicación aparecerá aquí.'}</p><p className="mt-2 text-[10px] text-slate-500">Los límites de caracteres se validarán según la plataforma cuando se defina la configuración oficial.</p></div>
           </div>}
 
-          {/* Acciones */}
-          <div className="pt-4 border-t flex items-center justify-end gap-3" style={{ borderColor: 'var(--borde)' }}>
+          </div>
+
+          {/* Acciones (fijas) */}
+          <div className="shrink-0 space-y-3 border-t px-6 py-4" style={{ borderColor: 'var(--borde)', background: 'var(--papel)' }}>
+            {errorMessage && (
+              <div
+                role="alert"
+                className="p-3 text-xs rounded-lg flex items-start gap-2 border"
+                style={{ background: '#FCEBEB', borderColor: '#F09595', color: '#A32D2D' }}
+              >
+                <TriangleAlert size={14} className="shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{errorMessage}</span>
+              </div>
+            )}
+            <div className="flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -330,6 +354,7 @@ export default function NuevoTicketModal({ isOpen, onClose, onCreated, categorie
                 </>
               )}
             </button>
+            </div>
           </div>
         </form>
       </div>

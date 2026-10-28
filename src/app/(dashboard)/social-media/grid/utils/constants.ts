@@ -58,3 +58,12 @@ export const ESTATUS_STYLE: Record<
   INCOMPLETO: { label: 'Incompleto', dotVar: 'var(--naranja)', bgVar: 'color-mix(in srgb, var(--naranja) 15%, white)', textVar: '#8A4B0C' },
   CANCELADO: { label: 'Cancelado', dotVar: 'var(--gris)', bgVar: 'var(--hueso)', textVar: 'var(--gris)' },
 };
+
+/**
+ * PENDIENTE_BRIEF dice "completar brief", pero sin diseño el brief es opcional:
+ * en ese caso el estado se muestra simplemente como "Pendiente".
+ */
+export function getEstatusLabel(estatus: EstatusEnum, requiereDiseno = true) {
+  if (estatus === 'PENDIENTE_BRIEF' && !requiereDiseno) return 'Pendiente';
+  return ESTATUS_STYLE[estatus].label;
+}
