@@ -10,6 +10,7 @@ import {
   startPublicacionBriefUploadAction,
 } from '@/app/actions/publicaciones/drive';
 import type { DriveBriefFile } from '@/lib/googleDrive';
+import { uploadFile } from '@/lib/drive-resumable-upload';
 
 type UploadStatus = 'preparing' | 'uploading' | 'confirming' | 'complete' | 'interrupted' | 'error' | 'cancelled';
 type UploadRow = {
@@ -44,58 +45,6 @@ function formatDate(value: string) {
   return Number.isNaN(date.getTime()) ? 'Fecha no disponible' : new Intl.DateTimeFormat('es-VE', {
     day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Caracas',
   }).format(date);
-}
-
-async function queryResumeOffset(uri: string, size: number) {
-  return new Promise<number>((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.open('PUT', uri);
-    xhr.setRequestHeader('Content-Range', 'bytes */' + size);
-    xhr.onload = () => {
-      if (xhr.status === 200 || xhr.status === 201) { resolve(size); return; }
-      if (xhr.status !== 308) { reject(new Error('Drive respondió ' + xhr.status + ' al consultar la sesión.')); return; }
-      const match = xhr.getResponseHeader('Range')?.match(/bytes=0-(\d+)/);
-      resolve(match ? Number(match[1]) + 1 : 0);
-    };
-    xhr.onerror = () => reject(new Error('No se pudo consultar el estado de la sesión resumible.'));
-    xhr.send();
-  });
-}
-
-async function uploadResumable(file: File, uri: string, onProgress: (percent: number) => void, signal: AbortSignal, resume = false) {
-  const chunkSize = 8 * 1024 * 1024;
-  let offset = resume ? await queryResumeOffset(uri, file.size) : 0;
-  if (offset >= file.size) return;
-  while (offset < file.size) {
-    if (signal.aborted) throw new DOMException('Carga cancelada', 'AbortError');
-    const end = Math.min(offset + chunkSize, file.size);
-    await new Promise<void>((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      const abort = () => xhr.abort();
-      signal.addEventListener('abort', abort, { once: true });
-      xhr.open('PUT', uri);
-      xhr.setRequestHeader('Content-Type', file.type);
-      xhr.setRequestHeader('Content-Range', 'bytes ' + offset + '-' + (end - 1) + '/' + file.size);
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) onProgress(Math.min(99, Math.round(((offset + event.loaded) / file.size) * 100)));
-      };
-      xhr.onload = () => {
-        signal.removeEventListener('abort', abort);
-        if (xhr.status >= 200 && xhr.status < 300) { offset = end; resolve(); }
-        else reject(new Error('Drive respondió ' + xhr.status + '.'));
-      };
-      xhr.onerror = () => {
-        signal.removeEventListener('abort', abort);
-        reject(new Error('El navegador no pudo conectar con Drive. Comprueba CORS del dominio de la aplicación.'));
-      };
-      xhr.onabort = () => {
-        signal.removeEventListener('abort', abort);
-        reject(new DOMException('Carga cancelada', 'AbortError'));
-      };
-      xhr.send(file.slice(offset, end));
-    });
-    onProgress(Math.min(99, Math.round((offset / file.size) * 100)));
-  }
 }
 
 export function PublicationDriveFiles({
@@ -167,8 +116,8 @@ export function PublicationDriveFiles({
     controllers.current.set(row.uploadId, controller);
     updateUpload(rowKey, { status: 'uploading', error: undefined });
     try {
-      await uploadResumable(row.file, row.sessionUri,
-        (progress) => updateUpload(rowKey, { progress, status: 'uploading' }), controller.signal, true);
+      await uploadFile(row.file, row.sessionUri, row.mimeType || row.file.type, controller.signal,
+        (progress) => updateUpload(rowKey, { progress, status: 'uploading' }), true);
       updateUpload(rowKey, { status: 'confirming', error: undefined });
       const finished = await finishPublicacionBriefUploadAction(row.uploadId);
       if (!finished.success) throw new Error(finished.error);
@@ -186,7 +135,15 @@ export function PublicationDriveFiles({
         updateUpload(rowKey, { status: 'interrupted', error: cancelled.error || 'No se pudo cancelar la carga.' });
         return;
       }
-      updateUpload(rowKey, { status: 'error', error: cause instanceof Error ? cause.message : 'Falló la carga.' });
+      // XHR puede reportar un error de red/CORS después de que Drive aceptó el último fragmento.
+      // Verificamos el resultado en el servidor antes de mostrar un fallo.
+      const confirmed = await finishPublicacionBriefUploadAction(row.uploadId).catch(() => null);
+      if (confirmed?.success) {
+        updateUpload(rowKey, { progress: 100, status: 'complete', error: undefined, uploadId: undefined, sessionUri: undefined, file: undefined });
+        await load();
+      } else {
+        updateUpload(rowKey, { status: 'error', error: cause instanceof Error ? cause.message : 'Falló la carga.' });
+      }
     } finally {
       controllers.current.delete(row.uploadId);
     }
@@ -251,8 +208,8 @@ export function PublicationDriveFiles({
         const controller = new AbortController();
         controllers.current.set(started.data.uploadId, controller);
         try {
-          await uploadResumable(file, started.data.sessionUri,
-            (progress) => updateUpload(key, { progress, status: 'uploading' }), controller.signal);
+          await uploadFile(file, started.data.sessionUri, mime, controller.signal,
+            (progress) => updateUpload(key, { progress, status: 'uploading' }));
           updateUpload(key, { status: 'confirming' });
           const finished = await finishPublicacionBriefUploadAction(started.data.uploadId);
           if (!finished.success) throw new Error(finished.error);
@@ -264,7 +221,15 @@ export function PublicationDriveFiles({
               updateUpload(key, { status: cancelled.completed ? 'complete' : 'cancelled', progress: cancelled.completed ? 100 : 0,
                 error: undefined, uploadId: undefined, sessionUri: undefined, file: undefined });
             } else updateUpload(key, { status: 'interrupted', error: cancelled.error || 'No se pudo cancelar la carga.' });
-          } else updateUpload(key, { status: 'error', error: cause instanceof Error ? cause.message : 'Falló la carga.' });
+          } else {
+            // Un error de red/CORS no prueba que Drive haya rechazado el último fragmento.
+            const confirmed = await finishPublicacionBriefUploadAction(started.data.uploadId).catch(() => null);
+            if (confirmed?.success) {
+              updateUpload(key, { progress: 100, status: 'complete', error: undefined, uploadId: undefined, sessionUri: undefined, file: undefined });
+            } else {
+              updateUpload(key, { status: 'error', error: cause instanceof Error ? cause.message : 'Falló la carga.' });
+            }
+          }
         } finally {
           controllers.current.delete(started.data.uploadId);
         }
