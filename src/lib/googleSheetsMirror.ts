@@ -227,7 +227,7 @@ async function getLegacyHistoryRows() {
     .order('id', { ascending: true });
   if (result.error) throw new Error(`No se pudo leer el histórico Excel: ${result.error.message}`);
   const rows: Cell[][] = [row(MANAGED_SHEETS[2].headers)];
-  rows.push(...(result.data ?? []).map((item) => row([
+  rows.push(...(result.data ?? []).map((item: Record<string, unknown>) => row([
     item.id, item.import_batch, item.source_row_number, item.title, item.source_timestamp, item.due_date,
     item.designer_name_raw, item.requester_name_raw, item.department_raw, item.area_raw, item.priority_raw,
     item.status_raw, item.completed_at, item.objective, item.publication_request, item.print_request,
