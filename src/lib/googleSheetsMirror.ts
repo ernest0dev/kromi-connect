@@ -70,10 +70,6 @@ function row(values: unknown[]): Cell[] {
   return values.map(cleanCell);
 }
 
-function dateOrEmpty(value: unknown): string {
-  return typeof value === 'string' ? value : '';
-}
-
 async function fetchAll<T>(query: () => Promise<{ data: T[] | null; error: { message: string } | null }>): Promise<T[]> {
   const result = await query();
   if (result.error) throw new Error(result.error.message);
@@ -128,7 +124,7 @@ async function getQueueRows() {
       .in('diseno_estatus', ['SOLICITADO', 'EN_DISENO'])
       .neq('estatus', 'CANCELADO'),
     admin.from('eventos')
-      .select('id,nombre,inicio,fin,diseno_formatos,diseno_estatus,diseno_solicitado_en,fecha_entrega_diseno,disenador_id,instrucciones_diseno,modificado_en,creado_en,archivado_en,estatus,requiere_diseno')
+      .select('id,nombre,inicio,fin,diseno_formatos,diseno_estatus,diseno_solicitado_en,fecha_entrega_diseno,disenador_id,instrucciones_diseno,modificado_en,creado_en,archivado_en,estatus')
       .is('archivado_en', null)
       .in('diseno_estatus', ['SOLICITADO', 'EN_DISENO'])
       .neq('estatus', 'CANCELADO'),
@@ -198,7 +194,7 @@ async function getOperationalHistoryRows() {
 
   const rows: Cell[][] = [row(MANAGED_SHEETS[1].headers)];
   rows.push(...(publications.data ?? []).map((item) => row([
-    `SOCIAL_MEDIA:${item.id}`, 'Social Media', `SOCIAL_MEDIA:${item.publicacion_id}`,
+    `SOCIAL_MEDIA_HISTORY:${item.id}`, 'Social Media', `SOCIAL_MEDIA:${item.publicacion_id}`,
     titleById.get(`SOCIAL_MEDIA:${item.publicacion_id}`) ?? item.publicacion_id,
     'ESTADO', item.estatus_anterior, item.estatus_nuevo, item.cambiado_en, item.cambiado_por, item.motivo,
   ])));
@@ -252,8 +248,6 @@ export async function syncDesignMirrorToGoogleSheets(): Promise<SheetsMirrorResu
   if (process.env.GOOGLE_SHEETS_SYNC_ENABLED !== 'true') return { enabled: false, synced: false };
   const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID?.trim();
   if (!spreadsheetId) throw new Error('Falta GOOGLE_SHEETS_SPREADSHEET_ID.');
-  const sheets = getSheetsClient();
-
   const [queueRows, historyRows, legacyRows] = await Promise.all([
     getQueueRows(),
     getOperationalHistoryRows(),
