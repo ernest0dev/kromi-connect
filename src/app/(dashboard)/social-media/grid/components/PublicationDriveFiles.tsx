@@ -124,7 +124,7 @@ export function PublicationDriveFiles({
   };
   const makeLocalKey = () => {
     sequence.current += 1;
-    return 'upload-' + Date.now() + '-' + sequence.current;
+    return 'upload-' + sequence.current;
   };
 
   const load = useCallback(async () => {
@@ -155,7 +155,10 @@ export function PublicationDriveFiles({
     }
   }, [publicationId]);
 
-  useEffect(() => { void load(); }, [load, refresh]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load(); }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load, refresh]);
 
   const resumeUpload = async (rowKey: string, override?: UploadRow) => {
     const row = override ?? uploads.find((item) => item.key === rowKey);
