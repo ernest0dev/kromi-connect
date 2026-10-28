@@ -1,6 +1,6 @@
 # Plan de implementación: espejo automático de Kromi Connect en Google Sheets
 
-**Estado:** Plan propuesto; todavía no implementado.
+**Estado:** Primera implementación preparada en rama `feat/google-sheets-design-mirror`; pendiente de build y validación en Preview antes de integrar en `main`.
 **Destino:** `main` — `docs/integraciones/plan-google-sheets-espejo.md`
 **Objetivo:** mantener una hoja de Google Sheets actualizada automáticamente desde Kromi Connect para consulta, filtros e informes. Kromi Connect/Supabase sigue siendo la única fuente de verdad.
 
@@ -11,10 +11,10 @@ Implementar sincronización **unidireccional Supabase → Google Sheets**, ejecu
 - **Fuente de verdad:** tablas y RPC de Kromi Connect en Supabase.
 - **Destino:** un Google Spreadsheet compartido con la cuenta de servicio autorizada.
 - **Autenticación:** Google Sheets API desde código de servidor; nunca desde componentes cliente.
-- **Entrega:** cola/outbox persistente en Supabase más un worker HTTP protegido, ejecutado mediante el cron ya disponible en el proyecto o una tarea programada de Vercel.
-- **Consistencia:** sincronización eventual; un fallo de Google no debe bloquear la creación o transición de solicitudes en Kromi Connect.
-- **Reintentos:** persistir errores, reintentar con backoff y permitir reprocesamiento manual.
-- **Idempotencia:** cada fila se identifica por un ID estable de Kromi Connect, no por el número de fila ni por el título de la solicitud.
+- **Entrega de la primera versión:** reconciliación periódica en servidor mediante un Route Handler protegido por `CRON_SECRET`; usa `GOOGLE_SERVICE_ACCOUNT_EMAIL` y `GOOGLE_PRIVATE_KEY` ya existentes.
+- **Consistencia:** sincronización eventual y unidireccional. El worker reconstruye las tres pestañas administradas desde Supabase; no se llama a Google desde triggers ni desde el navegador.
+- **Idempotencia:** la sincronización reemplaza el contenido administrado de las pestañas en lugar de insertar filas por cada ejecución. Esto evita duplicados por repetición, pero implica que los usuarios no deben editar esas pestañas.
+- **Límite conocido de la primera versión:** no incluye outbox, reintentos persistidos, panel de errores ni reconciliación incremental. Un fallo devuelve HTTP 500 y queda en los logs de Vercel; la siguiente ejecución vuelve a intentarlo.
 
 No se recomienda escribir en Sheets directamente desde el navegador, usar una URL de Apps Script pública como mecanismo principal ni hacer que Google Sheets sea una segunda base de datos operativa.
 
@@ -92,43 +92,29 @@ Configurar los mismos secretos en local y en el proveedor de despliegue (por eje
 
 ### Fase 3 — Persistencia de sincronización
 
-Añadir una migración Supabase para una tabla outbox de eventos de sincronización, con al menos:
-
-- ID del evento.
-- Tipo de entidad y operación (publicación, transición de historial o registro histórico).
-- ID estable del registro fuente.
-- Fecha de creación, intentos, próxima fecha de reintento, fecha de procesamiento y último error.
-- Estado de procesamiento.
-
-Añadir restricciones/índices para evitar encolar el mismo cambio más de una vez cuando corresponda. Los triggers deben ser pequeños: registrar el evento y terminar; no llamar a Google desde PostgreSQL.
-
-Evaluar también una tabla de correspondencia de filas solo si el diseño final requiere conservar rangos de fila. La alternativa preferida es localizar/actualizar por clave estable o reconstruir una pestaña completa en una resincronización controlada; nunca depender solo del índice de fila. Definir y probar el manejo de concurrencia para evitar que dos workers procesen el mismo evento a la vez.
-
-La outbox debe respetar RLS/grants: solo el backend autorizado puede leer, reclamar, actualizar y reintentar trabajos. No conceder acceso a la outbox a usuarios normales.
+**No se añade outbox en la primera versión.** El worker reconstruye el espejo desde las tablas fuente en cada ejecución. Esta estrategia es más simple de repetir y no necesita mapear números de fila, pero escala peor a medida que crecen los historiales y no conserva un registro de reintentos por fila. La outbox con backoff y reprocesamiento queda como siguiente mejora si el volumen o la necesidad de observabilidad lo justifican.
 
 ### Fase 4 — Adaptador de Google Sheets
 
-Crear un módulo de servidor aislado que:
+El módulo `src/lib/googleSheetsMirror.ts`:
 
-1. Inicialice el cliente Google con credenciales de entorno.
-2. Compruebe que la sincronización está habilitada y que el Spreadsheet y pestañas esperadas existen.
-3. Convierta datos de Supabase a filas explícitas y normalizadas, con fechas ISO legibles y valores nulos consistentes.
-4. Actualice la fila existente por clave estable o inserte la fila si aún no existe.
-5. Mantenga los eventos del historial como entradas independientes e idempotentes.
-6. Use rangos/operaciones por lotes cuando sea posible y respete los límites de cuota de Google.
-7. Escape/formatee los valores como texto cuando proceda para evitar que contenido controlado por usuarios sea interpretado como fórmula en Sheets.
-8. No registre secretos ni payloads completos con datos innecesarios.
+1. Inicializa Google Sheets API con la cuenta de servicio ya configurada para Drive, usando el scope de Sheets.
+2. No hace nada si `GOOGLE_SHEETS_SYNC_ENABLED` no es exactamente `true`.
+3. Crea las tres pestañas si faltan y escribe encabezados definidos en código.
+4. Lee la cola activa de las tres fuentes que usa Design: `publicaciones`, `pendientes_tienda` y `eventos`.
+5. Refleja las tablas de historial operativo `publicacion_estatus_historial`, `pendiente_tienda_historial` y `evento_historial`, y el registro `design_solicitudes_historicas`.
+6. Limpia y reconstruye los rangos administrados con `valueInputOption: RAW`; los valores con prefijos que podrían activar fórmulas se neutralizan.
+7. No registra claves privadas ni payloads completos.
 
-La implementación debe confirmar el comportamiento real de la API de Sheets y la estrategia de upsert antes de elegir la librería o añadir dependencias.
+Las pestañas administradas se consideran de solo lectura para los usuarios. La operación de clear + update puede dejar una pestaña temporalmente vacía si falla entre llamadas; el siguiente cron la reconstruirá. Debe validarse el volumen máximo de filas frente a los límites de Supabase/Sheets.
 
-### Fase 5 — Worker y recuperación
+### Fase 5 — Worker y programación
 
-- Crear un Route Handler de servidor protegido por un secreto de cron o por el mecanismo de autorización de cron que ya use el proyecto.
-- Procesar un lote acotado por ejecución, reclamar trabajos de forma atómica y marcar éxito solo después de confirmar la escritura en Sheets.
-- Aplicar backoff exponencial y límite de intentos; los trabajos agotados deben quedar visibles para diagnóstico y reproceso.
-- Exponer en logs solo IDs de evento, estado, duración y errores sanitizados.
-- Añadir una operación administrativa segura para resincronización inicial y reprocesamiento; no exponerla a usuarios sin permiso.
-- Programar el worker usando la infraestructura cron ya adoptada por el proyecto. No crear una segunda programación hasta revisar la existente.
+- `src/app/api/cron/sync-design-google-sheets/route.ts` valida `Authorization: Bearer $CRON_SECRET`.
+- La respuesta indica si la sincronización está desactivada o informa los conteos sincronizados. Los errores devuelven HTTP 500 y se registran en logs de servidor.
+- `vercel.json` programa el espejo a las 06:15 todos los días, separado de la purga de las 06:00.
+- El proyecto Vercel conectado está en plan Hobby; por eso se usa una ejecución diaria compatible con esa limitación. Una frecuencia mayor requeriría un plan/servicio de cron compatible.
+- No existe aún un endpoint administrativo de reprocesamiento ni una outbox persistente.
 
 ### Fase 6 — Carga inicial y reconciliación
 
@@ -139,7 +125,7 @@ La implementación debe confirmar el comportamiento real de la API de Sheets y l
 5. Ejecutar una reconciliación que compare conteos y claves fuente/destino y reporte diferencias.
 6. Activar sincronización incremental solo después de aprobar la carga inicial.
 
-La carga inicial debe ser repetible sin duplicar filas. Debe existir un procedimiento para reconstruir las pestañas desde Supabase si la hoja se borra o se daña.
+La carga inicial se ejecuta al activar el cron: el worker crea las pestañas que falten y reconstruye su contenido desde Supabase. Puede repetirse sin duplicar filas. Si la hoja se borra o se daña, la siguiente ejecución vuelve a crear las pestañas administradas.
 
 ## 4. Seguridad y permisos
 
@@ -163,9 +149,9 @@ La carga inicial debe ser repetible sin duplicar filas. Debe existir un procedim
 - Una resincronización completa es idempotente.
 
 ### Fallos y recuperación
-- Si Google Sheets no está disponible, Kromi Connect sigue permitiendo el flujo operativo y el evento queda pendiente.
-- Tras restaurarse la conexión, el worker reintenta y la hoja converge al estado fuente.
-- Dos workers simultáneos no duplican eventos ni corrompen filas.
+- Si Google Sheets no está disponible, Kromi Connect sigue permitiendo el flujo operativo; el worker devuelve HTTP 500 y la siguiente ejecución diaria vuelve a reconstruir el espejo.
+- Una ejecución completa repetida no añade duplicados, ya que las pestañas administradas se reemplazan.
+- La ejecución simultánea no tiene un bloqueo distribuido en esta versión; la programación diaria evita ejecuciones ordinarias frecuentes, pero este caso requiere prueba/mejora antes de aumentar la frecuencia.
 - Una clave inválida, permisos insuficientes o ID de Spreadsheet incorrecto producen errores diagnósticos sin filtrar secretos.
 - El endpoint rechaza llamadas no autorizadas.
 - Se verifica el tratamiento de texto que comienza con `=`, `+`, `-` o `@` para prevenir interpretación como fórmula.
@@ -178,12 +164,11 @@ La carga inicial debe ser repetible sin duplicar filas. Debe existir un procedim
 
 1. **Auditoría de esquema y credenciales** (sin cambios de producción).
 2. **Crear Spreadsheet y permisos** manualmente.
-3. **Migración outbox + módulo de sincronización**.
-4. **Endpoint/worker protegido y cron**.
-5. **Carga inicial idempotente**.
-6. **Pruebas de fallo, concurrencia, permisos y reconciliación**.
-7. **Activación gradual** con `GOOGLE_SHEETS_SYNC_ENABLED=false` hasta aprobar pruebas.
-8. **Actualizar `.env.example`, documentación y seguimiento del proyecto** con los nombres definitivos y resultados verificados.
+3. **Módulo servidor + worker protegido + programación diaria** (incluido en la rama de implementación).
+4. **Validar build y desplegar Preview**; no se ha podido confirmar build desde el entorno de trabajo actual.
+5. **Crear/compartir Spreadsheet y configurar variables de entorno**.
+6. **Probar una ejecución manual del worker con la sincronización habilitada**.
+7. **Activar gradualmente** `GOOGLE_SHEETS_SYNC_ENABLED=true` solo después de confirmar permisos y contenido.
 
 ## 7. Pasos manuales de conexión (resumen)
 
@@ -213,4 +198,4 @@ La carga inicial debe ser repetible sin duplicar filas. Debe existir un procedim
 - Revisar las rutas/cron actuales y las restricciones de Supabase para integrar la outbox sin duplicar mecanismos.
 - Validar el modelo de permisos y el nivel de sensibilidad de cada columna.
 
-**Importante:** este documento es un plan de trabajo, no una declaración de que la integración esté implementada ni desplegada.
+**Estado de validación:** código preparado en rama `feat/google-sheets-design-mirror`; todavía no se ha confirmado un build exitoso ni un despliegue funcional. Mantener `GOOGLE_SHEETS_SYNC_ENABLED=false` hasta validar Google Cloud, el Spreadsheet y la ejecución del worker.
