@@ -87,7 +87,7 @@ async function getUserLabels(userIds: Array<string | null | undefined>): Promise
   if (!ids.length) return labels;
 
   const admin = getSupabaseAdmin();
-  const profiles = await fetchAll(() => admin.from('profiles').select('user_id,full_name').in('user_id', ids));
+  const profiles = await fetchAll(async () => admin.from('profiles').select('user_id,full_name').in('user_id', ids));
   for (const profile of profiles) labels.set(profile.user_id, { name: profile.full_name?.trim() ?? '', email: '' });
 
   const batchSize = 10;
