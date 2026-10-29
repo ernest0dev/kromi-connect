@@ -23,6 +23,7 @@ const HISTORY_LABELS: Record<DesignRequestDetail['source'], Record<string, strin
   SOCIAL_MEDIA: { SOLICITADO: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_REVISION_CM: 'Entregado a revisión', RECHAZADO_DISENO: 'Devuelto por Diseño', EN_CORRECCION: 'Corrección solicitada', PROGRAMADO: 'Programado', PUBLICADO: 'Publicado', CANCELADO: 'Cancelado' },
   INTERNAL: { SOLICITADO: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_CORRECCION: 'Corrección solicitada', ENTREGADO: 'Entregado a Interno', CANCELADO: 'Cancelado', 'Solicitud actualizada': 'Solicitud actualizada' },
   EVENTS: { SOLICITADO: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_CORRECCION: 'Corrección solicitada', ENTREGADO: 'Entregado a Eventos', CANCELADO: 'Cancelado', 'Solicitud actualizada': 'Solicitud actualizada' },
+  GENERAL: { SOLICITADA: 'Solicitud recibida', EN_DISENO: 'Diseño iniciado', EN_CORRECCION: 'Corrección solicitada', ENTREGADA: 'Entregado', CANCELADA: 'Cancelada' },
 };
 function formatTime(value: string | null) { return value ? new Intl.DateTimeFormat('es-VE', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Caracas' }).format(new Date(value)) : '—'; }
 function sizeLabel(bytes: number) { return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / 1048576).toFixed(1)} MB`; }

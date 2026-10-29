@@ -12,6 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <DashboardShell
       roleLabel={ROLE_LABELS[role] ?? "Usuario"}
+      roleCode={role}
       roleInitials={ROLE_LABELS[role]?.slice(0, 2).toUpperCase() ?? "KC"}
       userEmail={user.email ?? ""}
     >

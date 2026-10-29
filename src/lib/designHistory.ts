@@ -54,7 +54,7 @@ export function filterHistoryEntries(entries: UnifiedHistoryEntry[], filter: His
 function historyTimestamp(entry: UnifiedHistoryEntry) {
   return entry.source === 'LEGACY'
     ? entry.source_timestamp
-    : entry.request.delivered_at ?? entry.request.requested_at;
+    : entry.request.history_at ?? entry.request.delivered_at ?? entry.request.requested_at;
 }
 
 function historyKey(entry: UnifiedHistoryEntry) {

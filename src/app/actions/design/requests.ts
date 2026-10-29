@@ -4,8 +4,9 @@ import { transitionPublicationAction } from '@/app/actions/publicaciones/workflo
 import { startInternalDesignWorkAction, deliverInternalDesignWorkAction, reopenInternalDesignWorkAction } from '@/app/actions/internal/design-work';
 import { startEventDesignWorkAction, deliverEventDesignWorkAction, reopenEventDesignWorkAction } from '@/app/actions/events/design';
 import type { DesignSource } from '@/lib/designRequests';
+import { startGeneralDesignWorkAction, deliverGeneralDesignRequestAction } from '@/app/actions/general-design-requests';
 
-const VALID_SOURCES: readonly string[] = ['SOCIAL_MEDIA', 'INTERNAL', 'EVENTS'];
+const VALID_SOURCES: readonly string[] = ['SOCIAL_MEDIA', 'INTERNAL', 'EVENTS', 'GENERAL'];
 function valid(input: { source: DesignSource; id: string }) {
   return !!input && VALID_SOURCES.includes(input.source) && /^[0-9a-f-]{36}$/i.test(input.id);
 }
@@ -14,6 +15,7 @@ export async function startDesignRequestAction(input: { source: DesignSource; id
   if (!valid(input)) return { success: false as const, error: 'La solicitud no es válida.' };
   if (input.source === 'SOCIAL_MEDIA') return transitionPublicationAction({ publicationId: input.id, status: 'EN_DISENO' });
   if (input.source === 'INTERNAL') return startInternalDesignWorkAction(input.id);
+  if (input.source === 'GENERAL') return startGeneralDesignWorkAction(input.id);
   return startEventDesignWorkAction(input.id);
 }
 
@@ -21,6 +23,7 @@ export async function deliverDesignRequestAction(input: { source: DesignSource; 
   if (!valid(input)) return { success: false as const, error: 'La solicitud no es válida.' };
   if (input.source === 'SOCIAL_MEDIA') return transitionPublicationAction({ publicationId: input.id, status: 'EN_REVISION_CM' });
   if (input.source === 'INTERNAL') return deliverInternalDesignWorkAction(input.id);
+  if (input.source === 'GENERAL') return deliverGeneralDesignRequestAction(input.id);
   return deliverEventDesignWorkAction(input.id);
 }
 
@@ -28,5 +31,6 @@ export async function reopenDesignRequestAction(input: { source: DesignSource; i
   if (!valid(input)) return { success: false as const, error: 'La solicitud no es válida.' };
   if (input.source === 'SOCIAL_MEDIA') return transitionPublicationAction({ publicationId: input.id, status: 'EN_DISENO' });
   if (input.source === 'INTERNAL') return reopenInternalDesignWorkAction(input.id);
+  if (input.source === 'GENERAL') return { success: false as const, error: 'La solicitud general no admite reapertura desde esta acción.' };
   return reopenEventDesignWorkAction(input.id);
 }

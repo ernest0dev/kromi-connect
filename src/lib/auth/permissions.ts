@@ -30,4 +30,5 @@ export type AppPermission =
   | `design.${string}`
   | `internal.${string}`
   | `management.${string}`
-  | `access.${string}`;
+  | `access.${string}`
+  | `requests.${string}`;

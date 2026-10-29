@@ -1,11 +1,22 @@
 # Plan de implementación: Solicitudes generales de diseño
 
-**Estado:** propuesta funcional y técnica pendiente de implementación.  
+**Estado:** MVP implementado localmente; migraciones aplicadas en Supabase según confirmación del usuario.
 **Alcance:** MVP de solicitudes generales independientes de los módulos operativos.  
 **Origen propuesto en el contrato común:** `GENERAL`.  
 **Última actualización:** 2026-10-28.
 
-> Este documento define el diseño y el plan de trabajo; no afirma que las vistas, las tablas, las migraciones, las políticas RLS o la integración general con Drive ya estén implementadas o desplegadas. Las rutas indicadas son propuestas hasta su contraste final con el código y el menú actuales.
+> El wireframe y las rutas iniciales son referencias de diseño. El estado de implementación y los límites de verificación se mantienen en la sección siguiente.
+
+## Estado de implementación (2026-10-28)
+
+- Implementados `/requests`, `/requests/mine` y el detalle en `/design/requests/general/[id]`; el menú compartido muestra «Solicitudes» únicamente a `social-media`, `events` e `internal`.
+- `GENERAL` ya forma parte del contrato, filtro, cola e historial unificados de Diseño. Tomar, entregar, prioridad, cargas, historial y cancelación usan acciones separadas del resto de orígenes.
+- Las migraciones `20261028000100_general_design_requests.sql` y `20261029030157_general_design_request_workflow.sql` fueron aplicadas manualmente en Supabase según confirmación del usuario. No se verificó aquí el historial remoto de migraciones.
+- Regla de fecha: fechas anteriores al día actual de Caracas se rechazan; hoy y fechas futuras se aceptan. No hay plazo mínimo automático ni escalamiento por urgencia; Diseño define prioridad. La cola y el detalle muestran el indicador de plazo con la zona horaria existente de Caracas.
+- Cancelación: se admite pedirla durante cualquier estado activo, incluso si ya se cargaron entregables. La petición no cambia el estado ni elimina archivos; el trabajo sigue activo hasta que Diseño la apruebe. Los estados terminales no admiten petición.
+- Drive: carpeta `Solicitud general - <id>` debajo de `GOOGLE_DRIVE_PARENT_FOLDER_ID`, sin permiso público `anyone`; subcarpetas privadas `Referencias` y `Entregables`. Las cargas usan los límites existentes de brief/entregables y permiten reanudar; si Drive responde que la sesión expiró, se marca fallida y se puede iniciar una sesión nueva.
+- Catálogos iniciales de categorías y departamentos están en el código y restringidos por servidor/base de datos; siguen pendientes de validación funcional por Mercadeo/Diseño.
+- `npm run build` pasó después de la implementación. Las pruebas por roles, RLS, Drive real, accesibilidad y móvil de la Fase 6 no se han ejecutado; no se declara validación integral de producción.
 
 ## 1. Objetivo
 

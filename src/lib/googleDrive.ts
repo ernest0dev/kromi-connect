@@ -101,6 +101,28 @@ export async function createPublicacionDriveFolder(folderName: string): Promise<
   }
 }
 
+/** Creates or finds a private general-request folder under the configured Kromi root. */
+export async function ensureGeneralRequestDriveFolder(requestId: string): Promise<{ id: string; url: string }> {
+  const parentId = process.env.GOOGLE_DRIVE_PARENT_FOLDER_ID;
+  if (!parentId) throw new Error('Falta configurar GOOGLE_DRIVE_PARENT_FOLDER_ID.');
+  if (!/^[0-9a-f-]{36}$/i.test(requestId)) throw new Error('Identificador de solicitud inválido.');
+  const drive = getDriveClient();
+  const name = `Solicitud general - ${requestId}`;
+  const safeName = name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const found = await drive.files.list({
+    q: `'${parentId}' in parents and name = '${safeName}' and mimeType = '${FOLDER_MIME}' and trashed = false`,
+    pageSize: 2, fields: 'files(id,webViewLink)', supportsAllDrives: true, includeItemsFromAllDrives: true,
+  });
+  const existing = found.data.files?.[0];
+  if (existing?.id) return { id: existing.id, url: existing.webViewLink || `https://drive.google.com/drive/folders/${existing.id}` };
+  const created = await drive.files.create({
+    requestBody: { name, mimeType: FOLDER_MIME, parents: [parentId] },
+    fields: 'id,webViewLink', supportsAllDrives: true,
+  });
+  if (!created.data.id) throw new Error('Drive no devolvió el identificador de carpeta.');
+  return { id: created.data.id, url: created.data.webViewLink || `https://drive.google.com/drive/folders/${created.data.id}` };
+}
+
 /** Permanently removes a Drive folder. A missing folder is considered already deleted. */
 export async function deletePublicacionDriveFolder(folderId: string): Promise<{ success: boolean; alreadyDeleted?: boolean; error?: string }> {
   if (!folderId.trim()) return { success: false, error: 'Falta el identificador de la carpeta de Google Drive.' };
@@ -147,6 +169,10 @@ async function ensureChildFolder(parentId: string, name: string): Promise<{ id: 
   if (!created.data.id) throw new Error(`No se pudo crear la carpeta ${name}.`);
   await drive.permissions.create({ fileId: created.data.id, supportsAllDrives: true, requestBody: { type: 'anyone', role: 'reader' } }).catch(() => undefined);
   return { id: created.data.id, url: created.data.webViewLink || `https://drive.google.com/drive/folders/${created.data.id}` };
+}
+
+export async function ensureDriveChildFolder(parentId: string, name: string) {
+  return ensureChildFolder(parentId, name);
 }
 
 export async function ensurePublicacionDriveFolders(rootId: string) {

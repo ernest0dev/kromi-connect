@@ -1,5 +1,5 @@
 import { requirePermission } from '@/lib/auth/dal';
-import { adaptEvent, adaptInternal, adaptPublication } from '@/lib/designRequests';
+import { adaptEvent, adaptGeneralRequest, adaptInternal, adaptPublication } from '@/lib/designRequests';
 import { adaptLegacyDesignHistory, sortUnifiedHistoryEntries } from '@/lib/designHistory';
 import { UnifiedHistoryView } from './UnifiedHistoryView';
 
@@ -21,7 +21,10 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
       .order('id', { ascending: true })
       .range(offset, offset + 99),
   ]);
-  if (publicationResult.error || internalResult.error || eventResult.error || legacyResult.error) {
+  const { data: generalHistory, error: generalHistoryError } = await (supabase as any).from('general_design_requests')
+    .select('id,title,design_type,design_type_other,department,required_date,status,priority,created_at,updated_at,delivered_at,requester_role,requester_id,designer_id,started_at,categories,scopes,instructions')
+    .in('status', ['ENTREGADA', 'CANCELADA']).order('updated_at', { ascending: false }).range(offset, offset + 99);
+  if (publicationResult.error || internalResult.error || eventResult.error || legacyResult.error || generalHistoryError) {
     throw new Error('No se pudo cargar el historial unificado de Diseño.');
   }
   const publications = publicationResult.data ?? [];
@@ -55,6 +58,7 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
       source: 'OPERATIONAL' as const,
       request: adaptEvent(row),
     })),
+    ...(generalHistory ?? []).map((row: Record<string, unknown>) => ({ source: 'OPERATIONAL' as const, request: adaptGeneralRequest(row) })),
     ...legacy.map(adaptLegacyDesignHistory),
   ].map((entry) => entry.source === 'LEGACY'
     ? entry
@@ -66,6 +70,6 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
         source_status: entry.request.source === 'SOCIAL_MEDIA' ? entry.request.source_status : null,
       },
     }));
-  const hasNextPage = [publications, internal, eventResult.data ?? [], legacy].some((rows) => rows.length === 100);
+  const hasNextPage = [publications, internal, eventResult.data ?? [], legacy, generalHistory ?? []].some((rows) => rows.length === 100);
   return <main className="mx-auto w-full max-w-[1100px] space-y-6 px-4 py-6 text-[#10233F] sm:px-6 sm:py-8"><UnifiedHistoryView entries={entries} page={page} hasNextPage={hasNextPage}/></main>;
 }

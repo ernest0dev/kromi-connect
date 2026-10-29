@@ -1,4 +1,4 @@
-export type DesignSource = 'SOCIAL_MEDIA' | 'INTERNAL' | 'EVENTS';
+export type DesignSource = 'SOCIAL_MEDIA' | 'INTERNAL' | 'EVENTS' | 'GENERAL';
 export type DesignStatus = 'REQUESTED' | 'IN_PROGRESS' | 'NEEDS_CHANGES' | 'DELIVERED' | 'CANCELLED';
 
 export type DesignRequest = {
@@ -12,6 +12,7 @@ export type DesignRequest = {
   usage_date?: { label: string; value: string | null } | null;
   cancellation_reason?: string | null;
   source_status?: string | null;
+  history_at?: string | null;
 };
 
 export type SourceContext =
@@ -66,6 +67,7 @@ export function adaptPublication(row: Record<string, unknown>, channels: string[
     delivered_at: optionalString(row, 'fecha_entrega_diseno_real'), delivery_files: [],
     usage_date: { label: 'Publica', value: publicationDate },
     source_status: status,
+    history_at: optionalString(row, 'updated_at'),
     source_context: { format, channels, publication_date: publicationDate },
   };
 }
@@ -106,6 +108,26 @@ export function adaptEvent(row: Record<string, unknown>): DesignRequest {
     designer_id: optionalString(row, 'disenador_id'), started_at: optionalString(row, 'diseno_iniciado_en'), delivered_at: optionalString(row, 'diseno_entregado_en'),
     delivery_files: [], usage_date: { label: 'Evento', value: eventDate },
     source_context: { event_name: requiredString(row, 'nombre'), stores: row.sedes ?? [], start: eventDate, end: optionalString(row, 'fin') },
+  };
+}
+
+export function adaptGeneralRequest(row: Record<string, unknown>): DesignRequest {
+  const id = requiredString(row, 'id');
+  const status = requiredString(row, 'status');
+  const type = requiredString(row, 'design_type');
+  const types = type === 'BOTH' ? ['DIGITAL', 'PRINT'] : [type];
+  return {
+    request_id: `GENERAL:${id}`, source: 'GENERAL', source_record_id: id,
+    title: requiredString(row, 'title'), requested_by: optionalString(row, 'requester_id'),
+    requested_at: optionalString(row, 'created_at'), instructions: optionalString(row, 'instructions') ?? '',
+    target_date: optionalString(row, 'required_date'),
+    requested_outputs: types.map((value) => ({ category: value === 'PRINT' ? 'PRINT' : 'DIGITAL', source_format_code: value, label: value === 'PRINT' ? 'Impreso' : value === 'OTHER' ? optionalString(row, 'design_type_other') ?? 'Otro' : 'Digital' })),
+    brief_files: [], design_status: status === 'EN_DISENO' ? 'IN_PROGRESS' : status === 'EN_CORRECCION' ? 'NEEDS_CHANGES' : status === 'ENTREGADA' ? 'DELIVERED' : status === 'CANCELADA' ? 'CANCELLED' : 'REQUESTED',
+    designer_id: optionalString(row, 'designer_id'), started_at: optionalString(row, 'started_at'), delivered_at: optionalString(row, 'delivered_at'), delivery_files: [],
+    source_context: { department: optionalString(row, 'department'), categories: stringArray(row.categories), scopes: stringArray(row.scopes), requester_role: optionalString(row, 'requester_role'), priority: optionalString(row, 'priority') },
+    usage_date: { label: 'Requerida', value: optionalString(row, 'required_date') },
+    source_status: status,
+    history_at: optionalString(row, 'updated_at'),
   };
 }
 

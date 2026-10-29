@@ -4,9 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Info } from 'lucide-react';
-import { startInternalDesignWorkAction } from '@/app/actions/internal/design-work';
-import { startEventDesignWorkAction } from '@/app/actions/events/design';
-import { transitionPublicationAction } from '@/app/actions/publicaciones/workflow';
+import { startDesignRequestAction } from '@/app/actions/design/requests';
 import { formatDesignDate } from '@/lib/designSla';
 import type { DesignRequest, DesignSource, DesignStatus } from '@/lib/designRequests';
 import { designRequestHref, designOutputLabel } from '@/lib/design/designLabels';
@@ -26,11 +24,7 @@ export function UnifiedQueueView({ requests, userId, today }: { requests: Design
 
   const take = (request: DesignRequest) => startTransition(async () => {
     setError('');
-    const result = request.source === 'SOCIAL_MEDIA'
-      ? await transitionPublicationAction({ publicationId: request.source_record_id, status: 'EN_DISENO' })
-      : request.source === 'INTERNAL'
-        ? await startInternalDesignWorkAction(request.source_record_id)
-        : await startEventDesignWorkAction(request.source_record_id);
+    const result = await startDesignRequestAction({ source: request.source, id: request.source_record_id });
     if (!result.success) setError(result.error || 'No se pudo iniciar la solicitud.');
     else {
       router.push(designRequestHref(request));
@@ -87,7 +81,7 @@ export function UnifiedQueueView({ requests, userId, today }: { requests: Design
         </div>
         <label className="sr-only" htmlFor="design-source-filter">Filtrar por origen</label>
         <select id="design-source-filter" value={source} onChange={(event) => setSource(event.target.value as 'ALL' | DesignSource)} className="min-h-11 rounded-lg border border-[#D2CCC0] bg-white px-3 text-sm text-[#3C4663]">
-          <option value="ALL">Todos los orígenes</option><option value="SOCIAL_MEDIA">Social Media</option><option value="INTERNAL">Interno</option><option value="EVENTS">Eventos</option>
+          <option value="ALL">Todos los orígenes</option><option value="SOCIAL_MEDIA">Social Media</option><option value="INTERNAL">Interno</option><option value="EVENTS">Eventos</option><option value="GENERAL">General</option>
         </select>
       </div>
     </div>

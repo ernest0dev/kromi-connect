@@ -1,7 +1,7 @@
 import type { DesignRequest, DesignSource, DesignStatus } from '@/lib/designRequests';
 
 export const DESIGN_SOURCE_LABELS: Record<DesignSource, string> = {
-  SOCIAL_MEDIA: 'Social Media', INTERNAL: 'Interno', EVENTS: 'Eventos',
+  SOCIAL_MEDIA: 'Social Media', INTERNAL: 'Interno', EVENTS: 'Eventos', GENERAL: 'General',
 };
 
 export const DESIGN_STATUS_LABELS: Record<DesignStatus, string> = {
