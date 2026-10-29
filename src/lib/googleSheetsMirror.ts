@@ -1,3 +1,4 @@
+import 'server-only';
 import { google } from 'googleapis';
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 
@@ -6,7 +7,9 @@ const MANAGED_SHEETS = [
     title: 'Cola de producción',
     headers: [
       'ID Kromi Connect', 'Origen', 'Solicitud', 'Estado', 'Formato / tipo',
-      'Fecha solicitada', 'Fecha objetivo', 'Fecha entrega', 'Diseñador ID', 'Diseñador nombre', 'Diseñador email',
+      'Fecha solicitada', 'Fecha objetivo', 'Fecha entrega',
+      'Solicitante ID', 'Solicitante nombre', 'Solicitante email',
+      'Diseñador ID', 'Diseñador nombre', 'Diseñador email',
       'Instrucciones', 'Actualizado en Kromi Connect',
     ],
   },
@@ -14,7 +17,7 @@ const MANAGED_SHEETS = [
     title: 'Historial operativo',
     headers: [
       'ID evento', 'Origen', 'ID solicitud', 'Solicitud', 'Tipo de evento',
-      'Estado anterior', 'Estado nuevo', 'Fecha y hora', 'Actor ID', 'Motivo',
+      'Estado anterior', 'Estado nuevo', 'Fecha y hora', 'Actor ID', 'Actor nombre', 'Actor email', 'Motivo',
     ],
   },
   {
@@ -76,6 +79,43 @@ async function fetchAll<T>(query: () => Promise<{ data: T[] | null; error: { mes
   return result.data ?? [];
 }
 
+type UserLabels = { name: string; email: string };
+
+async function getUserLabels(userIds: Array<string | null | undefined>): Promise<Map<string, UserLabels>> {
+  const ids = [...new Set(userIds.filter((id): id is string => Boolean(id)))];
+  const labels = new Map<string, UserLabels>();
+  if (!ids.length) return labels;
+
+  const admin = getSupabaseAdmin();
+  const profiles = await fetchAll(() => admin.from('profiles').select('user_id,full_name').in('user_id', ids));
+  for (const profile of profiles) labels.set(profile.user_id, { name: profile.full_name?.trim() ?? '', email: '' });
+
+  const batchSize = 10;
+  for (let index = 0; index < ids.length; index += batchSize) {
+    const batch = ids.slice(index, index + batchSize);
+    const users = await Promise.all(batch.map(async (id) => {
+      const { data, error } = await admin.auth.admin.getUserById(id);
+      if (error && !('code' in error && error.code === 'user_not_found')) {
+        throw new Error(`No se pudo resolver el usuario ${id} para Google Sheets: ${error.message}`);
+      }
+      if (error || !data.user) return [id, null] as const;
+      const metadata = data.user.user_metadata;
+      const profileName = labels.get(id)?.name;
+      const fallbackName = typeof metadata?.full_name === 'string' ? metadata.full_name
+        : typeof metadata?.name === 'string' ? metadata.name : '';
+      return [id, { name: profileName || fallbackName, email: data.user.email ?? '' }] as const;
+    }));
+    for (const [id, user] of users) {
+      if (user) labels.set(id, user);
+    }
+  }
+  return labels;
+}
+
+function userLabel(labels: Map<string, UserLabels>, id: string | null) {
+  return id ? labels.get(id) : undefined;
+}
+
 async function ensureTabs(spreadsheetId: string) {
   const sheets = getSheetsClient();
   const meta = await sheets.spreadsheets.get({ spreadsheetId });
@@ -114,17 +154,17 @@ async function getQueueRows() {
   const admin = getSupabaseAdmin();
   const [publicationsResult, internalResult, eventsResult] = await Promise.all([
     admin.from('publicaciones')
-      .select('id,titulo,formato,estatus,fecha_solicitud_diseno,fecha_publicacion,fecha_entrega_diseno_estimada,fecha_entrega_diseno_real,disenador_id,instrucciones_diseno,updated_at,created_at,deleted_at,requiere_diseno')
+      .select('id,titulo,formato,estatus,fecha_solicitud_diseno,fecha_publicacion,fecha_entrega_diseno_estimada,fecha_entrega_diseno_real,creador_id,disenador_id,instrucciones_diseno,updated_at,created_at,deleted_at,requiere_diseno')
       .is('deleted_at', null)
       .eq('requiere_diseno', true)
       .in('estatus', ['SOLICITADO', 'EN_DISENO', 'EN_CORRECCION']),
     admin.from('pendientes_tienda')
-      .select('id,titulo,tipo,diseno_estatus,diseno_solicitado_en,fecha_entrega_diseno,disenador_id,instrucciones_diseno,modificado_en,creado_en,archivado_en,estatus,requiere_diseno')
+      .select('id,titulo,tipo,diseno_estatus,diseno_solicitado_en,fecha_entrega_diseno,creado_por,disenador_id,instrucciones_diseno,modificado_en,creado_en,archivado_en,estatus,requiere_diseno')
       .is('archivado_en', null)
       .in('diseno_estatus', ['SOLICITADO', 'EN_DISENO'])
       .neq('estatus', 'CANCELADO'),
     admin.from('eventos')
-      .select('id,nombre,inicio,fin,diseno_formatos,diseno_estatus,diseno_solicitado_en,fecha_entrega_diseno,disenador_id,instrucciones_diseno,modificado_en,creado_en,archivado_en,estatus')
+      .select('id,nombre,inicio,fin,diseno_formatos,diseno_estatus,diseno_solicitado_en,fecha_entrega_diseno,creado_por,disenador_id,instrucciones_diseno,modificado_en,creado_en,archivado_en,estatus')
       .is('archivado_en', null)
       .in('diseno_estatus', ['SOLICITADO', 'EN_DISENO'])
       .neq('estatus', 'CANCELADO'),
@@ -137,22 +177,34 @@ async function getQueueRows() {
   const publications = publicationsResult.data ?? [];
   const internal = internalResult.data ?? [];
   const events = eventsResult.data ?? [];
+  const labels = await getUserLabels([
+    ...publications.flatMap((item) => [item.creador_id, item.disenador_id]),
+    ...internal.flatMap((item) => [item.creado_por, item.disenador_id]),
+    ...events.flatMap((item) => [item.creado_por, item.disenador_id]),
+  ]);
   const rows: Cell[][] = [row(MANAGED_SHEETS[0].headers)];
   rows.push(...publications.map((item) => row([
     `SOCIAL_MEDIA:${item.id}`, 'Social Media', item.titulo, item.estatus, item.formato,
     item.fecha_solicitud_diseno ?? item.created_at, item.fecha_publicacion, item.fecha_entrega_diseno_real ?? item.fecha_entrega_diseno_estimada,
-    item.disenador_id, item.instrucciones_diseno, item.updated_at,
+    item.creador_id, userLabel(labels, item.creador_id)?.name, userLabel(labels, item.creador_id)?.email,
+    item.disenador_id, userLabel(labels, item.disenador_id)?.name, userLabel(labels, item.disenador_id)?.email,
+    item.instrucciones_diseno, item.updated_at,
   ])));
   rows.push(...internal.map((item) => row([
     `INTERNAL:${item.id}`, 'Interno', item.titulo, item.diseno_estatus, item.tipo,
     item.diseno_solicitado_en ?? item.creado_en, item.fecha_entrega_diseno, null,
-    item.disenador_id, item.instrucciones_diseno, item.modificado_en,
+    item.creado_por, userLabel(labels, item.creado_por)?.name, userLabel(labels, item.creado_por)?.email,
+    item.disenador_id, userLabel(labels, item.disenador_id)?.name, userLabel(labels, item.disenador_id)?.email,
+    item.instrucciones_diseno, item.modificado_en,
   ])));
   rows.push(...events.map((item) => row([
     `EVENTS:${item.id}`, 'Eventos', item.nombre, item.diseno_estatus,
     Array.isArray(item.diseno_formatos) ? item.diseno_formatos.join(', ') : '',
     item.diseno_solicitado_en ?? item.creado_en, item.fecha_entrega_diseno ?? item.inicio,
-    null, item.disenador_id, item.instrucciones_diseno, item.modificado_en,
+    null,
+    item.creado_por, userLabel(labels, item.creado_por)?.name, userLabel(labels, item.creado_por)?.email,
+    item.disenador_id, userLabel(labels, item.disenador_id)?.name, userLabel(labels, item.disenador_id)?.email,
+    item.instrucciones_diseno, item.modificado_en,
   ])));
   return rows;
 }
@@ -192,21 +244,27 @@ async function getOperationalHistoryRows() {
   for (const item of internalTitles.data ?? []) titleById.set(`INTERNAL:${item.id}`, item.titulo);
   for (const item of eventTitles.data ?? []) titleById.set(`EVENTS:${item.id}`, item.nombre);
 
+  const allHistory = [...(publications.data ?? []), ...(internal.data ?? []), ...(events.data ?? [])];
+  const labels = await getUserLabels(allHistory.map((item) => item.cambiado_por));
+
   const rows: Cell[][] = [row(MANAGED_SHEETS[1].headers)];
   rows.push(...(publications.data ?? []).map((item) => row([
     `SOCIAL_MEDIA_HISTORY:${item.id}`, 'Social Media', `SOCIAL_MEDIA:${item.publicacion_id}`,
     titleById.get(`SOCIAL_MEDIA:${item.publicacion_id}`) ?? item.publicacion_id,
-    'ESTADO', item.estatus_anterior, item.estatus_nuevo, item.cambiado_en, item.cambiado_por, item.motivo,
+    'ESTADO', item.estatus_anterior, item.estatus_nuevo, item.cambiado_en, item.cambiado_por,
+    userLabel(labels, item.cambiado_por)?.name, userLabel(labels, item.cambiado_por)?.email, item.motivo,
   ])));
   rows.push(...(internal.data ?? []).map((item) => row([
     `INTERNAL:${item.id}`, 'Interno', `INTERNAL:${item.pendiente_id}`,
     titleById.get(`INTERNAL:${item.pendiente_id}`) ?? item.pendiente_id,
-    item.tipo, JSON.stringify(item.anterior), JSON.stringify(item.nuevo), item.cambiado_en, item.cambiado_por, item.motivo,
+    item.tipo, JSON.stringify(item.anterior), JSON.stringify(item.nuevo), item.cambiado_en, item.cambiado_por,
+    userLabel(labels, item.cambiado_por)?.name, userLabel(labels, item.cambiado_por)?.email, item.motivo,
   ])));
   rows.push(...(events.data ?? []).map((item) => row([
     `EVENTS:${item.id}`, 'Eventos', `EVENTS:${item.evento_id}`,
     titleById.get(`EVENTS:${item.evento_id}`) ?? item.evento_id,
-    item.tipo, JSON.stringify(item.anterior), JSON.stringify(item.nuevo), item.cambiado_en, item.cambiado_por, item.motivo,
+    item.tipo, JSON.stringify(item.anterior), JSON.stringify(item.nuevo), item.cambiado_en, item.cambiado_por,
+    userLabel(labels, item.cambiado_por)?.name, userLabel(labels, item.cambiado_por)?.email, item.motivo,
   ])));
   return rows;
 }
