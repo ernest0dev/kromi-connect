@@ -67,3 +67,6 @@ export function getEstatusLabel(estatus: EstatusEnum, requiereDiseno = true) {
   if (estatus === 'PENDIENTE_BRIEF' && !requiereDiseno) return 'Pendiente';
   return ESTATUS_STYLE[estatus].label;
 }
+
+export const PLATFORM_SHORT: Record<string, string> = { INSTAGRAM: 'IG', TIKTOK: 'TT', YOUTUBE: 'YT', FACEBOOK: 'FB' };
+export const PLATFORM_DOT: Record<string, string> = { INSTAGRAM: 'bg-pink-600', TIKTOK: 'bg-slate-950', YOUTUBE: 'bg-red-600', FACEBOOK: 'bg-blue-600' };

@@ -1,13 +1,10 @@
 import React from "react";
-import { calcularSlaState } from "./grid/utils/sla";
+import { computeIndicators } from "./grid/utils/quickViews";
+import type { GridIndicators } from "./grid/utils/quickViews";
+import { todayInCaracas } from "./grid/utils/today";
 import SocialMediaLayoutClient from "./SocialMediaLayoutClient";
 import { requirePermission } from "@/lib/auth/dal";
 import { getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
-
-export interface SlaSummary {
-  vencidos: number;
-  hoy: number;
-}
 
 export default async function SocialMediaLayout({
   children,
@@ -15,26 +12,20 @@ export default async function SocialMediaLayout({
   children: React.ReactNode;
 }) {
   const { supabase } = await requirePermission("social-media.grid.read");
+  // Solo piezas vivas: publicadas y canceladas no generan indicadores.
   const { data, error } = await supabase
     .from("publicaciones")
-    .select("fecha_limite_brief")
-    .is("deleted_at", null);
+    .select("estatus, requiere_diseno, fecha_limite_brief, fecha_publicacion, formato, hook_texto, body_texto, cta_texto")
+    .is("deleted_at", null)
+    .not("estatus", "in", "(PUBLICADO,CANCELADO)");
 
   if (error) {
-    console.error("Error al obtener resumen de SLA:", error);
+    console.error("Error al obtener indicadores del calendario:", error);
   }
 
-  const slaSummary: SlaSummary | null = error
+  const indicators: GridIndicators | null = error
     ? null
-    : (data ?? []).reduce<SlaSummary>(
-        (summary, publicacion) => {
-          const state = calcularSlaState(publicacion.fecha_limite_brief);
-          if (state === "vencido") summary.vencidos += 1;
-          if (state === "hoy") summary.hoy += 1;
-          return summary;
-        },
-        { vencidos: 0, hoy: 0 }
-      );
+    : computeIndicators(data ?? [], todayInCaracas());
 
   const [categoriesResult, campaignsResult] = await Promise.all([
     supabase.from("categorias_contenido").select("id, nombre").order("nombre"),
@@ -47,7 +38,7 @@ export default async function SocialMediaLayout({
 
   return (
     <SocialMediaLayoutClient
-      slaSummary={slaSummary}
+      indicators={indicators}
       contentCategories={(categoriesResult.data || []).map(({ id, nombre }) => ({ id, nombre }))}
       campaigns={campaignsResult.data}
       accounts={(accountsResult || []).map(({ id, platform, handle, display_name, active }) => ({ id, platform, handle, display_name, active }))}

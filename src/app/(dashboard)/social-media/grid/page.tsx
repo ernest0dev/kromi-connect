@@ -1,4 +1,6 @@
 import React from "react";
+import Link from "next/link";
+import { Archive } from "lucide-react";
 import { PublicacionConCuentas } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
 import { getCampaignsForGridMonthAction, getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
@@ -63,8 +65,8 @@ export default async function CalendarioPage() {
   const campaignOptionsResult = await getCampaignOptionsForGridAction();
   return (
     <div className="space-y-5">
-      {/* Encabezado: contexto, título, ayuda y total de publicaciones. */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-5">
+      {/* Encabezado: contexto, título y acceso al archivo. */}
+      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <span
             className="ui-eyebrow block mb-1.75"
@@ -79,24 +81,17 @@ export default async function CalendarioPage() {
             Calendario de contenido
           </h1>
           <p className="text-[13px] ui-text-muted">
-            Planifica publicaciones y reprograma entregables desde el
-            calendario.
+            Planifica el mes, filtra la lista y reprograma publicaciones arrastrándolas en el calendario.
           </p>
         </div>
 
-        {/* El contador resume el total y aparece en pantallas amplias. */}
-        <div className="hidden min-[1100px]:flex items-end gap-2">
-          <div
-            className="ui-card flex min-w-23.5 flex-col items-start gap-0.5 rounded-[10px] px-3 py-2.25"
-          >
-            <b className="text-sm font-bold" style={{color: "var(--tinta)" }}>
-              {lista.length}
-            </b>
-            <span className="text-[10px]" style={{color: "var(--gris)" }}>
-              Publicaciones
-            </span>
-          </div>
-        </div>
+        <Link
+          href="/social-media/grid/archive"
+          className="inline-flex items-center gap-2 self-start rounded-lg border bg-white px-3 py-2 text-xs font-semibold text-slate-700 md:self-auto"
+          style={{ borderColor: "var(--borde)" }}
+        >
+          <Archive size={14} aria-hidden="true" /> Archivo
+        </Link>
       </header>
 
       {/* La capa interactiva del calendario recibe los datos iniciales. */}

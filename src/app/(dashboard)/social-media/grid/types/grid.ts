@@ -44,9 +44,12 @@ export interface TicketCardProps {
 }
 
 export interface TicketDetailCardProps {
-  publicacion: Publicacion;
+  publicacion: PublicacionConCuentas;
   nombreCampana: string | null;
   formatoLabel: string;
+  accounts: SocialAccountOption[];
+  /** Reloj del cliente en ms (0 = aún desconocido). */
+  nowMs: number;
   onViewDetails: () => void;
   onArchive: () => void;
   onCancel: () => void;
@@ -71,6 +74,5 @@ export interface GridHeaderProps {
   onPrevMonth: () => void;
   onNextMonth: () => void;
   onToday: () => void;
-  onCreateClick: () => void;
   onFiltroChange: (filtro: 'TODOS' | FormatoEnum) => void;
 }

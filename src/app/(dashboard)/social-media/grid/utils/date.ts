@@ -24,3 +24,13 @@ export function generateCalendarDays(year: number, month: number): CalendarDay[]
   }
   return days;
 }
+
+/** Mes activo en la URL: `?mes=2026-11`. */
+export function parseMonthParam(value: string | null | undefined): Date | null {
+  const match = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(value || '');
+  return match ? new Date(Number(match[1]), Number(match[2]) - 1, 1) : null;
+}
+
+export function formatMonthParam(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}

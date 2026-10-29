@@ -11,6 +11,7 @@ import { SocialAccountSelector } from './SocialAccountSelector';
 import { parseHashtags } from '@/utils/hashtags';
 import { calcularMatrizSLA } from '@/utils/sla';
 import { getFormatoDisplayLabel } from '../grid/utils/constants';
+import { todayInCaracas } from '../grid/utils/today';
 import { retryPublicacionDriveFolderAction } from '@/app/actions/publicaciones/drive';
 import { PublicationDriveFiles } from '../grid/components/PublicationDriveFiles';
 
@@ -38,12 +39,6 @@ const inputStyle: React.CSSProperties = {
   borderColor: 'var(--borde)',
   color: 'var(--tinta)',
 };
-
-function todayInCaracas() {
-  const parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Caracas', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
-  const part = (type: string) => parts.find((item) => item.type === type)?.value || '';
-  return `${part('year')}-${part('month')}-${part('day')}`;
-}
 
 function formatDate(value: string | null) {
   if (!value) return '—';

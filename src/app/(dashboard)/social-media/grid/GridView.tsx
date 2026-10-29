@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
-import { Archive, Loader2 } from "lucide-react";
-import { PublicacionConCuentas, SocialAccountOption } from "@/types";
+import React, { useEffect, useMemo, useState, useTransition } from "react";
+import { Loader2 } from "lucide-react";
+import { EstatusEnum, PublicacionConCuentas, SocialAccountOption } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
 import type { Efemeride } from "@/app/actions/efemerides/efemerides";
 import { getCampaignsForGridMonthAction } from "@/app/actions/campanas/campaigns";
@@ -15,6 +14,15 @@ import NewTicketModal from "../components/NewTicketModal";
 import { useGridState } from "./hooks/useGridState";
 import { useTicketMutations } from "./hooks/useTicketMutations";
 import { useDragDrop } from "./hooks/useDragDrop";
+import { useGridFilters } from "./hooks/useGridFilters";
+import { useNow } from "./hooks/useNow";
+import { GridFiltersBar } from "./components/GridFiltersBar";
+import { GridListToolbar } from "./components/GridListToolbar";
+import { applyFilters, groupPublicaciones, sortPublicaciones } from "./utils/filters";
+import { QUICK_VIEW_LABEL } from "./utils/quickViews";
+import { todayInCaracas } from "./utils/today";
+import { formatMonthParam } from "./utils/date";
+import { NEW_PUBLICATION_EVENT } from "../events";
 import { GridHeader } from "./components/GridHeader";
 import { GridCalendar } from "./components/GridCalendar";
 import { TicketDetailCard } from "./components/TicketDetailCard";
@@ -114,24 +122,29 @@ export default function GridView({
   cuentasSocialesIniciales,
 }: Props) {
   const {
+    filters,
+    setFilters,
+    clearFilters,
+    resetNonce,
+    hasActiveFilters,
+    monthParam,
+    setMonthParam,
+  } = useGridFilters();
+  const {
+    publicaciones,
     setPublicaciones,
     currentDate,
     setCurrentDate,
-    formatoFiltro,
-    setFormatoFiltro,
     selectedTicketId,
-    publicacionesFiltradas,
-    publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
     goToToday,
     selectTicket,
-  } = useGridState(publicacionesIniciales);
+  } = useGridState(publicacionesIniciales, monthParam);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [createPrefillDate, setCreatePrefillDate] = useState<
     string | undefined
   >();
-  const [selectedAccountId, setSelectedAccountId] = useState("ALL");
   const [efemerides, setEfemerides] = useState(efemeridesIniciales);
   const [efemeridesYearLoaded, setEfemeridesYearLoaded] = useState(
     anioEfemeridesInicial,
@@ -150,8 +163,9 @@ export default function GridView({
     errorCampanasInicial || "",
   );
   const [campanasPublicaciones] = useState(campanasPublicacionesIniciales);
-  const nombreCampanaPorId = new Map(
-    campanasPublicaciones.map((campana) => [campana.id, campana.nombre]),
+  const nombreCampanaPorId = useMemo(
+    () => new Map(campanasPublicaciones.map((campana) => [campana.id, campana.nombre])),
+    [campanasPublicaciones],
   );
   const [selectedPublication, setSelectedPublication] =
     useState<PublicacionConCuentas | null>(null);
@@ -181,18 +195,59 @@ export default function GridView({
 
   const { handleDragStart, handleDragOver, handleDrop } =
     useDragDrop(rescheduleDate);
-  const publicacionesPorCuenta =
-    selectedAccountId === "ALL"
-      ? publicacionesFiltradas
-      : publicacionesFiltradas.filter((publication) =>
-          publication.social_account_ids.includes(selectedAccountId),
-        );
-  const publicacionesMesPorCuenta =
-    selectedAccountId === "ALL"
-      ? publicacionesMesFiltradas
-      : publicacionesMesFiltradas.filter((publication) =>
-          publication.social_account_ids.includes(selectedAccountId),
-        );
+  const nowMs = useNow();
+  const today = todayInCaracas();
+  const mesKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}`;
+  const campanaOptions = useMemo(
+    () => campanasPublicaciones.map(({ id, nombre }) => ({ id, nombre })),
+    [campanasPublicaciones],
+  );
+  // Los filtros se aplican al calendario y a la lista; el mes solo recorta la lista
+  // (y se ignora cuando hay una vista rápida activa, que abarca todos los meses).
+  const publicacionesFiltradas = useMemo(
+    () => applyFilters(publicaciones, filters, { today, campanaNombrePorId: nombreCampanaPorId }),
+    [publicaciones, filters, today, nombreCampanaPorId],
+  );
+  const listaEnAlcance = useMemo(
+    () =>
+      filters.vista
+        ? publicacionesFiltradas
+        : publicacionesFiltradas.filter((pub) => pub.fecha_publicacion.startsWith(`${mesKey}-`)),
+    [publicacionesFiltradas, filters.vista, mesKey],
+  );
+  const listaOrdenada = useMemo(
+    () => sortPublicaciones(listaEnAlcance, filters.sort, filters.dir),
+    [listaEnAlcance, filters.sort, filters.dir],
+  );
+  const grupos = useMemo(
+    () =>
+      groupPublicaciones(listaOrdenada, filters.group, {
+        campanaNombrePorId: nombreCampanaPorId,
+        sort: filters.sort,
+        dir: filters.dir,
+      }),
+    [listaOrdenada, filters.group, filters.sort, filters.dir, nombreCampanaPorId],
+  );
+  const totalEnAlcance = useMemo(
+    () =>
+      filters.vista
+        ? publicaciones.length
+        : publicaciones.filter((pub) => pub.fecha_publicacion.startsWith(`${mesKey}-`)).length,
+    [publicaciones, filters.vista, mesKey],
+  );
+  const estatusCounts = useMemo(() => {
+    const base = applyFilters(
+      publicaciones,
+      { ...filters, estatus: [] },
+      { today, campanaNombrePorId: nombreCampanaPorId },
+    );
+    const counts: Partial<Record<EstatusEnum, number>> = {};
+    for (const pub of base) {
+      if (!filters.vista && !pub.fecha_publicacion.startsWith(`${mesKey}-`)) continue;
+      counts[pub.estatus] = (counts[pub.estatus] || 0) + 1;
+    }
+    return counts;
+  }, [publicaciones, filters, today, nombreCampanaPorId, mesKey]);
 
   const removePublicationFromGrid = (publicationId: string) => {
     setPublicaciones((current) =>
@@ -318,7 +373,26 @@ export default function GridView({
     document
       .getElementById("ticket-card-" + selectedTicketId)
       ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  }, [selectedTicketId, publicacionesMesFiltradas]);
+  }, [selectedTicketId, listaOrdenada]);
+
+  // El botón "Nueva publicación" del header (fuera de esta vista) abre el modal de aquí.
+  useEffect(() => {
+    const openCreate = () => {
+      setCreatePrefillDate(undefined);
+      setIsCreateOpen(true);
+    };
+    window.addEventListener(NEW_PUBLICATION_EVENT, openCreate);
+    return () => window.removeEventListener(NEW_PUBLICATION_EVENT, openCreate);
+  }, []);
+
+  // El mes activo queda en la URL (?mes=2026-11); el mes actual no se escribe.
+  useEffect(() => {
+    const now = new Date();
+    const isCurrentMonth =
+      currentDate.getFullYear() === now.getFullYear() &&
+      currentDate.getMonth() === now.getMonth();
+    setMonthParam(isCurrentMonth ? null : formatMonthParam(currentDate));
+  }, [currentDate, setMonthParam]);
 
   const handleTicketCreated = (publicacion: PublicacionConCuentas) => {
     setPublicaciones((prev) =>
@@ -329,7 +403,7 @@ export default function GridView({
 
     const [year, month] = publicacion.fecha_publicacion.split("-").map(Number);
     setCurrentDate(new Date(year, month - 1, 1));
-    setFormatoFiltro("TODOS");
+    clearFilters();
     selectTicket(publicacion.id);
   };
 
@@ -361,51 +435,29 @@ export default function GridView({
         </p>
       )}
       <div className="space-y-3">
-        <div className="flex justify-end">
-          <Link
-            href="/social-media/grid/archive"
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700"
-          >
-            <Archive size={14} /> Archivo
-          </Link>
-        </div>
         <GridHeader
           currentDate={currentDate}
-          formatoFiltro={formatoFiltro}
+          formatoFiltro={filters.formato}
           onPrevMonth={prevMonth}
           onNextMonth={nextMonth}
           onToday={goToToday}
-          onCreateClick={() => {
-            setCreatePrefillDate(undefined);
-            setIsCreateOpen(true);
-          }}
-          onFiltroChange={setFormatoFiltro}
+          onFiltroChange={(formato) => setFilters({ formato })}
         />
-        <div className="flex items-center gap-2">
-          <label
-            htmlFor="grid-social-account"
-            className="text-xs font-semibold ui-text-muted"
-          >
-            Cuenta:
-          </label>
-          <select
-            id="grid-social-account"
-            value={selectedAccountId}
-            onChange={(event) => setSelectedAccountId(event.target.value)}
-            className="ui-control rounded-lg px-3 py-2 text-xs"
-          >
-            <option value="ALL">Todas mis cuentas</option>
-            {cuentasSocialesIniciales.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.platform} · {account.display_name}
-              </option>
-            ))}
-          </select>
-        </div>
+        <GridFiltersBar
+          key={resetNonce}
+          filters={filters}
+          hasActiveFilters={hasActiveFilters}
+          onChange={setFilters}
+          onClear={clearFilters}
+          campanas={campanaOptions}
+          temas={categoriasContenidoIniciales}
+          cuentas={cuentasSocialesIniciales}
+          estatusCounts={estatusCounts}
+        />
 
         <GridCalendar
           currentDate={currentDate}
-          publicaciones={publicacionesPorCuenta}
+          publicaciones={publicacionesFiltradas}
           efemerides={efemerides}
           campanas={campanas}
           socialAccounts={cuentasSocialesIniciales}
@@ -424,72 +476,103 @@ export default function GridView({
       </div>
 
       <section className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3
-              className="text-[17px] font-bold"
-              style={{
-                fontFamily: "var(--font-display)",
-                color: "var(--tinta)",
-              }}
-            >
-              Publicaciones del mes
-            </h3>
-            <p className="text-[11px] ui-text-muted">
-              Publicaciones de{" "}
-              {currentDate.toLocaleDateString("es-ES", {
-                month: "long",
-                year: "numeric",
-              })}{" "}
-              que coinciden con el formato seleccionado. Desde cada ficha puedes
-              cambiar el estado, editar la publicación completa o abrir sus
-              assets.
-            </p>
-          </div>
-          <span className="ui-badge">
-            {publicacionesMesPorCuenta.length} publicaciones
-          </span>
+        <div>
+          <h3
+            className="text-[17px] font-bold"
+            style={{
+              fontFamily: "var(--font-display)",
+              color: "var(--tinta)",
+            }}
+          >
+            {filters.vista ? "Publicaciones de la vista" : "Publicaciones del mes"}
+          </h3>
+          <p className="text-[11px] ui-text-muted">
+            {filters.vista
+              ? `${QUICK_VIEW_LABEL[filters.vista]} · todos los meses`
+              : `${currentDate.toLocaleDateString("es-ES", {
+                  month: "long",
+                  year: "numeric",
+                })}${hasActiveFilters ? " · con filtros activos" : ""}`}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 min-[761px]:grid-cols-2 min-[1100px]:grid-cols-3 gap-3">
-          {publicacionesMesPorCuenta.length > 0 ? (
-            publicacionesMesPorCuenta.map((pub) => (
-              <TicketDetailCard
-                key={pub.id}
-                publicacion={pub}
-                nombreCampana={
-                  pub.campana_id
-                    ? nombreCampanaPorId.get(pub.campana_id) || null
-                    : null
-                }
-                formatoLabel={formatForDestinations(
-                  pub,
-                  cuentasSocialesIniciales,
-                )}
-                onViewDetails={() => setSelectedPublication(pub)}
-                onArchive={() => {
-                  setPublicationToArchive(pub);
-                  setActionError("");
-                }}
-                onCancel={() => {
-                  setPublicationToCancel(pub);
-                  setCancelReason("");
-                  setActionError("");
-                }}
-                isDeleting={isPublicationActionPending}
-                isSelected={selectedTicketId === pub.id}
-                onEdit={() => setEditingPublication(pub)}
-                onStatusChange={async (nuevoEstatus, reason) => {
-                  updateStatus(pub, nuevoEstatus, reason);
-                }}
-              />
-            ))
-          ) : (
-            <p className="ui-empty-state col-span-full text-sm">
-              No hay publicaciones para este mes y formato.
+        <GridListToolbar
+          sort={filters.sort}
+          dir={filters.dir}
+          group={filters.group}
+          shown={listaOrdenada.length}
+          total={totalEnAlcance}
+          onChange={setFilters}
+        />
+
+        {grupos.length > 0 ? (
+          grupos.map((grupo) => (
+            <div key={grupo.key} className="space-y-2">
+              {filters.group !== "ninguno" && (
+                <h4
+                  className="flex items-center gap-2 text-xs font-bold"
+                  style={{ color: "var(--tinta)" }}
+                >
+                  {grupo.label}
+                  <span className="ui-badge">{grupo.items.length}</span>
+                </h4>
+              )}
+              <div className="grid grid-cols-1 min-[761px]:grid-cols-2 min-[1100px]:grid-cols-3 gap-3">
+                {grupo.items.map((pub) => (
+                  <TicketDetailCard
+                    key={pub.id}
+                    publicacion={pub}
+                    nombreCampana={
+                      pub.campana_id
+                        ? nombreCampanaPorId.get(pub.campana_id) || null
+                        : null
+                    }
+                    formatoLabel={formatForDestinations(
+                      pub,
+                      cuentasSocialesIniciales,
+                    )}
+                    accounts={cuentasSocialesIniciales}
+                    nowMs={nowMs}
+                    onViewDetails={() => setSelectedPublication(pub)}
+                    onArchive={() => {
+                      setPublicationToArchive(pub);
+                      setActionError("");
+                    }}
+                    onCancel={() => {
+                      setPublicationToCancel(pub);
+                      setCancelReason("");
+                      setActionError("");
+                    }}
+                    isDeleting={isPublicationActionPending}
+                    isSelected={selectedTicketId === pub.id}
+                    onEdit={() => setEditingPublication(pub)}
+                    onStatusChange={async (nuevoEstatus, reason) => {
+                      updateStatus(pub, nuevoEstatus, reason);
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="ui-empty-state space-y-2 text-sm">
+            <p>
+              {hasActiveFilters
+                ? "Ninguna publicación coincide con los filtros."
+                : "No hay publicaciones para este mes."}
             </p>
-          )}
-        </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-xs font-semibold underline"
+                style={{ color: "var(--azul)" }}
+              >
+                Limpiar filtros
+              </button>
+            )}
+          </div>
+        )}
       </section>
 
       <NewTicketModal

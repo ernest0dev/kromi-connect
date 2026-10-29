@@ -7,10 +7,15 @@ interface Props {
   onArchive: () => void;
   /** Se omite cuando la publicación ya está cancelada. */
   onCancel?: () => void;
+  disabled?: boolean;
+  /** Variante pequeña para tarjetas. */
+  compact?: boolean;
+  /** Hacia dónde se despliega; en el pie de una tarjeta conviene "up". */
+  placement?: 'down' | 'up';
 }
 
-/** Acciones secundarias/destructivas del detalle, agrupadas para no competir con Editar. */
-export function DetailActionsMenu({ onArchive, onCancel }: Props) {
+/** Acciones secundarias/destructivas, agrupadas para no competir con la acción principal. */
+export function DetailActionsMenu({ onArchive, onCancel, disabled = false, compact = false, placement = 'down' }: Props) {
   const [open, setOpen] = useState(false);
   const run = (action: () => void) => () => {
     setOpen(false);
@@ -18,21 +23,26 @@ export function DetailActionsMenu({ onArchive, onCancel }: Props) {
   };
 
   return (
-    <div className="relative">
+    <div className="relative" onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false); }}>
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Más acciones"
+        title="Más acciones"
+        disabled={disabled}
         onClick={() => setOpen((value) => !value)}
-        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+        className={`rounded-lg border border-slate-200 font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-wait disabled:opacity-50 ${compact ? 'p-1.5' : 'px-3 py-2 text-xs'}`}
       >
         <MoreHorizontal size={14} aria-hidden="true" />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" aria-hidden="true" onMouseDown={() => setOpen(false)} />
-          <div role="menu" className="absolute right-0 z-20 mt-1 w-52 rounded-lg border border-slate-200 bg-white py-1 shadow-lg">
+          <div
+            role="menu"
+            className={`absolute right-0 z-20 w-52 rounded-lg border border-slate-200 bg-white py-1 shadow-lg ${placement === 'up' ? 'bottom-full mb-1' : 'mt-1'}`}
+          >
             <button
               type="button"
               role="menuitem"

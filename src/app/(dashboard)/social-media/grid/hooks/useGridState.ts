@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { PublicacionConCuentas, FormatoEnum } from '@/types';
+import { useState, useEffect } from 'react';
+import { PublicacionConCuentas } from '@/types';
+import { parseMonthParam } from '../utils/date';
 
-export function useGridState(publicacionesIniciales: PublicacionConCuentas[]) {
+export function useGridState(publicacionesIniciales: PublicacionConCuentas[], initialMonth?: string | null) {
   const [publicaciones, setPublicaciones] = useState<PublicacionConCuentas[]>(publicacionesIniciales);
   const [currentDate, setCurrentDate] = useState(() => {
+    const fromUrl = parseMonthParam(initialMonth);
+    if (fromUrl) return fromUrl;
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
-  const [formatoFiltro, setFormatoFiltro] = useState<FormatoEnum | 'TODOS'>('TODOS');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,20 +24,6 @@ export function useGridState(publicacionesIniciales: PublicacionConCuentas[]) {
       return prev;
     });
   }, [publicacionesIniciales]);
-
-  const publicacionesFiltradas = useMemo(() => {
-    return publicaciones.filter((pub) => {
-      if (formatoFiltro !== 'TODOS' && pub.formato !== formatoFiltro) return false;
-      return true;
-    });
-  }, [publicaciones, formatoFiltro]);
-
-  const publicacionesMesFiltradas = useMemo(() => {
-    const mesActual = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-    return publicacionesFiltradas.filter((pub) =>
-      pub.fecha_publicacion.startsWith(`${mesActual}-`)
-    );
-  }, [publicacionesFiltradas, currentDate]);
 
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
@@ -51,12 +39,8 @@ export function useGridState(publicacionesIniciales: PublicacionConCuentas[]) {
     setPublicaciones,
     currentDate,
     setCurrentDate,
-    formatoFiltro,
-    setFormatoFiltro,
     selectedTicketId,
     setSelectedTicketId,
-    publicacionesFiltradas,
-    publicacionesMesFiltradas,
     prevMonth,
     nextMonth,
     goToToday,
