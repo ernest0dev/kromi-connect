@@ -74,7 +74,11 @@ export function adaptPublication(row: Record<string, unknown>, channels: string[
 
 export function adaptInternal(row: Record<string, unknown>): DesignRequest {
   const id = requiredString(row, 'id');
-  const status = requiredString(row, 'diseno_estatus');
+  // Cancelled store tasks can remain in the history RPC after the requester
+  // withdrew its design request, which clears diseno_estatus. The task status
+  // still lets the history view distinguish that record from a delivery.
+  const status = optionalString(row, 'diseno_estatus')
+    ?? (optionalString(row, 'estatus_pendiente') === 'CANCELADO' ? 'CANCELADO' : 'ENTREGADO');
   const type = requiredString(row, 'tipo');
   const usageDate = optionalString(row, 'fecha_requerida');
   return {
