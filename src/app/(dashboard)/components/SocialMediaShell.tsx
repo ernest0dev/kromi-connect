@@ -5,6 +5,7 @@ import Link from "next/link";
 import { LucideIcon } from "lucide-react";
 import { ShellSlotProvider, useShellSlot } from "./ShellSlot";
 import { logoutAction } from "@/app/actions/auth";
+import { mergeNavigationGroups } from "@/lib/navigation/dashboardNavigation";
 
 export interface NavItem {
   href: string;
@@ -55,7 +56,7 @@ function ShellInner({
 
   // Los grupos del perfil activo (ej. "Social media") van primero;
   // los transversales (ej. "Transversal") quedan siempre al final.
-  const gruposCombinados = [...extraNavGroups, ...navGroups];
+  const gruposCombinados = mergeNavigationGroups(navGroups, extraNavGroups);
 
   return (
     <div

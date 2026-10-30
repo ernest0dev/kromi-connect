@@ -2,31 +2,15 @@
 
 import React, { useState } from "react";
 import { usePathname } from "next/navigation";
-import { CalendarRange, Plus, CalendarHeart, Target } from "lucide-react";
+import { Plus } from "lucide-react";
 import NewTicketModal from "./components/NewTicketModal";
 import { GridIndicatorChips } from "./components/GridIndicatorChips";
 import { NEW_PUBLICATION_EVENT } from "./events";
 import { useRegisterShellSlots } from "../components/ShellSlot";
-import type { NavGroup } from "../components/SocialMediaShell";
 import type { GridIndicators } from "./grid/utils/quickViews";
 import type { ContentCategoryOption } from "./grid/components/ContentCategorySelector";
 import type { CampanaPublicacionGrid } from "@/app/actions/campanas/campaigns";
 import type { SocialAccountOption } from "@/types";
-
-const navGroupsSocialMedia: NavGroup[] = [
-  {
-    label: "Social media",
-    items: [
-      { href: "/social-media/efemerides", label: "Efemérides", icon: CalendarHeart },
-      { href: "/social-media/campaigns", label: "Campañas", icon: Target },
-      {
-        href: "/social-media/grid",
-        label: "Calendario de contenido",
-        icon: CalendarRange,
-      },
-    ],
-  },
-];
 
 export default function SocialMediaLayoutClient({
   children,
@@ -79,7 +63,7 @@ export default function SocialMediaLayoutClient({
     </header>
   );
 
-  useRegisterShellSlots(topbar, navGroupsSocialMedia);
+  useRegisterShellSlots(topbar);
 
   return (
     <>
