@@ -3,8 +3,11 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database.types";
+import { assertLiveDataMode } from "@/lib/data-mode";
 
 export async function createSupabaseServerClient() {
+  assertLiveDataMode();
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

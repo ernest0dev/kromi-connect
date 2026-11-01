@@ -7,6 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "supabase:start": "supabase start",
+    "supabase:reset": "supabase db reset",
+    "supabase:status": "supabase status",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
@@ -35,6 +38,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
     "jest": "^30.5.1",
+    "supabase": "^2.122.0",
     "tailwindcss": "^4",
     "ts-jest": "^29.4.12",
     "typescript": "^5"
