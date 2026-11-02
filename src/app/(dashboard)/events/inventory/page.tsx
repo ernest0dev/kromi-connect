@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { requirePermission } from '@/lib/auth/dal';
 import { INVENTARIO_RUTA, buildInventoryQueryString, parseInventoryQuery, sedeSlug } from '@/lib/inventory';
+import { normalizeInventoryItems } from '@/lib/inventory-rpc';
 import type { InventarioArticuloRow, InventarioPermisos } from '@/types';
 import { InventoryView } from './InventoryView';
 
@@ -41,18 +42,19 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
 
   const itemsRes = await supabase.rpc('list_inventory_items', {
     p_sede_id: sedeActual.id,
-    p_search: effective.q || null,
-    p_categoria_id: effective.categoria || null,
-    p_ubicacion_id: effective.ubicacion || null,
-    p_condicion: effective.condicion || null,
-    p_tipo_control: effective.control || null,
+    p_search: effective.q || undefined,
+    p_categoria_id: effective.categoria || undefined,
+    p_ubicacion_id: effective.ubicacion || undefined,
+    p_condicion: effective.condicion || undefined,
+    p_tipo_control: effective.control || undefined,
     p_sort: effective.sort,
     p_dir: effective.dir,
     p_limit: effective.pageSize,
     p_offset: (effective.page - 1) * effective.pageSize,
   });
 
-  const items: InventarioArticuloRow[] = itemsRes.data ?? [];
+  const normalizedItems = normalizeInventoryItems(itemsRes.data ?? []);
+  const items: InventarioArticuloRow[] = normalizedItems.ok ? normalizedItems.value : [];
   const total = items[0]?.total_count ?? 0;
 
   if (!itemsRes.error && items.length === 0 && effective.page > 1) {
@@ -70,7 +72,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   for (const row of countsRes.data ?? []) counts[row.sede_id] = Number(row.total);
 
   const loadError =
-    itemsRes.error || sedesRes.error || categoriasRes.error || ubicacionesRes.error
+    itemsRes.error || sedesRes.error || categoriasRes.error || ubicacionesRes.error || !normalizedItems.ok
       ? 'No se pudo cargar el inventario. Inténtalo de nuevo.'
       : null;
 

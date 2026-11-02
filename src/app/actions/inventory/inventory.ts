@@ -14,6 +14,11 @@ import {
   type ItemUpdateInput,
   type MovementInput,
 } from '@/lib/inventory';
+import {
+  normalizeInventoryActivity,
+  normalizeInventoryItem,
+  normalizeInventoryMovementArticleId,
+} from '@/lib/inventory-rpc';
 import type { InventarioActividadRow, InventarioArticuloRow, InventarioTipoControl } from '@/types';
 
 type Failure = {
@@ -49,9 +54,13 @@ const trimOrNull = (value: string | undefined) => {
 async function fetchCurrentItem(
   supabase: NonNullable<Awaited<ReturnType<typeof authorizeAction>>['context']>['supabase'],
   id: string,
-): Promise<InventarioArticuloRow | null> {
-  const { data } = await supabase.rpc('list_inventory_items', { p_articulo_id: id, p_limit: 1 });
-  return data?.[0] ?? null;
+): Promise<{ ok: true; item: InventarioArticuloRow | null } | { ok: false; error: string }> {
+  const { data, error } = await supabase.rpc('list_inventory_items', { p_articulo_id: id, p_limit: 1 });
+  if (error) return { ok: false, error: mapRpcError(error).error };
+  if (!data?.[0]) return { ok: true, item: null };
+
+  const normalized = normalizeInventoryItem(data[0]);
+  return normalized.ok ? { ok: true, item: normalized.value } : normalized;
 }
 
 export async function createInventoryItemAction(
@@ -63,6 +72,8 @@ export async function createInventoryItemAction(
   const invalid = validateItemInput(input);
   if (invalid) return { success: false, error: invalid };
   const observacion = trimOrNull(input.observacion);
+  const cantidad = input.tipoControl === 'INDIVIDUAL' ? 1 : parseQuantity(input.cantidad);
+  if (cantidad === null) return { success: false, error: 'La cantidad no es válida.' };
   if (observacion && observacion.length > LIMITES.observacion) {
     return { success: false, error: `La observación no puede superar ${LIMITES.observacion} caracteres.` };
   }
@@ -70,19 +81,21 @@ export async function createInventoryItemAction(
   const { data, error } = await access.context.supabase.rpc('create_inventory_item', {
     p_categoria_id: input.categoriaId,
     p_nombre: input.nombre.trim(),
-    p_especificaciones: trimOrNull(input.especificaciones),
+    p_especificaciones: trimOrNull(input.especificaciones) ?? '',
     p_tipo_control: input.tipoControl,
-    p_codigo: input.tipoControl === 'INDIVIDUAL' ? input.codigo.trim() : null,
-    p_cantidad: input.tipoControl === 'INDIVIDUAL' ? 1 : parseQuantity(input.cantidad),
+    p_codigo: input.tipoControl === 'INDIVIDUAL' ? input.codigo.trim() : '',
+    p_cantidad: cantidad,
     p_unidad_medida: input.unidadMedida.trim() || 'unidades',
     p_ubicacion_id: input.ubicacionId,
     p_condicion: input.condicion,
-    p_observacion: observacion,
+    p_atributos: {},
+    p_observacion: observacion ?? undefined,
     p_confirmar_duplicado: input.confirmarDuplicado === true,
   });
   if (error) return { success: false, ...mapRpcError(error) };
 
   revalidatePath(INVENTARIO_RUTA);
+  if (typeof data !== 'string') return { success: false, error: GENERIC_ERROR };
   return { success: true, id: data };
 }
 
@@ -100,18 +113,23 @@ export async function updateInventoryItemAction(
     p_expected_version: input.expectedVersion,
     p_categoria_id: input.categoriaId,
     p_nombre: input.nombre.trim(),
-    p_especificaciones: trimOrNull(input.especificaciones),
-    p_codigo: input.tipoControl === 'INDIVIDUAL' ? input.codigo.trim() : null,
+    p_especificaciones: trimOrNull(input.especificaciones) ?? '',
+    p_codigo: input.tipoControl === 'INDIVIDUAL' ? input.codigo.trim() : '',
     p_unidad_medida: input.unidadMedida.trim() || 'unidades',
     p_condicion: input.condicion,
+    p_atributos: {},
   });
   if (error) {
     const mapped = mapRpcError(error);
-    const current = mapped.code === 'CONFLICTO_VERSION' ? await fetchCurrentItem(access.context.supabase, input.id) : undefined;
-    return { success: false, ...mapped, current };
+    if (mapped.code !== 'CONFLICTO_VERSION') return { success: false, ...mapped };
+
+    const current = await fetchCurrentItem(access.context.supabase, input.id);
+    if (!current.ok) return { success: false, error: current.error };
+    return { success: false, ...mapped, current: current.item };
   }
 
   revalidatePath(INVENTARIO_RUTA);
+  if (typeof data !== 'number') return { success: false, error: GENERIC_ERROR };
   return { success: true, version: data };
 }
 
@@ -129,19 +147,24 @@ export async function registerInventoryMovementAction(
     p_tipo: input.tipo,
     p_cantidad: parseQuantity(input.cantidad) ?? 0,
     p_expected_version: input.expectedVersion,
-    p_destino_ubicacion_id: input.destinoUbicacionId || null,
-    p_externo: trimOrNull(input.externo),
-    p_fecha_hora: input.fechaHora ? new Date(input.fechaHora).toISOString() : null,
-    p_observacion: trimOrNull(input.observacion),
+    p_destino_ubicacion_id: input.destinoUbicacionId || undefined,
+    p_externo: trimOrNull(input.externo) ?? undefined,
+    p_fecha_hora: input.fechaHora ? new Date(input.fechaHora).toISOString() : undefined,
+    p_observacion: trimOrNull(input.observacion) ?? undefined,
   });
   if (error) {
     const mapped = mapRpcError(error);
-    const current = mapped.code === 'CONFLICTO_VERSION' ? await fetchCurrentItem(access.context.supabase, input.articuloId) : undefined;
-    return { success: false, ...mapped, current };
+    if (mapped.code !== 'CONFLICTO_VERSION') return { success: false, ...mapped };
+
+    const current = await fetchCurrentItem(access.context.supabase, input.articuloId);
+    if (!current.ok) return { success: false, error: current.error };
+    return { success: false, ...mapped, current: current.item };
   }
 
+  const result = normalizeInventoryMovementArticleId(data);
+  if (!result.ok) return { success: false, error: result.error };
   revalidatePath(INVENTARIO_RUTA);
-  return { success: true, articuloId: data.articulo_id };
+  return { success: true, articuloId: result.value };
 }
 
 export async function createInventoryLocationAction(input: {
@@ -179,13 +202,15 @@ export async function getInventoryItemActivityAction(input: {
   const offset = Number.isInteger(input.offset) && (input.offset ?? 0) >= 0 ? (input.offset as number) : 0;
   const { data, error } = await access.context.supabase.rpc('get_inventory_item_activity', {
     p_articulo_id: input.articuloId,
-    p_tipo: input.tipo ?? null,
+    p_tipo: input.tipo ?? undefined,
     p_limit: 20,
     p_offset: offset,
   });
   if (error) return { success: false, error: mapRpcError(error).error };
 
-  const rows = data ?? [];
+  const normalized = normalizeInventoryActivity(data ?? []);
+  if (!normalized.ok) return { success: false, error: normalized.error };
+  const rows = normalized.value;
   return { success: true, rows, total: rows[0]?.total_count ?? 0 };
 }
 
@@ -195,5 +220,7 @@ export async function getInventoryItemAction(
   const access = await authorizeAction('events.inventory.read');
   if (access.error || !access.context) return { success: false, error: access.error ?? 'Inicia sesión para continuar.' };
   if (!isUuid(articuloId)) return { success: false, error: 'El artículo no es válido.' };
-  return { success: true, item: await fetchCurrentItem(access.context.supabase, articuloId) };
+  const result = await fetchCurrentItem(access.context.supabase, articuloId);
+  if (!result.ok) return { success: false, error: result.error };
+  return { success: true, item: result.item };
 }

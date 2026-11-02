@@ -1,3 +1,5 @@
+import type { Database } from './database.types';
+
 export type FormatoEnum = 'CARRUSEL' | 'POST' | 'REEL' | 'STORY';
 export type EstatusEnum =
   | 'PENDIENTE_BRIEF'
@@ -17,5 +19,5 @@ export type TipoCampanaEnum = 'TEMPORADA' | 'EVENTO' | 'EFEMERIDE' | 'LANZAMIENT
 export type CampanaEstatusEnum = 'PLANIFICADA' | 'ACTIVA' | 'FINALIZADA' | 'ARCHIVADA';
 export type CampanaEstatusOperativoEnum = Exclude<CampanaEstatusEnum, 'ARCHIVADA'>;
 export type DepartamentoEnum = 'COMPRAS' | 'SELECCION' | 'PROVEEDOR' | 'GERENCIA' | 'EVENTOS';
-export type CanalEnum = 'INSTAGRAM' | 'TIKTOK' | 'YOUTUBE' | 'FACEBOOK';
+export type CanalEnum = Exclude<Database['public']['Enums']['canal_enum'], 'YOUTUBE_SHORTS'>;
 export type SedeEnum = 'PREBO' | 'MANONGO';

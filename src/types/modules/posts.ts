@@ -1,5 +1,5 @@
 import { Database } from '../database.types';
-import { FormatoEnum, EstatusEnum, SedeEnum, CanalEnum } from '../enums';
+import { CanalEnum } from '../enums';
 
 // Tipos base directos de la base de datos
 export type Publicacion = Database['public']['Tables']['publicaciones']['Row'];
@@ -16,6 +16,28 @@ export interface SocialAccountOption {
   handle: string;
   display_name: string;
   active: boolean;
+}
+
+export function isSocialAccountPlatform(
+  platform: Database['public']['Enums']['canal_enum'],
+): platform is CanalEnum {
+  return platform !== 'YOUTUBE_SHORTS';
+}
+
+export function toSocialAccountOptions(
+  accounts: Pick<SocialAccount, 'id' | 'platform' | 'handle' | 'display_name' | 'active'>[],
+): SocialAccountOption[] {
+  return accounts.flatMap((account) =>
+    isSocialAccountPlatform(account.platform)
+      ? [{
+          id: account.id,
+          platform: account.platform,
+          handle: account.handle,
+          display_name: account.display_name,
+          active: account.active,
+        }]
+      : [],
+  );
 }
 
 export interface PublicacionConCuentas extends Publicacion {
