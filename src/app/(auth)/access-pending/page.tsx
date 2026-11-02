@@ -1,8 +1,26 @@
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/dal";
 import { logoutAction } from "@/app/actions/auth";
+import { isFixturesMode } from "@/lib/data-mode";
 
 export default async function AccessPendingPage() {
+  if (isFixturesMode()) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f4f6f9] px-4 py-10">
+        <section className="w-full max-w-lg rounded-2xl border border-[#e1e6ee] bg-white p-8 text-center shadow-[0_12px_40px_rgba(18,38,63,0.09)]">
+          <div className="mx-auto mb-5 grid h-12 w-12 place-items-center rounded-full bg-[#fff3dc] text-xl font-bold text-[#9b5b08]">i</div>
+          <h1 className="mb-3 text-2xl font-bold text-[#10233f]">Demostración de solo lectura</h1>
+          <p className="mb-7 text-sm leading-6 text-[#6b7482]">
+            Este entorno usa fixtures y no permite autenticación, cambios ni integraciones.
+          </p>
+          <a className="inline-flex min-h-10 items-center rounded-lg bg-[#073b78] px-5 text-sm font-bold text-white hover:bg-[#052f61]" href="/staging">
+            Ver demostración
+          </a>
+        </section>
+      </main>
+    );
+  }
+
   const context = await getAuthContext();
   if (!context) redirect("/login");
   if (context.profile?.role_code === "social-media") redirect("/social-media/grid");
