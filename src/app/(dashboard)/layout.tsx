@@ -2,10 +2,16 @@ import React from "react";
 import { requireUser } from "@/lib/auth/dal";
 import { ROLE_LABELS, type AppRole } from "@/lib/auth/permissions";
 import { DASHBOARD_NAVIGATION_PERMISSIONS } from "@/lib/navigation/dashboardNavigation";
+import { isFixturesMode } from "@/lib/data-mode";
 import DashboardShell from "./components/DashboardShell";
+import StagingPage from "../staging/page";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  await connection();
+  if (isFixturesMode()) return <StagingPage />;
+
   const { user, profile, supabase } = await requireUser();
   const role = profile.role_code as AppRole;
   if (role === "pending") redirect("/access-pending");
