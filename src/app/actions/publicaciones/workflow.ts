@@ -62,7 +62,7 @@ export async function transitionPublicationAction(input: {
   const { data, error } = await access.context.supabase.rpc('transition_publicacion_status', {
     p_publicacion_id: input.publicationId,
     p_estatus_nuevo: input.status,
-    p_motivo: input.reason?.trim() || null,
+    p_motivo: input.reason?.trim() || undefined,
   });
   if (error) return { success: false as const, error: error.message };
 

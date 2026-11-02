@@ -25,12 +25,12 @@ export async function loadSchedule(searchParams: EventSearchParams, mode: Schedu
   const archivados = mode === 'archive';
   const isCalendar = mode === 'month' || mode === 'week';
   const range = isCalendar ? getCalendarRange(filters.fecha, mode === 'week') : null;
-  const pDesde = range ? range.from.toISOString() : null;
-  const pHasta = range ? range.to.toISOString() : null;
+  const pDesde = range?.from.toISOString();
+  const pHasta = range?.to.toISOString();
   const { data, error } = await supabase.rpc('list_events', {
-    p_desde: pDesde, p_hasta: pHasta, p_sede_id: sede?.id ?? null,
-    p_estatus: filters.estatus || null, p_tipo: filters.tipo || null, p_origen: filters.origen || null,
-    p_responsable_id: null, p_search: filters.q || null, p_archivados: archivados,
+    p_desde: pDesde, p_hasta: pHasta, p_sede_id: sede?.id,
+    p_estatus: filters.estatus || undefined, p_tipo: filters.tipo || undefined, p_origen: filters.origen || undefined,
+    p_search: filters.q || undefined, p_archivados: archivados,
     p_dir: 'asc', p_limit: isCalendar ? 500 : 100, p_offset: isCalendar ? 0 : (filters.page - 1) * 100,
   });
   let errorMessage: string | null = error ? `No se pudo cargar la programación: ${error.message}` : null;
