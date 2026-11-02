@@ -5,6 +5,7 @@ import { todayInCaracas } from "./grid/utils/today";
 import SocialMediaLayoutClient from "./SocialMediaLayoutClient";
 import { requirePermission } from "@/lib/auth/dal";
 import { getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
+import { toSocialAccountOptions } from "@/types/modules/posts";
 
 export default async function SocialMediaLayout({
   children,
@@ -41,7 +42,7 @@ export default async function SocialMediaLayout({
       indicators={indicators}
       contentCategories={(categoriesResult.data || []).map(({ id, nombre }) => ({ id, nombre }))}
       campaigns={campaignsResult.data}
-      accounts={(accountsResult || []).map(({ id, platform, handle, display_name, active }) => ({ id, platform, handle, display_name, active }))}
+      accounts={toSocialAccountOptions(accountsResult || [])}
     >
       {children}
     </SocialMediaLayoutClient>

@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { Archive } from "lucide-react";
-import { PublicacionConCuentas } from "@/types";
+import { PublicacionConCuentas, toSocialAccountOptions } from "@/types";
 import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
 import { getCampaignsForGridMonthAction, getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
 import GridView from "./GridView";
@@ -100,7 +100,7 @@ export default async function CalendarioPage() {
         errorPublicacionesIniciales={error?.message || null}
         campanasPublicacionesIniciales={campaignOptionsResult.data}
         categoriasContenidoIniciales={(categoriesResult.data || []) as ContentCategoryOption[]}
-        cuentasSocialesIniciales={accounts.map(({ id, platform, handle, display_name, active }) => ({ id, platform, handle, display_name, active }))}
+        cuentasSocialesIniciales={toSocialAccountOptions(accounts)}
         efemeridesIniciales={efemeridesResult.data}
         anioEfemeridesInicial={anioActual}
         errorEfemeridesInicial={efemeridesResult.success ? null : efemeridesResult.error || "No se pudieron cargar las efemérides."}

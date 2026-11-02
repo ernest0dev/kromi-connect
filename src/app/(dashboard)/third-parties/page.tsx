@@ -1,13 +1,15 @@
-import React from "react";
-import ThirdPartiesClientView from "./ThirdPartiesClientView";
-import { getThirdPartiesAction } from "@/app/actions/third-parties/thirdParties";
+import { UnavailableModule } from "@/components/UnavailableModule";
 import { requirePermission } from "@/lib/auth/dal";
 
 export const revalidate = 0;
 
 export default async function ThirdPartiesPage() {
   await requirePermission("third-parties.read");
-  const { data } = await getThirdPartiesAction();
 
-  return <ThirdPartiesClientView tercerosIniciales={data || []} />;
+  return (
+    <UnavailableModule
+      title="Clientes y Marcas Aliadas"
+      description="El directorio se reactivará cuando su esquema de datos esté recuperado y versionado."
+    />
+  );
 }
