@@ -198,7 +198,7 @@ function compareByDate(a: PublicacionConCuentas, b: PublicacionConCuentas): numb
   return (
     compareText(a.fecha_publicacion, b.fecha_publicacion) ||
     compareText(a.hora_publicacion ?? '99:99', b.hora_publicacion ?? '99:99') ||
-    compareText(a.created_at, b.created_at) ||
+    compareText(a.created_at ?? '', b.created_at ?? '') ||
     compareText(a.id, b.id)
   );
 }
@@ -218,7 +218,7 @@ export function sortPublicaciones(pubs: PublicacionConCuentas[], sort: SortKey, 
       case 'etapa':
         return etapaRank(a) - etapaRank(b);
       case 'actualizacion':
-        return compareText(a.updated_at, b.updated_at);
+        return compareText(a.updated_at ?? '', b.updated_at ?? '');
       case 'prioridad':
         return a.prioridad - b.prioridad;
       case 'titulo':

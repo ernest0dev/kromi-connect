@@ -5,11 +5,9 @@ import { processRequestAction } from "@/app/actions/solicitudes/convert";
 
 interface Solicitud {
   id: string;
-  tercero_nombre?: string;
-  solicitante_email?: string;
+  departamento: string;
   descripcion: string;
-  fecha_sugerida?: string;
-  estatus: "PENDIENTE" | "APROBADO" | "RECHAZADO";
+  estatus: string;
 }
 
 interface Props {
@@ -30,9 +28,7 @@ export default function RequestsClientView({ solicitudesIniciales }: Props) {
           ? {
               titulo: solicitud.descripcion.slice(0, 50) || "Nueva Solicitud",
               formato: "POST",
-              fecha_publicacion:
-                solicitud.fecha_sugerida ||
-                new Date().toISOString().split("T")[0],
+              fecha_publicacion: new Date().toISOString().split("T")[0],
             }
           : undefined,
       );
@@ -41,7 +37,7 @@ export default function RequestsClientView({ solicitudesIniciales }: Props) {
         setSolicitudes((prev) =>
           prev.map((s) =>
             s.id === solicitud.id
-              ? { ...s, estatus: aprobar ? "APROBADO" : "RECHAZADO" }
+              ? { ...s, estatus: aprobar ? "CONVERTIDA" : "RECHAZADO" }
               : s,
           ),
         );
@@ -76,16 +72,13 @@ export default function RequestsClientView({ solicitudesIniciales }: Props) {
               <div className="space-y-2 max-w-2xl">
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-emerald-400 bg-emerald-950/80 px-2.5 py-0.5 rounded border border-emerald-800/50">
-                    {item.tercero_nombre || "Marca Aliada"}
-                  </span>
-                  <span className="text-xs font-mono text-slate-500">
-                    {item.solicitante_email || "Sin email"}
+                    {item.departamento}
                   </span>
                   <span
                     className={`text-[10px] font-mono px-2 py-0.5 rounded font-bold ${
                       item.estatus === "PENDIENTE"
                         ? "bg-amber-950 text-amber-400"
-                        : item.estatus === "APROBADO"
+                        : item.estatus === "CONVERTIDA"
                           ? "bg-emerald-950 text-emerald-400"
                           : "bg-rose-950 text-rose-400"
                     }`}

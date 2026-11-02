@@ -194,7 +194,7 @@ export async function transitionDesignRequestAction(formData: FormData) {
     p_id: id,
     p_expected_version: version,
     p_estado: status,
-    p_motivo: reason || null,
+    p_motivo: reason || undefined,
   });
   if (error) reportFailure('transition request', error);
   revalidatePath(REGISTRY_PATH);
@@ -222,7 +222,7 @@ export async function transitionDesignDeliverableAction(formData: FormData) {
     p_id: id,
     p_expected_version: version,
     p_estado: status,
-    p_motivo: reason || null,
+    p_motivo: reason || undefined,
   });
   if (error) reportFailure('transition deliverable', error);
   revalidatePath(REGISTRY_PATH);

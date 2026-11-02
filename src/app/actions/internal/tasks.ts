@@ -72,7 +72,7 @@ export async function transitionStoreTaskAction(input: {
   if (access.error || !access.context) return denied(access.error);
   if (!/^[0-9a-f-]{36}$/i.test(input.id) || !Number.isInteger(input.version)) return { success: false, error: 'Referencia inválida.' };
   const { error } = await access.context.supabase.rpc('transition_store_task_status', {
-    p_id: input.id, p_version: input.version, p_estatus: input.status, p_motivo: input.reason?.trim() || null,
+    p_id: input.id, p_version: input.version, p_estatus: input.status, p_motivo: input.reason?.trim() || undefined,
   });
   if (error) return rpcError(error);
   revalidatePath(PATH);
