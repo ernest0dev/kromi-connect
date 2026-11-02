@@ -1717,7 +1717,7 @@ isOneToOne: false
 { Args: { "p_fecha_rodaje": string | null,"p_prioridad": number,"p_publicacion_id": string,"p_requiere_rodaje": boolean,"p_sedes": (Database["public"]['Enums']["sede_enum"])[] }; Returns: boolean
                            },
 "set_solicitud_diseno_responsable":
-{ Args: { "p_expected_version": number,"p_id": string,"p_responsable_id": string }; Returns: number
+{ Args: { "p_expected_version": number,"p_id": string,"p_responsable_id": string | null }; Returns: number
                            },
 "sync_event_statuses":
 { Args: Record<PropertyKey, never>; Returns: number

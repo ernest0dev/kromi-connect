@@ -14,8 +14,8 @@ export default async function InternalTasksPage({ searchParams }: { searchParams
   const requestedSize = integer(query.page_size, 25);
   const pageSize = [10, 25, 50, 100].includes(requestedSize) ? requestedSize : 25;
   const common = {
-    p_archived: false, p_tipo: one(query.tipo) || null, p_estatus: one(query.estado) || null,
-    p_sede_id: one(query.sede) || null, p_search: one(query.q)?.slice(0, 100) || null,
+    p_archived: false, p_tipo: one(query.tipo) || undefined, p_estatus: one(query.estado) || undefined,
+    p_sede_id: one(query.sede) || undefined, p_search: one(query.q)?.slice(0, 100) || undefined,
   };
   const [storesResult, tasksResult, mapResult, canCreate] = await Promise.all([
     supabase.rpc('list_internal_stores'),
