@@ -1073,7 +1073,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "check_event_overlap":
-{ Args: { "p_evento_id": string,"p_fin": string,"p_inicio": string,"p_sede_ids": (string)[] }; Returns: {
+{ Args: { "p_evento_id": string | null,"p_fin": string,"p_inicio": string,"p_sede_ids": (string)[] }; Returns: {
               "estatus": string,"evento_id": string,"fin": string,"inicio": string,"nombre": string,"sede_id": string,"sede_nombre": string
             }[]
                            },
@@ -1095,7 +1095,7 @@ isOneToOne: false
 { Args: { "p_nombre": string,"p_sede_id": string }; Returns: string
                            },
 "create_publicacion_with_relations":
-{ Args: { "p_body_texto": string,"p_campana_id": string,"p_categoria_ids": (string)[],"p_cta_texto": string,"p_drive_folder_id": string,"p_drive_folder_url": string,"p_fecha_limite_brief": string,"p_fecha_publicacion": string,"p_formato": Database["public"]['Enums']["formato_enum"],"p_hashtags": (string)[],"p_hook_texto": string,"p_social_account_ids": (string)[],"p_titulo": string }; Returns: Json
+{ Args: { "p_body_texto": string | null,"p_campana_id": string | null,"p_categoria_ids": (string)[],"p_cta_texto": string | null,"p_drive_folder_id": string | null,"p_drive_folder_url": string | null,"p_fecha_limite_brief": string | null,"p_fecha_publicacion": string,"p_formato": Database["public"]['Enums']["formato_enum"],"p_hashtags": (string)[] | null,"p_hook_texto": string | null,"p_social_account_ids": (string)[],"p_titulo": string }; Returns: Json
                            },
 "create_solicitud_diseno":
 { Args: { "p_data": Json }; Returns: string
@@ -1167,7 +1167,7 @@ isOneToOne: false
 { Args: { "p_check_future": boolean,"p_fin": string,"p_inicio": string,"p_responsable_id": string }; Returns: undefined
                            },
 "events_find_overlaps":
-{ Args: { "p_evento_id": string,"p_fin": string,"p_inicio": string,"p_sede_ids": (string)[] }; Returns: {
+{ Args: { "p_evento_id": string | null,"p_fin": string,"p_inicio": string,"p_sede_ids": (string)[] }; Returns: {
               "estatus": string,"evento_id": string,"fin": string,"inicio": string,"nombre": string,"sede_id": string,"sede_nombre": string
             }[]
                            },
@@ -1178,7 +1178,7 @@ isOneToOne: false
 { Args: { "p_datos": Json }; Returns: Json
                            },
 "events_raise_if_overlap":
-{ Args: { "p_confirmar": boolean,"p_evento_id": string,"p_fin": string,"p_inicio": string,"p_sede_ids": (string)[] }; Returns: undefined
+{ Args: { "p_confirmar": boolean,"p_evento_id": string | null,"p_fin": string,"p_inicio": string,"p_sede_ids": (string)[] }; Returns: undefined
                            },
 "events_require":
 { Args: { "p_permission": string }; Returns: undefined
@@ -1650,10 +1650,10 @@ isOneToOne: false
 { Args: { "p_lote_id": string }; Returns: Json
                            },
 "save_campaign_with_efemerides":
-{ Args: { "p_campana_id": string,"p_confirmar_desvinculacion": boolean,"p_descripcion": string,"p_efemeride_ids": (string)[],"p_fecha_fin": string,"p_fecha_inicio": string,"p_nombre": string,"p_presupuesto": number,"p_tipo_campana": Database["public"]['Enums']["tipo_campana_enum"] }; Returns: string
+{ Args: { "p_campana_id": string | null,"p_confirmar_desvinculacion": boolean,"p_descripcion": string | null,"p_efemeride_ids": (string)[],"p_fecha_fin": string,"p_fecha_inicio": string,"p_nombre": string,"p_presupuesto": number | null,"p_tipo_campana": Database["public"]['Enums']["tipo_campana_enum"] }; Returns: string
                            },
 "save_event_closure":
-{ Args: { "p_asistentes_reales": number,"p_evento_id": string,"p_expected_version": number,"p_gasto_real": number,"p_notas_cierre": string }; Returns: number
+{ Args: { "p_asistentes_reales": number | null,"p_evento_id": string,"p_expected_version": number,"p_gasto_real": number | null,"p_notas_cierre": string }; Returns: number
                            },
 "save_event_design_config":
 { Args: { "p_evento_id": string,"p_expected_version": number,"p_fecha": string,"p_formatos": (string)[],"p_instrucciones": string,"p_requiere": boolean }; Returns: number
@@ -1711,10 +1711,10 @@ isOneToOne: false
         isSetofReturn: false
       } },
 "set_publication_hour":
-{ Args: { "p_hora_publicacion": string,"p_publicacion_id": string }; Returns: boolean
+{ Args: { "p_hora_publicacion": string | null,"p_publicacion_id": string }; Returns: boolean
                            },
 "set_publication_production":
-{ Args: { "p_fecha_rodaje": string,"p_prioridad": number,"p_publicacion_id": string,"p_requiere_rodaje": boolean,"p_sedes": (Database["public"]['Enums']["sede_enum"])[] }; Returns: boolean
+{ Args: { "p_fecha_rodaje": string | null,"p_prioridad": number,"p_publicacion_id": string,"p_requiere_rodaje": boolean,"p_sedes": (Database["public"]['Enums']["sede_enum"])[] }; Returns: boolean
                            },
 "set_solicitud_diseno_responsable":
 { Args: { "p_expected_version": number,"p_id": string,"p_responsable_id": string }; Returns: number
@@ -1723,7 +1723,7 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: number
                            },
 "sync_evento_drive_brief":
-{ Args: { "p_brief_folder_id": string,"p_deliverables_folder_id": string,"p_drive_folder_id": string,"p_drive_folder_url": string,"p_evento_id": string,"p_file_count": number }; Returns: undefined
+{ Args: { "p_brief_folder_id": string,"p_deliverables_folder_id": string,"p_drive_folder_id": string | null,"p_drive_folder_url": string | null,"p_evento_id": string,"p_file_count": number }; Returns: undefined
                            },
 "sync_pendiente_drive_brief":
 { Args: { "p_brief_folder_id": string,"p_deliverables_folder_id": string,"p_file_count": number,"p_pendiente_id": string }; Returns: undefined
@@ -1838,7 +1838,7 @@ isOneToOne: false
 { Args: { "p_articulo_id": string,"p_atributos"?: Json,"p_categoria_id": string,"p_codigo": string,"p_condicion": string,"p_especificaciones": string,"p_expected_version": number,"p_nombre": string,"p_unidad_medida": string }; Returns: number
                            },
 "update_publicacion_with_relations":
-{ Args: { "p_body_texto": string,"p_campana_id": string,"p_categoria_ids": (string)[],"p_cta_texto": string,"p_estatus": Database["public"]['Enums']["estatus_enum"],"p_fecha_aprobacion_gerencia": string,"p_fecha_entrega_diseno_estimada": string,"p_fecha_entrega_diseno_real": string,"p_fecha_limite_brief": string,"p_fecha_publicacion": string,"p_fecha_solicitud_diseno": string,"p_formato": Database["public"]['Enums']["formato_enum"],"p_hashtags": (string)[],"p_hook_texto": string,"p_publicacion_id": string,"p_social_account_ids": (string)[],"p_titulo": string }; Returns: Json
+{ Args: { "p_body_texto": string | null,"p_campana_id": string | null,"p_categoria_ids": (string)[],"p_cta_texto": string | null,"p_estatus": Database["public"]['Enums']["estatus_enum"],"p_fecha_aprobacion_gerencia": string | null,"p_fecha_entrega_diseno_estimada": string | null,"p_fecha_entrega_diseno_real": string | null,"p_fecha_limite_brief": string | null,"p_fecha_publicacion": string,"p_fecha_solicitud_diseno": string | null,"p_formato": Database["public"]['Enums']["formato_enum"],"p_hashtags": (string)[] | null,"p_hook_texto": string | null,"p_publicacion_id": string,"p_social_account_ids": (string)[],"p_titulo": string }; Returns: Json
                            },
 "update_solicitud_diseno":
 { Args: { "p_data": Json,"p_expected_version": number,"p_id": string }; Returns: number

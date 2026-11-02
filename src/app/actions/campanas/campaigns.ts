@@ -77,6 +77,10 @@ const ESTADOS_CAMPANA: CampanaEstatus[] = ["PLANIFICADA", "ACTIVA", "FINALIZADA"
 const CAMPAIGNS_PATH = "/social-media/campaigns";
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+function isCampanaEstatusOperativo(status: string | null): status is CampanaEstatusOperativo {
+  return status === "PLANIFICADA" || status === "ACTIVA" || status === "FINALIZADA";
+}
+
 function validateEfemerideSelection(tipo: TipoCampanaEnum, ids?: string[]) {
   const selectedIds = ids ?? [];
   if (!Array.isArray(selectedIds) || selectedIds.some((id) => typeof id !== "string" || !UUID_PATTERN.test(id))) {
@@ -429,7 +433,7 @@ export async function restoreCampaignAction(id: string) {
     if (readError) return { success: false, error: readError.message };
     if (campaign.estatus !== "ARCHIVADA") return { success: true };
 
-    const status: CampanaEstatusOperativo = ESTADOS_CAMPANA.includes(campaign.estatus_pre_archivado)
+    const status: CampanaEstatusOperativo = isCampanaEstatusOperativo(campaign.estatus_pre_archivado)
       ? campaign.estatus_pre_archivado
       : "PLANIFICADA";
     const { error } = await supabase.from("campanas").update({

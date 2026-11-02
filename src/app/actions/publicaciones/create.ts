@@ -156,10 +156,10 @@ export async function createPostWithDriveAction(input: CreatePostInput) {
     }
 
     return { success: true, data: { ...newPost, linea_contenido: (categoryRows.data || []).map((category) => category.nombre).join(", ") || null, social_account_ids: selectedAccountIds } };
-  } catch (err: any) {
+  } catch (err) {
     return {
       success: false,
-      error: err.message || "Error inesperado al crear el post.",
+      error: err instanceof Error ? err.message : "Error inesperado al crear el post.",
     };
   }
 }

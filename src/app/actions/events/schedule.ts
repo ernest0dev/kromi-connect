@@ -7,6 +7,11 @@ import type { EventoDetalle, EventoHistorial, EventoRow, Json } from '@/types';
 
 type Failure = { success: false; error: string; code?: 'POSIBLE_CRUCE' | 'CONFLICTO_VERSION' | 'MOTIVO_REQUERIDO'; cruces?: unknown[] };
 const GENERIC = 'No se pudo completar la operación. Inténtalo de nuevo.';
+function isJson(value: unknown): value is Json {
+  if (value === null || typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return true;
+  if (Array.isArray(value)) return value.every(isJson);
+  return typeof value === 'object' && value !== null && Object.values(value).every(isJson);
+}
 function rpcFailure(error: { code?: string; message: string; details?: string | null }): Failure {
   if (error.message.includes('POSIBLE_CRUCE')) {
     let cruces: unknown[] = [];
@@ -27,9 +32,9 @@ export async function getEventScheduleDataAction(input: {
   const access = await authorizeAction('events.schedule.read');
   if (access.error || !access.context) return failAccess(access.error);
   const { data, error } = await access.context.supabase.rpc('list_events', {
-    p_desde: input.desde ?? null, p_hasta: input.hasta ?? null, p_sede_id: input.sedeId ?? null,
-    p_estatus: input.estatus ?? null, p_tipo: input.tipo ?? null, p_origen: input.origen ?? null,
-    p_responsable_id: null, p_search: input.q?.slice(0, 100) || null, p_archivados: input.archivados === true,
+    p_desde: input.desde ?? undefined, p_hasta: input.hasta ?? undefined, p_sede_id: input.sedeId ?? undefined,
+    p_estatus: input.estatus ?? undefined, p_tipo: input.tipo ?? undefined, p_origen: input.origen ?? undefined,
+    p_search: input.q?.slice(0, 100) || undefined, p_archivados: input.archivados === true,
     p_dir: 'asc', p_limit: Math.min(200, Math.max(1, input.limit ?? 100)), p_offset: Math.max(0, input.offset ?? 0),
   });
   if (error) return rpcFailure(error);
@@ -67,7 +72,8 @@ export async function createEventAction(input: Record<string, unknown>, confirma
   if (access.error || !access.context) return failAccess(access.error);
   const invalid = validateEventInput(input);
   if (invalid) return { success: false, error: invalid };
-  const { data, error } = await access.context.supabase.rpc('create_event_with_design', { p_datos: input as unknown as Json, p_confirmar_cruce: confirmarCruce });
+  if (!isJson(input)) return { success: false, error: 'Los datos del evento no se pueden serializar.' };
+  const { data, error } = await access.context.supabase.rpc('create_event_with_design', { p_datos: input, p_confirmar_cruce: confirmarCruce });
   if (error) return rpcFailure(error);
   revalidatePath(EVENTOS_RUTA);
   return { success: true, id: data };
@@ -78,9 +84,10 @@ export async function updateEventAction(input: { id: string; expectedVersion: nu
   if (access.error || !access.context) return failAccess(access.error);
   const invalid = validateEventInput(input.datos);
   if (invalid) return { success: false, error: invalid };
+  if (!isJson(input.datos)) return { success: false, error: 'Los datos del evento no se pueden serializar.' };
   const { data, error } = await access.context.supabase.rpc('update_event_with_design', {
-    p_evento_id: input.id, p_expected_version: input.expectedVersion, p_datos: input.datos as unknown as Json,
-    p_motivo: input.motivo?.trim() || null, p_confirmar_cruce: input.confirmarCruce === true,
+    p_evento_id: input.id, p_expected_version: input.expectedVersion, p_datos: input.datos,
+    p_motivo: input.motivo?.trim() || undefined, p_confirmar_cruce: input.confirmarCruce === true,
   });
   if (error) return rpcFailure(error);
   revalidatePath(EVENTOS_RUTA);
@@ -91,7 +98,7 @@ export async function rescheduleEventAction(input: { id: string; expectedVersion
   const access = await authorizeAction('events.schedule.update');
   if (access.error || !access.context) return failAccess(access.error);
   if (!input.inicio || !input.fin || Date.parse(input.fin) <= Date.parse(input.inicio)) return { success: false, error: 'El fin debe ser posterior al inicio.' };
-  const motivo = input.motivo?.trim() || null;
+  const motivo = input.motivo?.trim() || undefined;
   if (motivo && motivo.length > 300) return { success: false, error: 'El motivo no puede superar 300 caracteres.' };
   const { data, error } = await access.context.supabase.rpc('reschedule_event', {
     p_evento_id: input.id, p_expected_version: input.expectedVersion, p_inicio: input.inicio, p_fin: input.fin,
@@ -107,7 +114,7 @@ export async function transitionEventAction(input: { id: string; expectedVersion
   if (access.error || !access.context) return failAccess(access.error);
   const { data, error } = await access.context.supabase.rpc('transition_event_status', {
     p_evento_id: input.id, p_expected_version: input.expectedVersion, p_estatus: input.estatus,
-    p_motivo: input.motivo?.trim() || null, p_confirmar_cruce: input.confirmarCruce === true,
+    p_motivo: input.motivo?.trim() || undefined, p_confirmar_cruce: input.confirmarCruce === true,
   });
   if (error) return rpcFailure(error);
   revalidatePath(EVENTOS_RUTA);
