@@ -50,3 +50,6 @@ cspell.config.yaml
 # Python test and tool artifacts
 __pycache__/
 *.py[cod]
+
+# Audit files
+.audit
