@@ -40,13 +40,15 @@ pnpm supabase:status
 
 `supabase:start` levanta el stack local y `supabase:status` muestra su estado. No copies claves ni URLs de ese comando a documentación, commits o tickets.
 
-Para reconstruir **solo** la base local desde las migraciones y el seed determinista:
+La reconstrucción estructural desde cero usa la baseline y excluye el seed:
 
 ```bash
-pnpm supabase:reset
+pnpm exec supabase db reset --local --no-seed
 ```
 
-`supabase:reset` borra y recrea el estado local; no lo ejecutes contra un entorno remoto ni para preservar pruebas manuales. Las migraciones aplicables viven en `supabase/migrations/` y el seed local en `supabase/seed.sql`.
+Este comando borra y reconstruye la base local; no lo ejecutes si necesitas conservar datos locales. De las 28 versiones históricas, 27 archivos están archivados fuera de `supabase/migrations/`; `20261026000300_design_solicitudes_historicas.sql` se excluye temporalmente de la publicación porque contiene datos incrustados potencialmente sensibles y requiere revisión. La baseline incluye la estructura de su tabla, pero no esas filas. Las cuatro versiones no registradas en producción permanecen en `supabase/pending-migrations/`; ninguna se ejecuta en el flujo normal. La carpeta activa contiene la baseline y las migraciones incrementales nuevas.
+
+El seed `supabase/seed.sql` sigue separado de la baseline. Usa `crypt()` y `gen_salt()` sin calificar; requiere que `pgcrypto` esté visible en el `search_path`. No se ejecutó como parte de la prueba de reconstrucción. Consulta [la bitácora de migraciones](supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones) antes de usarlo.
 
 `.env.local` está ignorado por Git. Consérvalo únicamente en tu equipo, no lo subas ni lo copies al preview de `dev`. Las credenciales y configuraciones de producción se administran fuera del repositorio y no se reutilizan para desarrollo local o fixtures.
 
@@ -59,7 +61,7 @@ pnpm supabase:reset
 
 1. Actualiza `dev` y crea `feature/<tema>` o `fix/<tema>`.
 2. Inicia Docker y, si el cambio toca datos, levanta Supabase local con `pnpm supabase:start`.
-3. Implementa y valida el cambio localmente; usa `pnpm supabase:reset` solo cuando necesites reconstruir el estado local.
+3. Para probar una migración incremental, usa `pnpm exec supabase migration up --local`; para reconstruir desde cero usa el comando `db reset --local --no-seed` documentado arriba.
 4. Ejecuta las comprobaciones aplicables y abre un PR a `dev`.
 5. Revisa el preview de `dev` como demostración de fixtures de solo lectura; las operaciones reales se prueban contra Supabase local.
 6. Después de integrar en `dev`, promueve a `main` únicamente mediante PR cuando el cambio esté listo para producción.

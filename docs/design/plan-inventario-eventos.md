@@ -58,7 +58,7 @@ Los demás roles no reciben concesiones. RLS solo permite SELECT a quien tenga `
 
 | Capa | Archivos |
 |---|---|
-| Migraciones | `supabase/migrations/202610130001_events_inventory.sql`, `202610130002_events_inventory_transfer_identity.sql` |
+| Migraciones | `supabase/archived-migrations/historical/202610130001_events_inventory.sql`, `202610130002_events_inventory_transfer_identity.sql` |
 | Tipos | `src/types/modules/inventory.ts`, `src/types/database.types.ts` |
 | Lógica pura | `src/lib/inventory.ts` (consulta en URL, formato, validadores); pruebas en `tests/inventory.test.ts` |
 | Acciones | `src/app/actions/inventory/inventory.ts` |

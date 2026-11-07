@@ -1,6 +1,6 @@
 # Plan de implementación: perfil Design completo
 
-**Estado (2026-10-12):** implementación local completada en el workspace; migración `202610120001_design_profile.sql` creada, pendiente de aplicar y verificar en Supabase. No se ejecutaron cambios contra el proyecto remoto. La base de referencia fue la rama `main` y las migraciones locales hasta `202610110002_publication_design_requirement.sql`; el estado remoto requiere las comprobaciones de [Fase 0](#fase-0--preparación-y-verificaciones).
+**Estado histórico:** la migración `202610120001_design_profile.sql` está preservada en `supabase/archived-migrations/historical/`; su identificador figura en la última evidencia de historial remoto disponible, pero no se comprobó que el SQL desplegado coincida exactamente con ese archivo. No la vuelvas a aplicar. La baseline vigente y las diferencias conocidas están en la [bitácora de migraciones](../supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones).
 **Alcance:** rol `design`, rutas `/design/publications*`, Drive (carpeta `Entregables`), campo de instrucciones en los modales de `/social-media/grid` y revisión de entregables por Social Media.
 **Documentos relacionados:** [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`plan-validacion-brief-drive.md`](./plan-validacion-brief-drive.md), [`modales-publicacion.md`](./modales-publicacion.md).
 

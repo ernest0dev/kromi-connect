@@ -65,8 +65,8 @@ Estados usados: **Implementado**, **Parcial**, **Pendiente**, **No verificado**.
 - Tabla tipo spreadsheet para operación de publicaciones. **Pendiente:** no se encontró en las rutas auditadas.
 
 ### 2.2 Planificación Estratégica de Campañas
-- Categorización de campañas: Temporada, Evento, Efeméride, Lanzamiento, Oferta puntual. **Implementado**; la asociación muchos a muchos con efemérides queda implementada en esta actualización y requiere aplicar la migración `202609280002_campaign_efemerides.sql` en Supabase.
-- Catálogo anual independiente de efemérides: **Implementado** en `/social-media/efemerides` (alta, consulta por año, edición y eliminación; requiere aplicar la migración `202609280001_annual_efemerides.sql` en Supabase).
+- Categorización de campañas: Temporada, Evento, Efeméride, Lanzamiento, Oferta puntual. **Implementado**; la asociación muchos a muchos con efemérides está representada en la baseline actual. El SQL histórico `202609280002_campaign_efemerides.sql` permanece archivado y no debe aplicarse de nuevo.
+- Catálogo anual independiente de efemérides: **Implementado** en `/social-media/efemerides` (alta, consulta por año, edición y eliminación); el SQL histórico `202609280001_annual_efemerides.sql` permanece archivado y la estructura actual se reproduce desde la baseline.
 - Capa anual de efemérides y campañas EFEMERIDE vinculadas en Grid: **Implementada** con indicadores y fichas de detalle; depende de las migraciones anuales y de relación. Las campañas finalizadas siguen visibles atenuadas y las archivadas se ocultan. La capa de alianzas con proveedores: **Pendiente.**
 - Informes post-mortem por campaña (alcance, interacciones, presupuesto, cualitativo). **Pendiente:** la tabla está tipada, pero no tiene consumidor identificado.
 
@@ -411,8 +411,8 @@ El catálogo puede conservar el código histórico `social-media.posts.delete` d
 | `src/app/(auth)/login/` | Vista y formulario de inicio de sesión. |
 | `src/app/(auth)/access-pending/` | Vista para usuario sin rol habilitado. |
 | `src/app/(dashboard)/layout.tsx` y `components/DashboardShell.tsx` | Protección del área autenticada y datos de usuario/rol en la navegación. |
-| `supabase/migrations/202610050001_auth_roles_permissions.sql` | Tablas de roles/permisos/perfiles, funciones auxiliares, trigger y concesiones actuales. |
-| `supabase/migrations/202610060001_role_permission_policies.sql` | RLS y policies de las tablas de negocio incluidas en la migración. |
+| `supabase/archived-migrations/historical/202610050001_auth_roles_permissions.sql` | Tablas de roles/permisos/perfiles, funciones auxiliares, trigger y concesiones actuales. |
+| `supabase/archived-migrations/historical/202610060001_role_permission_policies.sql` | RLS y policies de las tablas de negocio incluidas en la migración. |
 
 Las páginas y Server Actions existentes se guardan según sus permisos. Algunas operaciones aún acceden a datos mediante el cliente administrativo Service Role, que omite RLS: en esos flujos la autorización depende de la comprobación explícita en la Server Action. No se debe exponer ese cliente ni su secreto al navegador.
 

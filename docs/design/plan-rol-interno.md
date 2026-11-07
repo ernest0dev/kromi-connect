@@ -186,7 +186,7 @@ Si la imagen no carga, los marcadores se dibujan igualmente sobre un lienzo liso
 
 ## 6. Modelo de datos
 
-Migraciones del módulo, preparadas para aplicación manual: `supabase/migrations/202610180001_internal_store_tasks.sql` y `202610180002_internal_design_requests.sql` (§11). Antes de aplicarlas en Supabase, contrastarlas con el esquema desplegado y resolver cualquier diferencia.
+Las migraciones históricas del módulo se preservan en `supabase/archived-migrations/historical/`; no las apliques. Los cambios futuros deben ser deltas nuevos desde la baseline, descrita en [la bitácora](../supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones).
 
 ### 6.1 Catálogo de tiendas (mapa)
 

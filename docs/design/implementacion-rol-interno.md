@@ -1,8 +1,10 @@
 # Guía de implementación: perfil Interno
 
+> **Nota de vigencia:** esta guía conserva instrucciones históricas. Las migraciones que menciona están archivadas; no las vuelvas a crear ni a aplicar. Cualquier cambio nuevo debe partir de la baseline y usar una versión incremental nueva, según [la bitácora](../supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones).
+
 **Estado (2026-10-18):** implementación inicial en revisión visual. La vista de mapa forma parte de la primera entrega con fondo gris liso; solo se posterga la imagen geográfica. La especificación está en [`plan-rol-interno.md`](./plan-rol-interno.md) (gana ante cualquier diferencia) y las maquetas en [`prototypes/internal-map/`](./prototypes/internal-map).
 
-**Ajuste local actual:** opciones nuevas `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` (se preservan `INSUMO` y `NECESIDAD` como valores históricos); brief de Drive como carga de archivos en lugar de enlace para nuevas solicitudes; SLA derivado de la fecha requerida en tienda (entrega a Design -2 días, límite del brief -5 días, estimación de Design +2 días calendario desde la solicitud); paginación con selector 10/25/50/100; y acción para crear un pendiente nuevo prellenado desde uno entregado o cancelado. La solicitud con diseño sigue requiriendo una tienda. La migración incremental pendiente de aplicar manualmente es `202610180003_internal_task_types.sql`.
+**Ajuste local documentado:** opciones `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` (se preservan `INSUMO` y `NECESIDAD` como valores históricos); brief de Drive como carga de archivos; SLA derivado de la fecha requerida; paginación con selector 10/25/50/100; y acción para crear un pendiente nuevo prellenado desde uno entregado o cancelado. La última evidencia de historial registra `202610180003`; no se verificó que el SQL desplegado coincida exactamente con el archivo archivado.
 
 ## Antes de empezar
 
@@ -33,12 +35,12 @@ T5 entrega una versión usable sin diseño; T7 y T8 añaden el flujo con Design.
 ## T0. Preparación
 
 - Confirmar los nombres/códigos de las tiendas existentes que consumirá el formulario.
-- Revisar el esquema del repositorio y usarlo como base de las migraciones. La conciliación contra remoto se realiza antes de aplicarlas manualmente.
+- La guía es histórica. Para cambios actuales, toma la baseline como punto de partida, contrasta el objeto remoto concreto y crea una migración incremental nueva; no apliques manualmente el SQL archivado.
 - No se añade imagen, coordenadas ni módulo de mapa en esta entrega.
 
 ## T1. Migración 1: pendientes y permisos del Interno
 
-**Archivo:** `supabase/migrations/202610180001_internal_store_tasks.sql`
+**Archivo:** `supabase/archived-migrations/historical/202610180001_internal_store_tasks.sql`
 
 **Contenido** (plan §6 a §8):
 - RPC `list_internal_stores` con acceso controlado, para devolver solo los campos del catálogo que necesita el formulario; no modifica `inventario_sedes`.
@@ -55,8 +57,8 @@ Seguir el estilo de `202610150001_events_schedule.sql`. No aplicar a remoto sin 
 <details><summary>Prompt para Kilo Code</summary>
 
 ```
-Lee AGENTS.md, docs/design/plan-rol-interno.md (§3, §4, §6, §7, §8) y docs/design/implementacion-rol-interno.md (T1). Toma como modelo supabase/migrations/202610150001_events_schedule.sql.
-Crea supabase/migrations/202610180001_internal_store_tasks.sql con: tablas pendientes_tienda y pendiente_tienda_historial, permisos internal.store-tasks.*, RLS, y las RPC de pendientes de §8.1 (sin las de carga/Design), incluyendo list_internal_stores sin modificar inventario_sedes. No toques otros archivos. No apliques la migración. Al terminar, lista las decisiones que tomaste y qué no pudiste verificar.
+Lee AGENTS.md, docs/design/plan-rol-interno.md (§3, §4, §6, §7, §8) y docs/design/implementacion-rol-interno.md (T1). Toma como modelo supabase/archived-migrations/historical/202610150001_events_schedule.sql.
+Prompt histórico: `202610180001_internal_store_tasks.sql` ya está archivada. No la recrees ni apliques; diseña una migración nueva solo para un cambio vigente aprobado.
 ```
 </details>
 
@@ -118,7 +120,7 @@ Lee docs/design/plan-rol-interno.md §3, §4 y §9 y abre las maquetas Lista, Ar
 
 ## T6. Migración 2: Drive y solicitud a Design
 
-**Archivo:** `supabase/migrations/202610180002_internal_design_requests.sql`.
+**Archivo:** `supabase/archived-migrations/historical/202610180002_internal_design_requests.sql`.
 
 **Contenido** (plan §6.2, §6.4, §7, §8): tabla `pendiente_drive_uploads` (modelo: `publicacion_drive_uploads`), RPC `sync_pendiente_drive_brief`, `reserve_pendiente_brief_upload`, `reserve_pendiente_deliverable_upload`, `request_pendiente_to_design`, `retract_pendiente_design_request`, `get_design_internal_queue`, `get_design_internal_history`, `get_design_internal_request`, `design_start_internal_request`, `design_deliver_internal_request`, `get_pendiente_designer_names`, y permisos `design.internal.*` solo para `design`.
 
@@ -129,8 +131,7 @@ Las RPC que dependen de Drive son solo para `service_role`. Las de Design devuel
 <details><summary>Prompt para Kilo Code</summary>
 
 ```
-Lee docs/design/plan-rol-interno.md §3.1, §6, §7 y §8 y las migraciones supabase/migrations/202610110001, 202610110002, 202610120001 y 202610130001 como modelo (cargas a Drive, solicitud a Design, cola de Design).
-Crea supabase/migrations/202610180002_internal_design_requests.sql con las tablas y RPC de §8.1 para cargas a Drive, solicitud y lado Design, y los permisos design.internal.*. Reutiliza el patrón service_role-only para lo que depende de Drive. No apliques la migración y no modifiques las de publicaciones.
+Prompt histórico: las versiones previas usadas como modelo y `202610180002_internal_design_requests.sql` están archivadas. No recrees esa versión; cualquier cambio futuro debe tener una versión nueva posterior a la baseline.
 ```
 </details>
 

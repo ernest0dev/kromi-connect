@@ -1,10 +1,12 @@
 # Plan: solicitud de diseño desde la programación de eventos
 
+> **Nota de vigencia:** las versiones propuestas `202610180005` y `202610180006` son anteriores a la baseline actual y no deben crearse ni ejecutarse. Este documento conserva el diseño histórico; cualquier trabajo vigente requiere una versión nueva creada por CLI y un delta revisado contra el esquema actual. Ver [la bitácora](../supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones).
+
 **Estado (2026-10-19):** plan, sin código ni migración. El historial remoto de migraciones se concilió manualmente con las 20 migraciones locales; el esquema se revisó contra el snapshot remoto y verificaciones puntuales, aunque no fue posible ejecutar `db diff` desde CLI. El contrato común de solicitud y la cola única de Design quedan definidos en §9. Extiende [`plan-eventos-programacion.md`](./plan-eventos-programacion.md). Las referencias de Social Media ([`modales-publicacion.md`](./modales-publicacion.md), [`plan-rol-design.md`](./plan-rol-design.md)) e Interno ([`plan-rol-interno.md`](./plan-rol-interno.md), [`implementacion-rol-interno.md`](./implementacion-rol-interno.md)) son flujos existentes, no el objetivo de conservar pantallas separadas.
 
 ## Estado de implementación (2026-10-20)
 
-**Actualización (2026-10-21): implementado.** Los campos de diseño de Eventos, la cola y el historial unificados, la ficha única y las cargas de brief y entregables a Drive están en el repositorio. Migraciones: `20261020011300_events_design.sql` (columnas `diseno_*`, permisos `events.schedule.design` y `design.requests.*`), `20261020011301_unified_design_requests.sql` (tabla `evento_drive_uploads`, solicitud, retiro, cola, historial, inicio y entrega), `20261020011400_design_request_details.sql` (detalle, línea de tiempo, carga de entregables, permiso `design.requests.upload`) y `20261021030128_event_brief_design_corrections.sql` (correcciones, reapertura y carga del brief opcional; incluye `EN_CORRECCION` en `diseno_estatus` y exige al menos 10 caracteres de instrucciones). El usuario confirmó el historial remoto hasta `20261021030127`; `20261021030128` está pendiente de aplicar.
+**Actualización histórica (2026-10-21):** Los campos de diseño de Eventos, la cola e historial unificados, la ficha única y las cargas de brief y entregables a Drive quedaron descritos en las versiones históricas `20261020011300`, `20261020011301`, `20261020011400` y `20261021030128`. La última evidencia de historial incluye `20261021030128`, aunque no prueba que el SQL desplegado coincida exactamente con ese archivo. Las versiones originales están archivadas; consulta §20 de la bitácora antes de proponer cambios.
 
 **Diferencias respecto a este plan:**
 - El archivo propuesto `202610180006_events_design_requests.sql` no existe; el trabajo quedó repartido en las migraciones anteriores.
@@ -146,7 +148,7 @@ T3 entrega una versión usable sin Drive: Eventos ya puede registrar qué necesi
 <details><summary>Prompt T1 para Kilo Code</summary>
 
 ```
-Lee AGENTS.md y docs/design/plan-eventos-diseno.md (§3, §4, §8, §9). No empieces T1 hasta verificar manualmente que las firmas y permisos remotos de list_events y get_event coinciden con las definiciones existentes que se van a recrear. El historial ya se concilió manualmente y el contrato canónico está definido. Toma como modelo supabase/migrations/202610180001_internal_store_tasks.sql y 202610150001_events_schedule.sql.
+Lee AGENTS.md y docs/design/plan-eventos-diseno.md (§3, §4, §8, §9). No empieces T1 hasta verificar manualmente que las firmas y permisos remotos de list_events y get_event coinciden con las definiciones existentes que se van a recrear. El historial ya se concilió manualmente y el contrato canónico está definido. Toma como modelo supabase/archived-migrations/historical/202610180001_internal_store_tasks.sql y 202610150001_events_schedule.sql.
 Crea supabase/migrations/202610180005_events_design.sql con las columnas, CHECK, permiso events.schedule.design y los cambios a events_normalize, create_event, update_event, list_events, get_event, events_flags, transition_event_status, archive_event y al CHECK de evento_historial.tipo. list_events y get_event cambian su returns table: usa drop function y vuelve a crear con revoke/grant. No apliques la migración ni toques otros archivos. Al terminar, lista decisiones y lo que no pudiste verificar.
 ```
 </details>
@@ -162,7 +164,7 @@ Crea src/lib/eventDesign.ts con constantes y etiquetas (formatos múltiples, est
 <details><summary>Prompt T4 para Kilo Code</summary>
 
 ```
-Lee docs/design/plan-eventos-diseno.md (§3, §5, §9) y supabase/migrations/202610180002_internal_design_requests.sql como modelo.
+Lee docs/design/plan-eventos-diseno.md (§3, §5, §9) y supabase/archived-migrations/historical/202610180002_internal_design_requests.sql como modelo.
 Crea supabase/migrations/202610180006_events_design_requests.sql con evento_drive_uploads, permiso de Eventos para solicitar/subir, las RPC solo service_role de Drive y solicitud, retract_evento_design_request y la integración con las RPC/adaptadores unificados de Design acordados en P1. La solicitud requiere evento fechado e instrucciones, pero no brief. Aplica límites atómicos de carga. No cambies eventos.version en acciones de Design. No crees design.events.* ni una cola de Eventos independiente si P1 define una autorización común. No apliques la migración.
 ```
 </details>
