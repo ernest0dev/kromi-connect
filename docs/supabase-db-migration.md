@@ -3,11 +3,11 @@
 > **Proyecto:** Kromi Connect — Fase 1 (Perfil Social Media Manager)
 > **Motor:** Supabase / PostgreSQL
 > **Tipo de documento:** Bitácora de migración y arquitectura de esquema
-> **Estado:** bitácora de esquema y migraciones; las últimas migraciones tienen estado de despliegue diferenciado más abajo.
+> **Estado:** bitácora histórica y guía de operación. La baseline estructural vigente y la organización del historial se resumen en §20.
 
 ---
 
-> **Vigencia:** los capítulos 1–9 documentan la arquitectura base y migraciones anteriores; no son un volcado completo del esquema desplegado actual. El inventario (`202610130001`/`002`) y programación (`202610150001`) fueron reportados por el usuario como aplicados. La captura y el esquema Markdown todavía deben reconciliarse con la programación mediante `supabase db pull`. Este repositorio no verificó el estado vivo; revisar objetos, grants, policies y funciones antes de generar nuevas migraciones.
+> **Vigencia:** las notas de despliegue de las secciones históricas describen lo que se sabía entonces y pueden estar superadas. El esquema estructural actual parte del snapshot de producción utilizado para sincronizar `kromi-connect`; el historial anterior se conserva en `supabase/archived-migrations/historical/`. No se debe inferir qué SQL exacto llegó a producción a partir de un commit, un timestamp o la presencia de objetos.
 
 ---
 
@@ -64,7 +64,7 @@ Entidad de agrupación para campañas de temporada, eventos o lanzamientos.
 | `activo` | `BOOLEAN DEFAULT TRUE` | |
 | `created_at` | `TIMESTAMPTZ DEFAULT now()` | |
 
-La vista de campañas amplía esta tabla con `descripcion`, `presupuesto`, `estatus` y `estatus_pre_archivado`. `estatus` admite `PLANIFICADA`, `ACTIVA`, `FINALIZADA` y `ARCHIVADA`; archivar conserva el estado previo en `estatus_pre_archivado` y pone `activo = FALSE`. La acción de restauración devuelve ese estado previo y no elimina las relaciones con publicaciones, inventario ni evaluaciones. Aplicar las migraciones de `supabase/migrations/` en orden para habilitar estos campos.
+La vista de campañas amplía esta tabla con `descripcion`, `presupuesto`, `estatus` y `estatus_pre_archivado`. `estatus` admite `PLANIFICADA`, `ACTIVA`, `FINALIZADA` y `ARCHIVADA`; archivar conserva el estado previo en `estatus_pre_archivado` y pone `activo = FALSE`. La acción de restauración devuelve ese estado previo y no elimina las relaciones con publicaciones, inventario ni evaluaciones. Estos campos forman parte de la baseline actual; las migraciones históricas que los introdujeron no deben ejecutarse de nuevo.
 
 ### 3.2 `publicaciones` (entidad central)
 Ticket de contenido con trazabilidad completa de matriz SLA (brief → rodaje → diseño → aprobación → publicación).
@@ -299,7 +299,7 @@ Se ejecutó un bloque anónimo PL/pgSQL (`DO $$ ... $$`) para poblar el esquema 
 
 ## 7. Efemérides anuales: migración para Supabase SQL Editor
 
-La migración versionada es `supabase/migrations/202609280001_annual_efemerides.sql`. Para aplicarla, abre Supabase **SQL Editor**, pega y ejecuta el bloque completo siguiente. Es idempotente y no modifica filas de `campanas` ni `publicaciones`.
+La migración versionada es `supabase/archived-migrations/historical/202609280001_annual_efemerides.sql`. Para aplicarla, abre Supabase **SQL Editor**, pega y ejecuta el bloque completo siguiente. Es idempotente y no modifica filas de `campanas` ni `publicaciones`.
 
 ```sql
 CREATE TABLE IF NOT EXISTS public.efemerides (
@@ -351,7 +351,7 @@ La UI `/social-media/efemerides` permite consultar por año, crear, editar y eli
 
 ## 8. Vínculos entre campañas y efemérides
 
-La migración `supabase/migrations/202609280002_campaign_efemerides.sql` agrega la tabla de unión, RLS, triggers de integridad y la función transaccional `save_campaign_with_efemerides`. Para aplicarla en Supabase, abre **SQL Editor**, pega el contenido completo de ese archivo y ejecútalo después de la migración anual de efemérides (§7). No ejecutes solo la creación de la tabla: la función y los triggers forman parte de las validaciones. El archivo solicita recargar el caché de esquema de PostgREST al terminar.
+La migración `supabase/archived-migrations/historical/202609280002_campaign_efemerides.sql` agrega la tabla de unión, RLS, triggers de integridad y la función transaccional `save_campaign_with_efemerides`. Para aplicarla en Supabase, abre **SQL Editor**, pega el contenido completo de ese archivo y ejecútalo después de la migración anual de efemérides (§7). No ejecutes solo la creación de la tabla: la función y los triggers forman parte de las validaciones. El archivo solicita recargar el caché de esquema de PostgREST al terminar.
 
 Verifica la instalación desde SQL Editor:
 
@@ -386,12 +386,12 @@ La acción de guardar campaña llama esa función para guardar datos y vínculos
 
 Grid consume `public.efemerides` por año; esta capa no necesita otra tabla ni una migración adicional. Las efemérides puntuales aparecen en su fecha. Los periodos aparecen como un solo indicador en su primer día de cada mes que abarcan (o como “En curso” al inicio del mes si comenzaron antes); al abrirlo se muestran las fechas completas y la descripción. El filtro de formato solo afecta publicaciones.
 
-Grid también consulta campañas `EFEMERIDE` con al menos un vínculo y cuyo periodo se solape con el mes visible. Cada campaña se muestra una sola vez por mes en la fecha de inicio o al inicio del mes si ya estaba en curso. La ficha detalla por separado el periodo propio de la campaña y las fechas de sus efemérides vinculadas. Las campañas `FINALIZADA` permanecen visibles con estilo atenuado; `ARCHIVADA` queda excluida. No hay cambios DDL adicionales para esta capa; sí se requiere aplicar la migración de asociaciones descrita en §8.
+Grid también consulta campañas `EFEMERIDE` con al menos un vínculo y cuyo periodo se solape con el mes visible. Cada campaña se muestra una sola vez por mes en la fecha de inicio o al inicio del mes si ya estaba en curso. La ficha detalla por separado el periodo propio de la campaña y las fechas de sus efemérides vinculadas. Las campañas `FINALIZADA` permanecen visibles con estilo atenuado; `ARCHIVADA` queda excluida. El DDL de asociaciones está incluido en la baseline; el SQL histórico descrito en §8 permanece archivado.
 
 
 ## 10. Extensión de publicaciones: flujo, Design y Archivo (2026-10-10)
 
-La migración `supabase/migrations/202610100001_publication_workflow_archive.sql` extiende el esquema base descrito arriba. Según confirmación del usuario, fue ejecutada en el proyecto Supabase; no se consultó remotamente para validar el estado actual.
+La migración `supabase/archived-migrations/historical/202610100001_publication_workflow_archive.sql` extiende el esquema base descrito arriba. Según confirmación del usuario, fue ejecutada en el proyecto Supabase; no se consultó remotamente para validar el estado actual.
 
 ### Cambios estructurales
 
@@ -533,7 +533,7 @@ La migración correctiva `202610130002_events_inventory_transfer_identity.sql` s
 
 ## 16. Programación de Eventos (`202610150001`)
 
-La migración [`202610150001_events_schedule.sql`](../supabase/migrations/202610150001_events_schedule.sql) implementa la programación del rol `events`. Depende de `profiles`, `has_permission`, `app_permissions`, `role_permissions`, `inventario_sedes` y `campanas`; se aplica después del esquema de autenticación y del inventario. El usuario reportó que la ejecutó desde Supabase SQL Editor. No se recibió una salida de introspección ni `supabase db pull` posterior, por lo que el estado remoto queda **reportado, no verificado independientemente**.
+La migración [`202610150001_events_schedule.sql`](../supabase/archived-migrations/historical/202610150001_events_schedule.sql) implementa la programación del rol `events`. Depende de `profiles`, `has_permission`, `app_permissions`, `role_permissions`, `inventario_sedes` y `campanas`; se aplica después del esquema de autenticación y del inventario. El usuario reportó que la ejecutó desde Supabase SQL Editor. No se recibió una salida de introspección ni `supabase db pull` posterior, por lo que el estado remoto queda **reportado, no verificado independientemente**.
 
 ### Objetos y seguridad
 
@@ -563,9 +563,9 @@ Migraciones de aplicación manual; el equipo reportó aplicarlas. Las RPC de lec
 
 ## 18. Importación histórica de solicitudes de Diseño (`20261026000300`)
 
-[`20261026000300_design_solicitudes_historicas.sql`](../supabase/migrations/20261026000300_design_solicitudes_historicas.sql) registra el SQL proporcionado para importar el histórico de Excel en `public.design_solicitudes_historicas`. Crea la tabla independiente con clave de idempotencia `(import_batch, source_row_number)`, conserva el estado original y `raw_payload`, y habilita lectura para `authenticated` únicamente cuando `public.has_permission('design.requests.read')` lo permite mediante RLS. No modifica tablas ni estados operativos.
+La migración `20261026000300_design_solicitudes_historicas.sql` registra la importación histórica de Excel en `public.design_solicitudes_historicas`, con clave de idempotencia `(import_batch, source_row_number)` y RLS de lectura para `authenticated`. Su SQL contiene filas históricas incrustadas con valores potencialmente sensibles. Se conserva intacto en el worktree local, fuera del conjunto publicado en este commit, y requiere revisión antes de publicarse. No se enlaza aquí a una ruta versionada porque el archivo se excluye temporalmente.
 
-El usuario reporta que este SQL ya se ejecutó en Supabase. Se conserva aquí para historial y reproducibilidad; **no volver a ejecutarlo en la base que ya contiene el lote**. El archivo se incorporó al historial local sin ejecutar el SQL ni verificar el estado remoto.
+El usuario reporta que este SQL ya se ejecutó en Supabase. **No volver a ejecutarlo en una base que ya contiene el lote.** La definición vacía de la tabla sí está incluida en la baseline; excluir el archivo de importación no impide reconstruir el esquema.
 - **`202610180003_internal_task_types.sql`:** amplía el check de `tipo` a `IMPRESION`, `SONIDO_INTERNO`, `REPARACION`, `OTRO` y conserva `INSUMO` y `NECESIDAD` como históricos.
 - **`202610180004_internal_inventory_access.sql`:** concede al rol `internal` los cinco permisos `events.inventory.*`. No cambia RLS ni RPC.
 
@@ -578,10 +578,53 @@ El usuario reporta que este SQL ya se ejecutó en Supabase. Se conserva aquí pa
 ## 19. Correcciones y carga del brief de Eventos (`20261021030127`, `20261021030128`)
 
 - **`20261021030127_fix_postgrest_40001_retry_loop.sql`:** PostgREST 14 reintenta las transacciones que devuelven SQLSTATE `40001`, y las RPC de Interno y Eventos lo usaban para los conflictos de versión optimista, lo que podía crear un bucle de reintentos. Las funciones `update_store_task`, `transition_store_task_status`, `archive_store_task`, `restore_store_task`, `retract_pendiente_design_request` y `retract_evento_design_request` pasan a señalar el conflicto con `PT409` (HTTP 409). Aplicada según el historial remoto confirmado por el usuario.
-- **`20261021030128_event_brief_design_corrections.sql`:** **preparada en el repositorio y pendiente de aplicar.** Admite `EN_CORRECCION` en `diseno_estatus` de `eventos` y `pendientes_tienda`, crea `reserve_evento_brief_upload` (carga del brief opcional de un evento: hasta 10 archivos de 100 MB, solo `service_role`), `request_pendiente_design_correction`, `request_event_design_correction`, `design_reopen_internal_request` y `design_reopen_event_request`, endurece `request_evento_to_design` (instrucciones de al menos 10 caracteres, antes bastaba con que no estuvieran vacías) y redefine `get_design_internal_queue`, `get_design_internal_request`, `get_design_event_queue`, `get_design_event_request`, `save_event_design_config` y `guard_event_design_archive`.
+- **`20261021030128_event_brief_design_corrections.sql`:** su identificador aparece en la última evidencia disponible del historial remoto, aunque no se verificó que el SQL desplegado coincida exactamente con este archivo. Describe cambios para admitir `EN_CORRECCION` en `diseno_estatus` de `eventos` y `pendientes_tienda`, crear RPC de carga/corrección y redefinir varias RPC de Interno y Eventos. La descripción histórica no prueba el estado actual de cada función ni sus grants; consultar §20 antes de diseñar cambios.
 
-### Comprobaciones pendientes
+### Estado de estas comprobaciones históricas
 
-1. Aplicar `20261021030128` y verificar con cuentas reales los permisos y flujos de corrección de Interno y Eventos.
-2. Ejecutar `supabase db pull` y comparar con las migraciones `202610150001` en adelante.
-3. Regenerar `supabase-schema-public.md` y `supabase-schema-public.png` desde la instancia reconciliada: el archivo actual no refleja `evento_drive_uploads` ni las columnas de diseño de `eventos`.
+Las comprobaciones de despliegue enumeradas aquí se anotaron antes de la sincronización del esquema. No las interpretes como instrucciones para ejecutar la migración archivada. La baseline y las limitaciones vigentes se documentan en §20.
+
+## 20. Baseline actual y flujo de migraciones
+
+### Qué representa la baseline
+
+[`20261107015233_production_schema_baseline.sql`](../supabase/migrations/20261107015233_production_schema_baseline.sql) reconstruye la estructura `public` del snapshot schema-only de producción usado para sincronizar la instancia local `kromi-connect`. El snapshot original permanece en el checkout principal bajo `.audit/sync-production/production-schema.sql` (SHA-256 `1176192DC06CE905EF8CC980ECAC470278E7A88D3C1B7E5366B068DA003A852B`); no se copia ni se sobrescribe desde este worktree.
+
+La baseline contiene DDL, funciones, restricciones, índices, triggers, RLS, políticas y permisos. No contiene filas operativas ni datos de seed. La validación aislada reconstruyó 49 tablas, 126 funciones, 55 políticas, 52 índices no asociados a constraints, 17 triggers y 6 enums; las 49 tablas quedaron con RLS habilitado.
+
+La baseline conserva el estado observado, incluida una función cuyo cuerpo referencia `user_has_any_publication_account`. Esa función auxiliar no aparece definida en el snapshot ni en la baseline. No se inventó una definición; por ello, las rutas que dependan de esa referencia requieren una corrección funcional aprobada aparte.
+
+### Destino del historial anterior
+
+- De las 28 versiones históricas registradas en la última evidencia remota, 27 archivos se preservan en [`supabase/archived-migrations/historical/`](../supabase/archived-migrations/historical/). Son documentación del desarrollo histórico y **no forman parte de la ejecución normal**.
+- `20261026000300_design_solicitudes_historicas.sql` se excluye temporalmente del commit porque contiene datos históricos incrustados potencialmente sensibles. Su contenido permanece intacto en el worktree local y requiere revisión antes de publicarse. La tabla y su estructura se reconstruyen desde la baseline, sin cargar esas filas.
+- Las cuatro versiones no registradas en esa evidencia quedan en [`supabase/pending-migrations/`](../supabase/pending-migrations/). “Pendiente” significa preservada para revisión, no aprobada ni segura para ejecutar. Sus objetos se solapan en parte con producción.
+- `supabase/migrations/` contiene la baseline y, en adelante, migraciones incrementales nuevas.
+
+La baseline es un punto de reconstrucción estructural, no una narración completa de cada cambio anterior ni una prueba de qué SQL se ejecutó históricamente.
+
+### Reconstruir una instalación local
+
+Desde el worktree de `kromi-connect`, con Docker disponible:
+
+```bash
+pnpm exec supabase start
+pnpm exec supabase db reset --local --no-seed
+```
+
+`db reset --local --no-seed` borra el contenido de la base **local** y aplica la baseline y migraciones activas. No lo uses si necesitas conservar datos locales. Se omite el seed deliberadamente: `supabase/seed.sql` usa `crypt()` y `gen_salt()` sin calificar y requiere que `pgcrypto` sea visible en el `search_path`; no fue parte de la validación de la baseline. No incluyas el seed dentro de la baseline.
+
+En una instalación nueva, la baseline se registra aplicada al ejecutarse como migración durante el reset; no hace falta `migration repair`. Para una base ya reconstruida cuyo esquema debe preservarse, `supabase migration repair --local --status applied 20261107015233` registra el baseline en el historial sin ejecutar el SQL. Durante esta transición, el historial local anterior se retiró del ledger con `--status reverted` y luego se registró la baseline; ese ajuste tocó solo metadatos de `supabase_migrations.schema_migrations`, no el esquema `public` ni sus filas.
+
+### Crear, probar y desplegar cambios incrementales
+
+1. Confirma el estado del esquema que se va a cambiar; no reutilices SQL de los archivos archivados o pendientes.
+2. Crea una versión nueva con `pnpm exec supabase migration new <nombre-descriptivo>` y escribe solo el delta que falta.
+3. Prueba en la instancia local sincronizada con `pnpm exec supabase migration up --local`; revisa el SQL, objetos, grants, RLS y comportamiento relevante. Para una reconstrucción desde cero usa el comando local de arriba.
+4. Revisa el historial y la diferencia contra el estado de producción antes de cualquier despliegue. Producción recibe solo migraciones nuevas y aprobadas.
+
+La baseline **no está registrada en el historial remoto**. No ejecutes `db push` contra producción hasta completar una transición remota autorizada que registre la baseline como aplicada sin ejecutar su DDL y confirme la compatibilidad del historial remoto antiguo. Esa transición no forma parte de esta tarea.
+
+### Consolidaciones futuras
+
+Crear otra baseline solo cuando exista una razón técnica concreta. Generarla desde un esquema reconciliado, probarla en una instancia aislada, conservar la baseline anterior y todos los archivos históricos fuera de `supabase/migrations/`, y registrar el nuevo punto de partida local sin volver a ejecutar su DDL sobre una base existente. Cualquier cambio de historial remoto requiere autorización separada.

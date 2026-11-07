@@ -54,7 +54,7 @@ Las acciones requieren el permiso correspondiente y alcance sobre las cuentas de
 
 ## Design / Diseñador de publicaciones
 
-**Estado (2026-10-21):** perfil operativo implementado en el repositorio. Atiende tres orígenes (Social Media, Interno y Eventos) en una sola cola, un solo historial y una sola ficha; el historial remoto confirmado por el usuario incluye las migraciones hasta `20261021030127`. `20261021030128` (correcciones de Interno y Eventos) está pendiente de aplicar. Los permisos son `design.posts.*` (Social Media), `design.internal.*` (Interno) y `design.requests.*` (Eventos y cola unificada).
+**Estado documentado:** perfil operativo implementado en el repositorio. Atiende tres orígenes (Social Media, Interno y Eventos) en una sola cola, un solo historial y una sola ficha. La última evidencia disponible del historial remoto incluye `20261021030128`; no verifica que el SQL desplegado coincida exactamente con ese archivo, que ahora está archivado. Los permisos son `design.posts.*` (Social Media), `design.internal.*` (Interno) y `design.requests.*` (Eventos y cola unificada). Ver la [bitácora de migraciones](supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones).
 
 ### Puede hacer
 
@@ -103,7 +103,7 @@ Detalle y fases en [`design/plan-rol-design.md`](design/plan-rol-design.md).
 - Lo usa **una sola persona**. Crea sus pendientes de impresiones, insumos y necesidades por tienda y se los asigna; por ahora no recibe solicitudes de otros.
 - Menú con un solo ítem, **Pendientes** (`/internal/pendientes`), que abre el Mapa; **Listado** y **Archivo** son vistas secundarias. El fondo geográfico se posterga. No usa calendario.
 - Tipos nuevos: **Impresión**, **Sonido interno**, **Reparación** y **Otro**; los pendientes históricos de insumos y necesidades siguen identificados como anteriores. Cualquier pendiente puede guardar brief en Drive (10 archivos, 100 MB cada uno). Con diseño, la fecha de entrega y el límite de brief se calculan a partir de la fecha requerida en tienda; la solicitud exige estado `PENDIENTE`, que pasa a `EN_PROCESO`.
-- Estados del pendiente: `PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`. Estados de la solicitud: `SOLICITADO`, `EN_DISENO`, `ENTREGADO`. La corrección (`EN_CORRECCION`) y la reapertura por Design se añadieron en `20261021030128`, pendiente de aplicar.
+- Estados del pendiente: `PENDIENTE`, `EN_PROCESO`, `LISTO`, `ENTREGADO`, `CANCELADO`. Estados de la solicitud: `SOLICITADO`, `EN_DISENO`, `ENTREGADO`. La corrección (`EN_CORRECCION`) y la reapertura por Design se describieron en `20261021030128`, cuyo identificador figura en la última evidencia de historial; el SQL exacto desplegado no está confirmado.
 - Permisos `internal.store-tasks.*` (Interno) y `design.internal.*` (Design); las solicitudes de Interno aparecen en la cola unificada de Design (`/design/publications`); `/design/internal` redirige allí.
 
 ### Adoptado por defecto, por confirmar
@@ -113,15 +113,15 @@ Con diseño se elige una sola tienda; la casilla viene marcada solo en impresion
 ### Pendiente
 
 - Para una fase posterior: imagen o representación geográfica, fuente, límites y coordenadas verificadas del mapa.
-- Probar con el equipo el ciclo de corrección de piezas una vez aplicada `20261021030128`.
+- Validar con el equipo el ciclo de corrección de piezas; no aplicar el archivo histórico `20261021030128`.
 
 ### Acceso al inventario de Eventos (2026-10-18)
 
-Por decisión del equipo, el Interno tiene **el mismo acceso al inventario que el rol Eventos, sin limitaciones**: consultar, crear, editar y registrar traslados y ajustes, y crear ubicaciones. Los permisos son los cinco `events.inventory.*` (migración `202610180004_internal_inventory_access.sql`, pendiente de aplicar). En su menú aparece el grupo **Eventos › Inventario**, que abre `/events/inventory`; en esa vista el menú conserva **Interno › Pendientes**. No incluye la programación de eventos. Los movimientos quedan a nombre de quien los registra.
+Por decisión del equipo, el Interno tiene **el mismo acceso al inventario que el rol Eventos, sin limitaciones**: consultar, crear, editar y registrar traslados y ajustes, y crear ubicaciones. Los permisos son los cinco `events.inventory.*`, descritos en la migración histórica `202610180004_internal_inventory_access.sql`; su identificador figura en el historial disponible. En su menú aparece el grupo **Eventos › Inventario**, que abre `/events/inventory`; en esa vista el menú conserva **Interno › Pendientes**. No incluye la programación de eventos. Los movimientos quedan a nombre de quien los registra.
 
 ## Eventos: solicitud de diseño (2026-10-21)
 
-Desde la programación (`/events/calendar`), con `events.schedule.design`, un evento puede marcar **Requiere diseño** y capturar formato (digital, impresión o ambos), instrucciones (mínimo 10 caracteres a partir de `20261021030128`) y fecha de entrega (hoy o posterior y no posterior al día del evento). Solo se solicita para eventos activos en `EN_PLANIFICACION` o `PROGRAMADO`. El brief en Drive es opcional (hasta 10 archivos de 100 MB). Puede retirarse mientras esté en `SOLICITADO`, y Design entrega, reabre y recibe correcciones con la misma ficha que los otros orígenes. Ver [`design/plan-eventos-diseno.md`](design/plan-eventos-diseno.md).
+Desde la programación (`/events/calendar`), con `events.schedule.design`, un evento puede marcar **Requiere diseño** y capturar formato (digital, impresión o ambos), instrucciones (mínimo 10 caracteres descritos por la versión histórica `20261021030128`; SQL exacto desplegado no confirmado) y fecha de entrega (hoy o posterior y no posterior al día del evento). Solo se solicita para eventos activos en `EN_PLANIFICACION` o `PROGRAMADO`. El brief en Drive es opcional (hasta 10 archivos de 100 MB). Puede retirarse mientras esté en `SOLICITADO`, y Design entrega, reabre y recibe correcciones con la misma ficha que los otros orígenes. Ver [`design/plan-eventos-diseno.md`](design/plan-eventos-diseno.md).
 
 ## Perfiles por definir
 

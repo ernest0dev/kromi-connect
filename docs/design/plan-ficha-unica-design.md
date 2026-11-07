@@ -162,7 +162,7 @@ Crea la ruta src/app/(dashboard)/design/requests/[source]/[id]/ con page.tsx (se
 
 ```
 Lee docs/design/plan-ficha-unica-design.md (§6, §7) y plan-eventos-diseno.md (§5, §7).
-Mueve el cargador resumible de design/publications/[id]/detail.tsx (líneas 23–78) a src/lib/driveResumableUpload.ts sin cambiar su lógica y úsalo desde un FilesPanel común. Completa Interno con reanudar y cancelar. Para Eventos crea actions/events/drive.ts y la migración con session_uri y las RPC de reserva, tomando como modelo supabase/migrations/202610180002_internal_design_requests.sql. La entrega valida en servidor que el evento no esté cancelado. No apliques migraciones.
+Mueve el cargador resumible de design/publications/[id]/detail.tsx (líneas 23–78) a src/lib/driveResumableUpload.ts sin cambiar su lógica y úsalo desde un FilesPanel común. Completa Interno con reanudar y cancelar. Para Eventos crea actions/events/drive.ts y la migración con session_uri y las RPC de reserva, tomando como modelo supabase/archived-migrations/historical/202610180002_internal_design_requests.sql. La entrega valida en servidor que el evento no esté cancelado. No apliques migraciones.
 ```
 </details>
 

@@ -1,6 +1,6 @@
 # Perfil Eventos: programación y planificación de eventos
 
-**Estado (2026-10-15):** cliente, acciones de servidor y migración están implementados. El usuario reportó haber aplicado `supabase/migrations/202610150001_events_schedule.sql` en Supabase; el repositorio no tiene conexión para verificar el esquema remoto ni sus grants. `pnpm run build` finaliza correctamente. Es el segundo módulo del perfil `events`, junto al [inventario](./plan-inventario-eventos.md). Materiales y patrocinadores son texto libre, la moneda es USD y se usan los umbrales aceptados; el alcance podrá ampliarse con observaciones de las personas usuarias.
+**Estado (2026-10-15):** cliente, acciones de servidor y migración están implementados. El usuario reportó haber aplicado `supabase/archived-migrations/historical/202610150001_events_schedule.sql` en Supabase; el repositorio no tiene conexión para verificar el esquema remoto ni sus grants. `pnpm run build` finaliza correctamente. Es el segundo módulo del perfil `events`, junto al [inventario](./plan-inventario-eventos.md). Materiales y patrocinadores son texto libre, la moneda es USD y se usan los umbrales aceptados; el alcance podrá ampliarse con observaciones de las personas usuarias.
 **Alcance:** rol `events`, calendario en `/events/calendar` con sub vistas `/events/calendar/list` y `/events/calendar/archive`; inventario se mantiene como módulo separado en `/events/inventory`.
 **Diseño de UI:** lienzo de diseño "Eventos · Programación", copiado en [`prototypes/events-schedule/`](./prototypes/events-schedule) (ver §9); implementación local alineada a las pantallas y flujos.
 **Documentos relacionados:** [`plan-inventario-eventos.md`](./plan-inventario-eventos.md), [`perfiles-de-usuario.md`](../perfiles-de-usuario.md), [`kromi-connect-srs.md`](../kromi-connect-srs.md) §7, [`supabase-db-migration.md`](../supabase-db-migration.md).
@@ -186,7 +186,7 @@ El estado automático debe ser correcto aunque no corra ninguna tarea programada
 
 ## 6. Modelo de datos propuesto
 
-Migración: [`supabase/migrations/202610150001_events_schedule.sql`](../../supabase/migrations/202610150001_events_schedule.sql) (el usuario reportó que la aplicó en remoto; falta verificar mediante introspección/`supabase db pull`). Escritura solo por RPC `SECURITY DEFINER` con `search_path=''`; RLS de lectura y sin grants de escritura directa a `anon` ni `authenticated`, igual que el inventario.
+Migración: [`supabase/archived-migrations/historical/202610150001_events_schedule.sql`](../../supabase/archived-migrations/historical/202610150001_events_schedule.sql) (el usuario reportó que la aplicó en remoto; falta verificar mediante introspección/`supabase db pull`). Escritura solo por RPC `SECURITY DEFINER` con `search_path=''`; RLS de lectura y sin grants de escritura directa a `anon` ni `authenticated`, igual que el inventario.
 
 | Tabla | Contenido |
 |---|---|

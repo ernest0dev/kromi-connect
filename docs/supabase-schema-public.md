@@ -1,3 +1,5 @@
+> **Baseline:** el estado estructural de producción con el que se sincronizó local está representado por [`20261107015233_production_schema_baseline.sql`](../supabase/migrations/20261107015233_production_schema_baseline.sql). La baseline y las limitaciones de verificación están explicadas en [la bitácora de migraciones](supabase-db-migration.md#20-baseline-actual-y-flujo-de-migraciones). Las migraciones históricas archivadas no se ejecutan como parte de una reconstrucción normal.
+
 ## Table `campanas`
 
 ### Columns
