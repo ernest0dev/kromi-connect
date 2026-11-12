@@ -57,15 +57,15 @@ class DesignImportSimulationTests(unittest.TestCase):
         row["Nombre de arte/flyer"] = "Solicitud de prueba"
         row["Responsble"] = "Nombre privado de prueba"
         row["Dirección de correo electrónico"] = "privado@example.invalid"
-        with tempfile.NamedTemporaryFile() as workbook:
-            workbook.write(b"synthetic fixture")
-            workbook.flush()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workbook_path = Path(temp_dir) / "fixture.xlsx"
+            workbook_path.write_bytes(b"synthetic fixture")
             with patch.object(
                 simulate_import,
                 "read_workbook",
                 return_value=(list(simulate_import.EXPECTED_HEADERS), [row], [2]),
             ):
-                report = simulate_import.simulate(Path(workbook.name))
+                report = simulate_import.simulate(workbook_path)
 
         self.assertEqual(report["filas_origen"], 1)
         self.assertEqual(sum(report["resultados"].values()), 1)
@@ -178,7 +178,9 @@ class DesignImportSimulationTests(unittest.TestCase):
                 return [{"id": "00000000-0000-0000-0000-000000000001"}]
             self.fail(f"Unexpected mocked request: {method} {resource}")
 
-        with tempfile.NamedTemporaryFile(suffix=".xlsx") as workbook:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            workbook_path = Path(temp_dir) / "fixture.xlsx"
+            workbook_path.write_bytes(b"synthetic fixture")
             with (
                 patch.dict("os.environ", {
                     "NEXT_PUBLIC_SUPABASE_URL": "https://example.invalid",
@@ -193,7 +195,7 @@ class DesignImportSimulationTests(unittest.TestCase):
                 ),
             ):
                 client_class.return_value.request.side_effect = respond
-                report = import_requests.run_import(Path(workbook.name), str(uuid.uuid4()))
+                report = import_requests.run_import(workbook_path, str(uuid.uuid4()))
 
         self.assertEqual(report["estado"], "COMPLETADO")
         rpc_call = next(
