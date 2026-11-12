@@ -7,14 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit --incremental false",
     "supabase:start": "supabase start",
     "supabase:reset": "supabase db reset",
     "supabase:status": "supabase status",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
-    "test:integration": "NODE_OPTIONS=--experimental-vm-modules jest tests/integration",
-    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
+    "test:integration": "jest --config jest.integration.config.js --runInBand",
+    "test": "jest --runInBand"
   },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",

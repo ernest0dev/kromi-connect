@@ -54,12 +54,26 @@ function makePageSupabase(
   });
   const builder = {
     select: jest.fn(),
+    in: jest.fn(),
     order: jest.fn(),
     range: jest.fn(async (start: number) => start === 0 ? legacyResult : { data: [], error: null }),
   };
+  const generalHistoryBuilder = {
+    select: jest.fn(),
+    in: jest.fn(),
+    order: jest.fn(),
+    range: jest.fn(async () => ({ data: [], error: null })),
+  };
   builder.select.mockReturnValue(builder);
   builder.order.mockReturnValue(builder);
-  const supabase = { rpc, from: jest.fn(() => builder) };
+  builder.in.mockReturnValue(builder);
+  generalHistoryBuilder.select.mockReturnValue(generalHistoryBuilder);
+  generalHistoryBuilder.in.mockReturnValue(generalHistoryBuilder);
+  generalHistoryBuilder.order.mockReturnValue(generalHistoryBuilder);
+  const supabase = {
+    rpc,
+    from: jest.fn((table: string) => table === 'general_design_requests' ? generalHistoryBuilder : builder),
+  };
   mockRequirePermission.mockResolvedValue({ supabase } as unknown as Awaited<ReturnType<typeof requirePermission>>);
   return { rpc, builder, supabase };
 }
