@@ -3,13 +3,13 @@
 import React, { useEffect, useMemo, useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { EstatusEnum, PublicacionConCuentas, SocialAccountOption } from "@/types";
-import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
-import type { Efemeride } from "@/app/actions/efemerides/efemerides";
-import { getCampaignsForGridMonthAction } from "@/app/actions/campanas/campaigns";
+import { getEfemeridesByYearAction } from "@/modules/social-media/actions";
+import type { Efemeride } from "@/modules/social-media";
+import { getCampaignsForGridMonthAction } from "@/modules/social-media/actions";
 import type {
   CampanaGrid,
   CampanaPublicacionGrid,
-} from "@/app/actions/campanas/campaigns";
+} from "@/modules/social-media";
 import NewTicketModal from "../components/NewTicketModal";
 import { useGridState } from "./hooks/useGridState";
 import { useTicketMutations } from "./hooks/useTicketMutations";

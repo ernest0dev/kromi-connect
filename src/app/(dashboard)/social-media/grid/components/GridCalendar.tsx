@@ -2,8 +2,7 @@
 
 import { useMemo } from 'react';
 import { Publicacion } from '@/types';
-import type { Efemeride } from '@/app/actions/efemerides/efemerides';
-import type { CampanaGrid } from '@/app/actions/campanas/campaigns';
+import type { Efemeride, CampanaGrid } from '@/modules/social-media';
 import { generateCalendarDays, getTodayIso, CalendarDay } from '../utils/date';
 import { GridCalendarProps } from '../types/grid';
 import { GridCell } from './GridCell';

@@ -3,7 +3,7 @@
 import { FormEvent, ReactNode, CSSProperties, useId, useState, useTransition } from 'react';
 import { Loader2, X } from 'lucide-react';
 import { EstatusEnum, FormatoEnum, PublicacionConCuentas, SocialAccountOption } from '@/types';
-import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
+import type { CampanaPublicacionGrid } from '@/modules/social-media';
 import { editPublicacionAction, EditPublicacionInput } from '@/app/actions/publicaciones/edit';
 import { ESTATUS_STYLE, FORMATO_LABEL_UPPER, getEstatusLabel, getFormatoDisplayLabel } from '../utils/constants';
 import { ContentCategorySelector } from './ContentCategorySelector';

@@ -1,6 +1,5 @@
 import { Publicacion, PublicacionConCuentas, FormatoEnum, EstatusEnum, SocialAccountOption } from '@/types';
-import type { Efemeride } from '@/app/actions/efemerides/efemerides';
-import type { CampanaGrid } from '@/app/actions/campanas/campaigns';
+import type { Efemeride, CampanaGrid } from '@/modules/social-media';
 import type { DragEvent } from 'react';
 
 export interface GridCellProps {

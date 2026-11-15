@@ -1,7 +1,7 @@
 import React from "react";
-import CampaignsClientView from "./CampaignsClientView";
+import { CampaignsClientView } from "@/modules/social-media";
 import { requirePermission } from "@/lib/auth/dal";
-import { getCampaignsAction } from "@/app/actions/campanas/campaigns";
+import { getCampaignsAction } from "@/modules/social-media/actions";
 
 export const revalidate = 0;
 

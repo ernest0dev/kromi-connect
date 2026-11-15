@@ -9,10 +9,11 @@ import {
   getCampaignsAction,
   saveCampaignEvaluationAction,
   updateCampaignStatusAction,
-} from "@/app/actions/campanas/campaigns";
-import { getEfemeridesInYearRangeAction } from "@/app/actions/efemerides/efemerides";
-import type { Campana, CampanaEstatus, EfemerideCampana } from "@/app/actions/campanas/campaigns";
+  getEfemeridesInYearRangeAction,
+} from "@/modules/social-media/actions";
+import type { Campana, CampanaEstatus, EfemerideCampana } from "@/modules/social-media";
 import type { TipoCampanaEnum } from "@/types/enums";
+import { getEfemeridesRangeKey, getEfemeridesRangeView, type EfemerideRangeResult } from "../efemeridesRange";
 import { Archive, CalendarDays, ChartNoAxesCombined, Pencil, Plus, RotateCcw } from "lucide-react";
 
 interface Props { campanasIniciales: Campana[] }
@@ -60,49 +61,50 @@ export default function CampaignsClientView({ campanasIniciales }: Props) {
   const [evaluationCampaign, setEvaluationCampaign] = useState<Campana | null>(null);
   const [form, setForm] = useState(emptyCampaignForm);
   const [evaluationForm, setEvaluationForm] = useState(emptyEvaluationForm);
-  const [efemeridesOptions, setEfemeridesOptions] = useState<EfemerideCampana[]>([]);
+  const [efemeridesRangeResult, setEfemeridesRangeResult] = useState<EfemerideRangeResult<EfemerideCampana> | null>(null);
   const [efemeridesConocidas, setEfemeridesConocidas] = useState<EfemerideCampana[]>(() =>
     campanasIniciales.flatMap((campaign) => campaign.efemerides || [])
   );
-  const [loadingEfemerides, setLoadingEfemerides] = useState(false);
-  const [efemeridesLoadError, setEfemeridesLoadError] = useState("");
   const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
   const [error, setError] = useState("");
   const [isPending, startTransition] = useTransition();
+  const [isEfemeridesRequestPending, startEfemeridesTransition] = useTransition();
+  const efemeridesRangeKey = getEfemeridesRangeKey(form.tipo_campana, form.fecha_inicio, form.fecha_fin);
+  const efemeridesStartYear = Number(form.fecha_inicio.slice(0, 4));
+  const efemeridesEndYear = Number(form.fecha_fin.slice(0, 4));
   useEffect(() => {
-    if (form.tipo_campana !== "EFEMERIDE") {
-      setEfemeridesOptions([]);
-      setEfemeridesLoadError("");
-      setLoadingEfemerides(false);
-      return;
-    }
-    const startYear = Number(form.fecha_inicio.slice(0, 4));
-    const endYear = Number(form.fecha_fin.slice(0, 4));
-    if (!form.fecha_inicio || !form.fecha_fin || !Number.isInteger(startYear) || !Number.isInteger(endYear) || endYear < startYear) {
-      setEfemeridesOptions([]);
-      setLoadingEfemerides(false);
-      return;
-    }
+    if (!efemeridesRangeKey) return;
     let active = true;
-    setLoadingEfemerides(true);
-    setEfemeridesLoadError("");
-    getEfemeridesInYearRangeAction(startYear, endYear).then((result) => {
-      if (!active) return;
-      setEfemeridesOptions(result.data as EfemerideCampana[]);
-      setEfemeridesConocidas((current) => {
-        const byId = new Map(current.map((efemeride) => [efemeride.id, efemeride]));
-        for (const efemeride of result.data) byId.set(efemeride.id, efemeride as EfemerideCampana);
-        return [...byId.values()];
-      });
-      if (!result.success) setEfemeridesLoadError(result.error || "No se pudieron cargar las efemérides.");
-      setLoadingEfemerides(false);
-    }).catch((loadError: unknown) => {
-      if (!active) return;
-      setEfemeridesLoadError(loadError instanceof Error ? loadError.message : "No se pudieron cargar las efemérides.");
-      setLoadingEfemerides(false);
+    startEfemeridesTransition(async () => {
+      try {
+        const result = await getEfemeridesInYearRangeAction(efemeridesStartYear, efemeridesEndYear);
+        if (!active) return;
+        setEfemeridesRangeResult({
+          key: efemeridesRangeKey,
+          options: result.data as EfemerideCampana[],
+          error: result.success ? "" : result.error || "No se pudieron cargar las efemérides.",
+        });
+        setEfemeridesConocidas((current) => {
+          const byId = new Map(current.map((efemeride) => [efemeride.id, efemeride]));
+          for (const efemeride of result.data) byId.set(efemeride.id, efemeride as EfemerideCampana);
+          return [...byId.values()];
+        });
+      } catch (loadError: unknown) {
+        if (!active) return;
+        setEfemeridesRangeResult({
+          key: efemeridesRangeKey,
+          options: [],
+          error: loadError instanceof Error ? loadError.message : "No se pudieron cargar las efemérides.",
+        });
+      }
     });
     return () => { active = false; };
-  }, [form.tipo_campana, form.fecha_inicio, form.fecha_fin]);
+  }, [efemeridesRangeKey, efemeridesStartYear, efemeridesEndYear]);
+  const efemeridesRangeView = getEfemeridesRangeView(
+    efemeridesRangeKey,
+    efemeridesRangeResult,
+    isEfemeridesRequestPending,
+  );
   const activeCampaigns = campanas.filter((campaign) => campaign.estatus !== "ARCHIVADA");
   const archivedCampaigns = campanas.filter((campaign) => campaign.estatus === "ARCHIVADA");
   const activeCount = activeCampaigns.filter((campaign) => campaign.estatus === "ACTIVA").length;
@@ -138,16 +140,19 @@ export default function CampaignsClientView({ campanasIniciales }: Props) {
     });
   };
 
-  const efemeridesVisibles = [
-    ...efemeridesOptions,
+  const efemeridesVisibles = efemeridesRangeKey ? [
+    ...efemeridesRangeView.options,
     ...efemeridesConocidas.filter((efemeride) =>
       form.efemeride_ids.includes(efemeride.id) &&
-      !efemeridesOptions.some((option) => option.id === efemeride.id)
+      !efemeridesRangeView.options.some((option) => option.id === efemeride.id)
     ),
-  ];
+  ] : [];
+  const isLoadingEfemerides = efemeridesRangeView.loading;
+  const visibleEfemeridesError = efemeridesRangeView.error;
 
   const openCreate = () => {
     setError("");
+    setEfemeridesRangeResult(null);
     setEditingCampaign(null);
     setForm(emptyCampaignForm());
     setShowCreateModal(true);
@@ -155,6 +160,7 @@ export default function CampaignsClientView({ campanasIniciales }: Props) {
 
   const openEdit = (campaign: Campana) => {
     setError("");
+    setEfemeridesRangeResult(null);
     setEditingCampaign(campaign);
     setForm({
       nombre: campaign.nombre,
@@ -332,20 +338,27 @@ export default function CampaignsClientView({ campanasIniciales }: Props) {
             <div className="campaign-form-row">
               <label>Categoría<select required value={form.tipo_campana} onChange={(event) => {
                 const tipo = event.target.value as TipoCampanaEnum;
+                setEfemeridesRangeResult(null);
                 setForm({ ...form, tipo_campana: tipo, confirmar_desvinculacion: false });
               }} className={inputClass}>{CATEGORIAS.map((category) => <option key={category.value} value={category.value}>{category.label}</option>)}</select></label>
               <label>Presupuesto (USD)<input type="number" min="0" step="0.01" value={form.presupuesto} onChange={(event) => setForm({ ...form, presupuesto: event.target.value })} className={inputClass} placeholder="0.00" /></label>
             </div>
             <div className="campaign-form-row">
-              <label>Fecha de inicio<input type="date" required value={form.fecha_inicio} onChange={(event) => setForm({ ...form, fecha_inicio: event.target.value })} className={inputClass} /></label>
-              <label>Fecha de fin<input type="date" required min={form.fecha_inicio || undefined} value={form.fecha_fin} onChange={(event) => setForm({ ...form, fecha_fin: event.target.value })} className={inputClass} /></label>
+              <label>Fecha de inicio<input type="date" required value={form.fecha_inicio} onChange={(event) => {
+                setEfemeridesRangeResult(null);
+                setForm({ ...form, fecha_inicio: event.target.value });
+              }} className={inputClass} /></label>
+              <label>Fecha de fin<input type="date" required min={form.fecha_inicio || undefined} value={form.fecha_fin} onChange={(event) => {
+                setEfemeridesRangeResult(null);
+                setForm({ ...form, fecha_fin: event.target.value });
+              }} className={inputClass} /></label>
             </div>
             {form.tipo_campana === "EFEMERIDE" && <section className="campaign-form-full space-y-2 rounded-lg border border-slate-700 bg-slate-800/60 p-3" aria-label="Efemérides asociadas">
               <div>
                 <h4 className="text-xs font-bold text-slate-100">Efemérides vinculadas</h4>
                 <p className="mt-1 text-[11px] text-slate-400">Se muestran las efemérides de los años que abarca esta campaña. Puedes elegir varias.</p>
               </div>
-              {!form.fecha_inicio || !form.fecha_fin ? <p className="text-[11px] text-amber-300">Indica primero las fechas de la campaña.</p> : loadingEfemerides ? <p role="status" className="text-[11px] text-slate-400">Cargando efemérides…</p> : efemeridesLoadError ? <p role="alert" className="text-[11px] text-rose-300">{efemeridesLoadError}</p> : efemeridesVisibles.length === 0 ? <p className="text-[11px] text-slate-400">No hay efemérides registradas para esos años.</p> : (
+              {!form.fecha_inicio || !form.fecha_fin ? <p className="text-[11px] text-amber-300">Indica primero las fechas de la campaña.</p> : isLoadingEfemerides ? <p role="status" className="text-[11px] text-slate-400">Cargando efemérides…</p> : visibleEfemeridesError ? <p role="alert" className="text-[11px] text-rose-300">{visibleEfemeridesError}</p> : efemeridesVisibles.length === 0 ? <p className="text-[11px] text-slate-400">No hay efemérides registradas para esos años.</p> : (
                 <div className="max-h-48 space-y-1 overflow-y-auto">
                   {efemeridesVisibles.map((efemeride) => {
                     const selected = form.efemeride_ids.includes(efemeride.id);
