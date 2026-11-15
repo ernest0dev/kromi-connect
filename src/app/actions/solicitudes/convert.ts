@@ -17,8 +17,8 @@ export async function getRequestsAction() {
 
     if (error) return { success: false, error: error.message, data: [] };
     return { success: true, data };
-  } catch (err: any) {
-    return { success: false, error: err.message, data: [] };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : 'Error desconocido.', data: [] };
   }
 }
 
@@ -94,7 +94,7 @@ export async function processRequestAction(
     revalidatePath("/social-media/grid");
 
     return { success: true, data: nuevaPublicacion };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : 'Error desconocido.' };
   }
 }

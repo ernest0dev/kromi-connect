@@ -25,7 +25,7 @@ export default async function DesignPublicationsPage() {
     publicationIds.length ? supabase.rpc('get_publication_designer_names', { p_ids: publicationIds }) : Promise.resolve({ data: [], error: null }),
     internalIds.length ? supabase.rpc('get_pendiente_designer_names', { p_ids: internalIds }) : Promise.resolve({ data: [], error: null }),
   ]);
-  const { data: generalRequests, error: generalError } = await (supabase as any).from('general_design_requests')
+  const { data: generalRequests, error: generalError } = await supabase.from('general_design_requests')
     .select('id,title,design_type,design_type_other,required_date,status,department,created_at,updated_at,requester_id,requester_role,designer_id,started_at,delivered_at,priority,categories,scopes,instructions')
     .in('status', ['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION']).order('required_date', { ascending: true });
   if (generalError) throw new Error('No se pudieron cargar las solicitudes generales de Diseño.');
@@ -39,7 +39,7 @@ export default async function DesignPublicationsPage() {
     ...publications.map((row) => ({ ...adaptPublication(row, channels[row.id] ?? []), designer_name: publicationNames[row.id] ?? null })),
     ...internal.map((row) => ({ ...adaptInternal(row), designer_name: internalNames[row.disenador_id ?? ''] ?? null })),
     ...(eventResult.data ?? []).map((row) => adaptEvent(row)),
-    ...(generalRequests ?? []).map((row: Record<string, unknown>) => adaptGeneralRequest(row)),
+    ...(generalRequests ?? []).map((row) => adaptGeneralRequest(row)),
   ]);
   return <main className="mx-auto w-full max-w-[1100px] space-y-6 px-4 py-6 text-[#10233F] sm:px-6 sm:py-8">
     <DesignWorkspaceNav active="queue" />

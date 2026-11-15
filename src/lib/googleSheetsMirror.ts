@@ -271,21 +271,13 @@ async function getOperationalHistoryRows() {
 
 async function getLegacyHistoryRows() {
   const admin = getSupabaseAdmin();
-  const columns = [
-    'id', 'import_batch', 'source_row_number', 'title', 'source_timestamp', 'due_date',
-    'designer_name_raw', 'requester_name_raw', 'department_raw', 'area_raw', 'priority_raw',
-    'status_raw', 'completed_at', 'objective', 'publication_request', 'print_request',
-    'medium_raw', 'design_quantity_raw', 'pieces_quantity_raw', 'material', 'dimensions',
-    'reference_url', 'review_required', 'review_reasons', 'imported_at',
-  ].join(',');
-  const legacyTable = (admin as any).from('design_solicitudes_historicas');
-  const result = await legacyTable
-    .select(columns)
+  const result = await admin.from('design_solicitudes_historicas')
+    .select('id,import_batch,source_row_number,title,source_timestamp,due_date,designer_name_raw,requester_name_raw,department_raw,area_raw,priority_raw,status_raw,completed_at,objective,publication_request,print_request,medium_raw,design_quantity_raw,pieces_quantity_raw,material,dimensions,reference_url,review_required,review_reasons,imported_at')
     .order('source_timestamp', { ascending: false, nullsFirst: false })
     .order('id', { ascending: true });
   if (result.error) throw new Error(`No se pudo leer el histórico Excel: ${result.error.message}`);
   const rows: Cell[][] = [row(MANAGED_SHEETS[2].headers)];
-  rows.push(...(result.data ?? []).map((item: Record<string, unknown>) => row([
+  rows.push(...(result.data ?? []).map((item) => row([
     item.id, item.import_batch, item.source_row_number, item.title, item.source_timestamp, item.due_date,
     item.designer_name_raw, item.requester_name_raw, item.department_raw, item.area_raw, item.priority_raw,
     item.status_raw, item.completed_at, item.objective, item.publication_request, item.print_request,

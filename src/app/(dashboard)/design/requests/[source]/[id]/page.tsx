@@ -23,12 +23,12 @@ export default async function DesignRequestPage({ params }: { params: Promise<{ 
     const [{ data: canManage }, { data: canReadOwn }, { data: row, error }] = await Promise.all([
       supabase.rpc('has_permission', { required_permission: 'design.requests.read' }),
       supabase.rpc('has_permission', { required_permission: 'requests.general.read-own' }),
-      (supabase as any).from('general_design_requests').select('*').eq('id', id).maybeSingle(),
+      supabase.from('general_design_requests').select('*').eq('id', id).maybeSingle(),
     ]);
     if (error || !row || (row.requester_id !== user.id && canManage !== true) || (row.requester_id === user.id && canReadOwn !== true)) notFound();
     const [{ data: history }, { data: cancellations }, { data: designerProfile }, { data: requesterProfile }] = await Promise.all([
-      (supabase as any).from('general_design_request_history').select('id,action,detail,created_at').eq('request_id', id).order('created_at', { ascending: true }),
-      (supabase as any).from('general_design_cancellations').select('id,reason,status,review_note,created_at').eq('request_id', id).order('created_at', { ascending: false }),
+      supabase.from('general_design_request_history').select('id,action,detail,created_at').eq('request_id', id).order('created_at', { ascending: true }),
+      supabase.from('general_design_cancellations').select('id,reason,status,review_note,created_at').eq('request_id', id).order('created_at', { ascending: false }),
       row.designer_id ? getSupabaseAdmin().from('profiles').select('full_name').eq('user_id', row.designer_id).maybeSingle() : Promise.resolve({ data: null }),
       getSupabaseAdmin().from('profiles').select('full_name').eq('user_id', row.requester_id).maybeSingle(),
     ]);

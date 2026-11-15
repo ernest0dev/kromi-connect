@@ -152,7 +152,7 @@ export default function ThirdPartiesClientView({ tercerosIniciales }: Props) {
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        tipo: e.target.value as any,
+                        tipo: e.target.value as typeof form.tipo,
                       })
                     }
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white"
