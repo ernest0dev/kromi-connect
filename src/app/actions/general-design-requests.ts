@@ -6,11 +6,12 @@ import { createDriveResumableSession, ensureDriveChildFolder, ensureGeneralReque
 import { getSupabaseAdmin } from '@/lib/supabaseClient';
 import { getDriveFileRule } from '@/lib/driveFileRules';
 import { getCaracasToday } from '@/lib/designSla';
+import { listSedesActivas } from '@/lib/sedes';
 
 const UUID = /^[0-9a-f-]{36}$/i;
 
 const CATEGORIES = ['Carnicería', 'Charcutería', 'Pescadería', 'Víveres', 'Panadería', 'Farmacia', 'Eventos', 'Otros'];
-const SCOPES = ['Prebo', 'Mañongo', 'Trigal Sur', 'Trigal Norte', 'Guataparo', 'Castillito', 'San Felipe', 'Online'];
+const ONLINE_SCOPE = 'Online';
 const DEPARTMENTS = ['Mercadeo', 'Operaciones', 'Capital Humano', 'Selección', 'Compras', 'Farmacia', 'Ventas Online'];
 
 export async function createGeneralDesignRequestAction(input: {
@@ -29,7 +30,18 @@ export async function createGeneralDesignRequestAction(input: {
   if (input.designType === 'OTHER' && (!input.otherType?.trim() || input.otherType.trim().length > 120)) return { success: false as const, error: 'Describe el tipo de diseño (hasta 120 caracteres).' };
   if (!Number.isFinite(date.getTime()) || date.toISOString().slice(0, 10) !== input.requiredDate) return { success: false as const, error: 'Indica una fecha válida.' };
   if (input.requiredDate < getCaracasToday()) return { success: false as const, error: 'La fecha requerida no puede estar en el pasado (zona horaria de Caracas).' };
-  if (!DEPARTMENTS.includes(input.department) || input.categories.some((item) => !CATEGORIES.includes(item)) || input.scopes.some((item) => !SCOPES.includes(item))) return { success: false as const, error: 'Hay opciones de catálogo no válidas.' };
+  let activeScopes = new Set<string>([ONLINE_SCOPE]);
+  if (input.scopes.some((scope) => scope !== ONLINE_SCOPE)) {
+    // social-media lacks events.inventory.read in the local grants. Its admin
+    // fallback is reached only after authorizeAction and the role check above.
+    const sedesResult = profile.role_code === 'social-media'
+      ? await listSedesActivas()
+      : await listSedesActivas(supabase);
+    const { data: sedes, error: sedesError } = sedesResult;
+    if (sedesError) return { success: false as const, error: 'No se pudieron validar las sedes seleccionadas.' };
+    activeScopes = new Set([ONLINE_SCOPE, ...(sedes ?? []).map((sede) => sede.nombre)]);
+  }
+  if (!DEPARTMENTS.includes(input.department) || input.categories.some((item) => !CATEGORIES.includes(item)) || input.scopes.some((item) => !activeScopes.has(item))) return { success: false as const, error: 'Hay opciones de catálogo no válidas.' };
   const { data, error } = await (supabase as any).from('general_design_requests').insert({
     title, design_type: input.designType, design_type_other: input.designType === 'OTHER' ? input.otherType?.trim() : null,
     instructions, categories: input.categories, scopes: input.scopes, department: input.department,

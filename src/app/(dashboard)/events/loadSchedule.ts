@@ -1,5 +1,6 @@
 import { requirePermission } from '@/lib/auth/dal';
 import { getCalendarRange, parseEventQuery } from '@/lib/events';
+import { listSedesActivas } from '@/lib/sedes';
 import type { EventoPermisos, EventoRow } from '@/types';
 
 export type ScheduleMode = 'month' | 'week' | 'list' | 'archive';
@@ -10,7 +11,7 @@ export async function loadSchedule(searchParams: EventSearchParams, mode: Schedu
   const raw = await searchParams;
   const filters = parseEventQuery(raw);
   const [sedesResult, peopleResult, campaignsResult, ...permissionResults] = await Promise.all([
-    supabase.from('inventario_sedes').select('id, codigo, nombre, orden').eq('activa', true).order('orden'),
+    listSedesActivas(supabase),
     supabase.rpc('list_event_responsables'),
     supabase.rpc('list_event_campaigns'),
     supabase.rpc('has_permission', { required_permission: 'events.schedule.create' }),
@@ -20,20 +21,28 @@ export async function loadSchedule(searchParams: EventSearchParams, mode: Schedu
     supabase.rpc('has_permission', { required_permission: 'events.schedule.design' }),
   ]);
   const sedes = sedesResult.data ?? [];
-  const sede = sedes.find((s) => s.id === filters.sede || s.codigo.toLowerCase() === filters.sede.toLowerCase());
+  const requestedSede = filters.sede.trim();
+  const sede = requestedSede
+    ? sedes.find((item) => item.id.toLowerCase() === requestedSede.toLowerCase()
+      || item.codigo.toLowerCase() === requestedSede.toLowerCase()) ?? null
+    : null;
+  const invalidSedeFilter = Boolean(filters.sede) && (Boolean(sedesResult.error) || !sede);
   const normalizedFilters = { ...filters, sede: sede?.id ?? '' };
   const archivados = mode === 'archive';
   const isCalendar = mode === 'month' || mode === 'week';
   const range = isCalendar ? getCalendarRange(filters.fecha, mode === 'week') : null;
   const pDesde = range?.from.toISOString();
   const pHasta = range?.to.toISOString();
-  const { data, error } = await supabase.rpc('list_events', {
+  const eventsResult = invalidSedeFilter ? null : await supabase.rpc('list_events', {
     p_desde: pDesde, p_hasta: pHasta, p_sede_id: sede?.id,
     p_estatus: filters.estatus || undefined, p_tipo: filters.tipo || undefined, p_origen: filters.origen || undefined,
     p_search: filters.q || undefined, p_archivados: archivados,
     p_dir: 'asc', p_limit: isCalendar ? 500 : 100, p_offset: isCalendar ? 0 : (filters.page - 1) * 100,
   });
+  const data = eventsResult?.data ?? null;
+  const error = eventsResult?.error ?? null;
   let errorMessage: string | null = error ? `No se pudo cargar la programación: ${error.message}` : null;
+  if (filters.sede && !sedesResult.error && !sede) errorMessage ??= 'La sede seleccionada no existe o no está activa.';
   if (sedesResult.error) errorMessage ??= 'No se pudieron cargar las tiendas. Verifica que la migración del inventario esté aplicada.';
   if (peopleResult.error) errorMessage ??= 'No se pudieron cargar las personas responsables.';
   if (campaignsResult.error) errorMessage ??= 'No se pudieron cargar las campañas.';
