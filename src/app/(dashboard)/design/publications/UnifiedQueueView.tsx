@@ -12,7 +12,7 @@ import { DesignStatusBadge, DueBadge, OriginChip } from '../components/DesignBad
 
 const IN_PROGRESS_STATUSES: DesignStatus[] = ['IN_PROGRESS', 'NEEDS_CHANGES'];
 
-export function UnifiedQueueView({ requests, userId, today }: { requests: DesignRequest[]; userId: string; today: string }) {
+export function UnifiedQueueView({ requests, userId, today, canStartGeneral }: { requests: DesignRequest[]; userId: string; today: string; canStartGeneral: boolean }) {
   const router = useRouter();
   const [source, setSource] = useState<'ALL' | DesignSource>('ALL');
   const [mine, setMine] = useState(false);
@@ -61,7 +61,7 @@ export function UnifiedQueueView({ requests, userId, today }: { requests: Design
         <DueBadge estimate={request.target_date} today={today}/>
       </div>
       <div className="sm:justify-self-end">
-        {request.design_status === 'REQUESTED'
+        {request.design_status === 'REQUESTED' && (request.source !== 'GENERAL' || canStartGeneral)
           ? <button type="button" disabled={busy} onClick={() => take(request)} className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-[#0066D2] bg-[#0066D2] px-4 text-sm font-semibold text-white transition hover:bg-[#002F80] disabled:cursor-wait disabled:opacity-60 sm:w-auto">{busy ? 'Abriendo…' : 'Tomar y abrir'}</button>
           : <Link href={designRequestHref(request)} className={`inline-flex min-h-11 w-full items-center justify-center rounded-lg px-4 text-sm font-semibold transition sm:w-auto ${primaryAction ? 'border border-[#0066D2] bg-[#0066D2] text-white hover:bg-[#002F80]' : 'border border-[#C9C3B6] bg-white text-[#10233F] hover:bg-[#F7F5F0]'}`}>{primaryAction ? 'Ver correcciones' : 'Abrir ficha'}</Link>}
       </div>

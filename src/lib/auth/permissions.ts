@@ -32,3 +32,11 @@ export type AppPermission =
   | `management.${string}`
   | `access.${string}`
   | `requests.${string}`;
+
+export const DESIGN_GENERAL_PERMISSIONS = [
+  "design.general.start",
+  "design.general.deliver",
+  "design.general.deliverable.upload",
+  "design.general.priority.update",
+  "design.general.cancellation.resolve",
+] as const satisfies readonly AppPermission[];

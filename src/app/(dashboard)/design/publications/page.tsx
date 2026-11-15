@@ -8,7 +8,8 @@ export const revalidate = 0;
 
 export default async function DesignPublicationsPage() {
   const { supabase, user } = await requirePermission('design.requests.read');
-  const [publicationResult, internalResult, eventResult] = await Promise.all([
+  const [{ data: canStartGeneral }, publicationResult, internalResult, eventResult] = await Promise.all([
+    supabase.rpc('has_permission', { required_permission: 'design.general.start' }),
     supabase.rpc('get_design_publication_queue'),
     supabase.rpc('get_design_internal_queue'),
     supabase.rpc('get_design_event_queue'),
@@ -44,6 +45,6 @@ export default async function DesignPublicationsPage() {
   return <main className="mx-auto w-full max-w-[1100px] space-y-6 px-4 py-6 text-[#10233F] sm:px-6 sm:py-8">
     <DesignWorkspaceNav active="queue" />
     <header><p className="text-[11px] font-bold uppercase tracking-[0.08em] text-[#0066D2]">Diseño</p><h1 className="mt-1 text-[28px] font-bold leading-tight text-[#10233F]">Solicitudes</h1><p className="mt-1 max-w-2xl text-sm text-[#5E6680]">Una cola para Social Media, Interno, Eventos y solicitudes generales.</p></header>
-    <UnifiedQueueView requests={requests} userId={user.id} today={getCaracasToday()} />
+    <UnifiedQueueView requests={requests} userId={user.id} today={getCaracasToday()} canStartGeneral={canStartGeneral === true} />
   </main>;
 }

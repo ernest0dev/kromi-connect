@@ -20,10 +20,19 @@ export default async function DesignRequestPage({ params }: { params: Promise<{ 
   const { source: sourceParam, id } = await params;
   if (sourceParam.toUpperCase() === 'GENERAL') {
     const { supabase, user } = await requireUser();
-    const [{ data: canManage }, { data: canReadOwn }, { data: row, error }] = await Promise.all([
+    const [
+      { data: canManage }, { data: canReadOwn }, { data: row, error },
+      { data: canStart }, { data: canUploadDeliverables }, { data: canDeliver },
+      { data: canUpdatePriority }, { data: canResolveCancellation },
+    ] = await Promise.all([
       supabase.rpc('has_permission', { required_permission: 'design.requests.read' }),
       supabase.rpc('has_permission', { required_permission: 'requests.general.read-own' }),
       supabase.from('general_design_requests').select('*').eq('id', id).maybeSingle(),
+      supabase.rpc('has_permission', { required_permission: 'design.general.start' }),
+      supabase.rpc('has_permission', { required_permission: 'design.general.deliverable.upload' }),
+      supabase.rpc('has_permission', { required_permission: 'design.general.deliver' }),
+      supabase.rpc('has_permission', { required_permission: 'design.general.priority.update' }),
+      supabase.rpc('has_permission', { required_permission: 'design.general.cancellation.resolve' }),
     ]);
     if (error || !row || (row.requester_id !== user.id && canManage !== true) || (row.requester_id === user.id && canReadOwn !== true)) notFound();
     const [{ data: history }, { data: cancellations }, { data: designerProfile }, { data: requesterProfile }] = await Promise.all([
@@ -32,7 +41,24 @@ export default async function DesignRequestPage({ params }: { params: Promise<{ 
       row.designer_id ? getSupabaseAdmin().from('profiles').select('full_name').eq('user_id', row.designer_id).maybeSingle() : Promise.resolve({ data: null }),
       getSupabaseAdmin().from('profiles').select('full_name').eq('user_id', row.requester_id).maybeSingle(),
     ]);
-    return <GeneralRequestDetailView request={{ ...row, designer_name: designerProfile?.full_name ?? null, requester_name: requesterProfile?.full_name ?? null }} history={history ?? []} cancellations={cancellations ?? []} isDesigner={row.requester_id !== user.id && canManage === true} today={getCaracasToday()} />;
+    const isRequester = row.requester_id === user.id && canReadOwn === true;
+    return <GeneralRequestDetailView
+      request={{ ...row, designer_name: designerProfile?.full_name ?? null, requester_name: requesterProfile?.full_name ?? null }}
+      history={history ?? []}
+      cancellations={cancellations ?? []}
+      capabilities={{
+        canReadDesignQueue: canManage === true,
+        canReadOwnRequest: isRequester,
+        canReadDeliverables: canManage === true || isRequester,
+        canUploadReferences: isRequester && ['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(row.status),
+        canStart: canStart === true,
+        canUploadDeliverables: canUploadDeliverables === true,
+        canDeliver: canDeliver === true,
+        canUpdatePriority: canUpdatePriority === true,
+        canResolveCancellation: canResolveCancellation === true,
+      }}
+      today={getCaracasToday()}
+    />;
   }
   const source = sourceParam.toUpperCase() as DesignSource;
   if (!['SOCIAL_MEDIA', 'INTERNAL', 'EVENTS'].includes(source)) notFound();

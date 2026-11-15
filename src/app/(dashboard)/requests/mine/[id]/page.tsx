@@ -39,7 +39,17 @@ export default async function MyGeneralRequestDetailPage({ params }: { params: P
       }}
       history={history ?? []}
       cancellations={cancellations ?? []}
-      isDesigner={false}
+      capabilities={{
+        canReadDesignQueue: false,
+        canReadOwnRequest: true,
+        canReadDeliverables: true,
+        canUploadReferences: ['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(request.status),
+        canStart: false,
+        canUploadDeliverables: false,
+        canDeliver: false,
+        canUpdatePriority: false,
+        canResolveCancellation: false,
+      }}
       today={getCaracasToday()}
     />
   );
