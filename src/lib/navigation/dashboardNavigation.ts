@@ -7,7 +7,7 @@ import {
   Package,
   Target,
 } from "lucide-react";
-import type { NavGroup } from "@/app/(dashboard)/components/SocialMediaShell";
+import type { NavGroup } from "@/components/layout/navigation";
 import type { AppRole } from "@/lib/auth/permissions";
 
 export const DASHBOARD_NAVIGATION_PERMISSIONS = [
