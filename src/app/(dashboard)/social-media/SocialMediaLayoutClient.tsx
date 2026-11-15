@@ -9,7 +9,7 @@ import { NEW_PUBLICATION_EVENT } from "./events";
 import { useRegisterShellSlots } from "../components/ShellSlot";
 import type { GridIndicators } from "./grid/utils/quickViews";
 import type { ContentCategoryOption } from "./grid/components/ContentCategorySelector";
-import type { CampanaPublicacionGrid } from "@/app/actions/campanas/campaigns";
+import type { CampanaPublicacionGrid } from "@/modules/social-media";
 import type { SocialAccountOption } from "@/types";
 
 export default function SocialMediaLayoutClient({

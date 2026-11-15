@@ -1,18 +1,10 @@
-"use server";
+import "server-only";
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { authorizeAction } from "@/lib/auth/dal";
 
-export interface Efemeride {
-  id: string;
-  nombre: string;
-  anio: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-  descripcion: string | null;
-  created_at: string;
-}
+import type { Efemeride, EfemerideInput } from "./types";
 
 const EFEMERIDES_PATH = "/social-media/efemerides";
 
@@ -92,13 +84,7 @@ export async function getEfemeridesInYearRangeAction(anioInicio: number, anioFin
   }
 }
 
-export async function createEfemerideAction(input: {
-  nombre: string;
-  anio: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-  descripcion?: string;
-}) {
+export async function createEfemerideAction(input: EfemerideInput) {
   const access = await authorizeAction("social-media.efemerides.create");
   if (access.error) return { success: false, error: access.error };
   const validationError = validateInput(input);
@@ -120,13 +106,7 @@ export async function createEfemerideAction(input: {
   }
 }
 
-export async function updateEfemerideAction(id: string, input: {
-  nombre: string;
-  anio: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-  descripcion?: string;
-}) {
+export async function updateEfemerideAction(id: string, input: EfemerideInput) {
   const access = await authorizeAction("social-media.efemerides.update");
   if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la efeméride." };

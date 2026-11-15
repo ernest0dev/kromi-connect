@@ -4,7 +4,7 @@ import type { GridIndicators } from "./grid/utils/quickViews";
 import { todayInCaracas } from "./grid/utils/today";
 import SocialMediaLayoutClient from "./SocialMediaLayoutClient";
 import { requirePermission } from "@/lib/auth/dal";
-import { getCampaignOptionsForGridAction } from "@/app/actions/campanas/campaigns";
+import { getCampaignOptionsForGridAction } from "@/modules/social-media/actions";
 import { toSocialAccountOptions } from "@/types/modules/posts";
 
 export default async function SocialMediaLayout({

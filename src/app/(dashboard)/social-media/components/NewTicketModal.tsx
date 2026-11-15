@@ -6,7 +6,7 @@ import { FormatoEnum, PublicacionConCuentas, SedeEnum, SocialAccountOption } fro
 import { createPostWithDriveAction } from '@/app/actions/publicaciones/create';
 import { ContentCategorySelector } from '../grid/components/ContentCategorySelector';
 import type { ContentCategoryOption } from '../grid/components/ContentCategorySelector';
-import type { CampanaPublicacionGrid } from '@/app/actions/campanas/campaigns';
+import type { CampanaPublicacionGrid } from '@/modules/social-media';
 import { SocialAccountSelector } from './SocialAccountSelector';
 import { parseHashtags } from '@/utils/hashtags';
 import { calcularMatrizSLA } from '@/utils/sla';

@@ -1,74 +1,22 @@
-"use server";
+import "server-only";
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabaseClient";
 import { authorizeAction } from "@/lib/auth/dal";
-import { TipoCampanaEnum } from "@/types/enums";
-
-export type CampanaEstatus = "PLANIFICADA" | "ACTIVA" | "FINALIZADA" | "ARCHIVADA";
-export type CampanaEstatusOperativo = Exclude<CampanaEstatus, "ARCHIVADA">;
-
-export interface Campana {
-  id: string;
-  nombre: string;
-  descripcion?: string | null;
-  tipo_campana: TipoCampanaEnum;
-  fecha_inicio: string;
-  fecha_fin: string;
-  presupuesto?: number | null;
-  estatus: CampanaEstatus;
-  estatus_pre_archivado?: CampanaEstatusOperativo | null;
-  activo?: boolean;
-  created_at?: string;
-  publicaciones?: PublicacionCampana[];
-  efemerides?: EfemerideCampana[];
-  evaluacion?: CampanaEvaluacion | null;
-}
-
-export interface EfemerideCampana {
-  id: string;
-  nombre: string;
-  anio: number;
-  fecha_inicio: string;
-  fecha_fin: string;
-}
-
-export interface CampanaGrid {
-  id: string;
-  nombre: string;
-  descripcion: string | null;
-  tipo_campana: TipoCampanaEnum;
-  estatus: CampanaEstatus;
-  fecha_inicio: string;
-  fecha_fin: string;
-  efemerides: EfemerideCampana[];
-}
-
-export interface CampanaPublicacionGrid {
-  id: string;
-  nombre: string;
-  estatus: CampanaEstatus;
-}
-
-export interface PublicacionCampana {
-  id: string;
-  titulo: string;
-  formato: string;
-  fecha_publicacion: string;
-  estatus: string;
-  drive_folder_url?: string | null;
-}
-
-export interface CampanaEvaluacion {
-  id: string;
-  campana_id: string;
-  alcance_total: number | null;
-  interacciones_totales: number | null;
-  presupuesto_ejecutado: number | null;
-  informe_cualitativo: string | null;
-  observaciones: string | null;
-  created_at: string;
-}
+import type {
+  Campana,
+  CampanaEstatus,
+  CampanaEstatusOperativo,
+  CampanaEvaluacion,
+  CampanaGrid,
+  CampanaPublicacionGrid,
+  CreateCampaignInput,
+  EfemerideCampana,
+  PublicacionCampana,
+  SaveCampaignEvaluationInput,
+  UpdateCampaignInput,
+} from "./types";
+import type { TipoCampanaEnum } from "@/types/enums";
 
 const TIPOS_CAMPANA: TipoCampanaEnum[] = [
   "TEMPORADA", "EVENTO", "EFEMERIDE", "LANZAMIENTO", "OFERTA_PUNTUAL",
@@ -278,15 +226,7 @@ export async function getCampaignOptionsForGridAction() {
   }
 }
 
-export async function createCampaignAction(input: {
-  nombre: string;
-  descripcion?: string;
-  tipo_campana: TipoCampanaEnum;
-  fecha_inicio: string;
-  fecha_fin: string;
-  presupuesto?: number;
-  efemeride_ids?: string[];
-}) {
+export async function createCampaignAction(input: CreateCampaignInput) {
   const access = await authorizeAction("social-media.campaigns.create");
   if (access.error) return { success: false, error: access.error };
   if (!input.nombre.trim()) return { success: false, error: "El nombre es obligatorio." };
@@ -320,16 +260,7 @@ export async function createCampaignAction(input: {
   }
 }
 
-export async function updateCampaignAction(id: string, input: {
-  nombre: string;
-  descripcion?: string;
-  tipo_campana: TipoCampanaEnum;
-  fecha_inicio: string;
-  fecha_fin: string;
-  presupuesto?: number;
-  efemeride_ids?: string[];
-  confirmar_desvinculacion?: boolean;
-}) {
+export async function updateCampaignAction(id: string, input: UpdateCampaignInput) {
   const access = await authorizeAction("social-media.campaigns.update");
   if (access.error) return { success: false, error: access.error };
   if (!id) return { success: false, error: "Falta el identificador de la campaña." };
@@ -449,14 +380,7 @@ export async function restoreCampaignAction(id: string) {
   }
 }
 
-export async function saveCampaignEvaluationAction(input: {
-  campana_id: string;
-  alcance_total?: number | null;
-  interacciones_totales?: number | null;
-  presupuesto_ejecutado?: number | null;
-  informe_cualitativo?: string;
-  observaciones?: string;
-}) {
+export async function saveCampaignEvaluationAction(input: SaveCampaignEvaluationInput) {
   const access = await authorizeAction("social-media.campaigns.evaluation.create");
   if (access.error) return { success: false, error: access.error };
   if (!input.campana_id) return { success: false, error: "Falta la campaña del informe." };

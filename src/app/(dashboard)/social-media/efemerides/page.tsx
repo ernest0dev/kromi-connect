@@ -1,6 +1,6 @@
 import React from "react";
-import { getEfemeridesByYearAction } from "@/app/actions/efemerides/efemerides";
-import EfemeridesClientView from "./EfemeridesClientView";
+import { getEfemeridesByYearAction } from "@/modules/social-media/actions";
+import { EfemeridesClientView } from "@/modules/social-media";
 import { requirePermission } from "@/lib/auth/dal";
 
 export const revalidate = 0;

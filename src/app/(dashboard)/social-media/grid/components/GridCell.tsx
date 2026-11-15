@@ -1,8 +1,7 @@
 'use client';
 
 import { GridCellProps } from '../types/grid';
-import type { Efemeride } from '@/app/actions/efemerides/efemerides';
-import type { CampanaGrid } from '@/app/actions/campanas/campaigns';
+import type { Efemeride, CampanaGrid } from '@/modules/social-media';
 import { TicketCard } from './TicketCard';
 import { getFormatoDisplayLabel } from '../utils/constants';
 

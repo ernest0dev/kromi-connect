@@ -7,8 +7,8 @@ import {
   deleteEfemerideAction,
   getEfemeridesByYearAction,
   updateEfemerideAction,
-} from "@/app/actions/efemerides/efemerides";
-import type { Efemeride } from "@/app/actions/efemerides/efemerides";
+} from "@/modules/social-media/actions";
+import type { Efemeride } from "@/modules/social-media";
 
 interface Props {
   anioInicial: number;
