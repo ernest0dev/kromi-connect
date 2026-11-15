@@ -32,10 +32,10 @@ export async function GET() {
         message: 'Conexión exitosa a la base de datos PostgreSQL en Supabase.',
       };
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     results.supabase = {
       status: 'ERROR',
-      message: err.message || 'Error desconocido al conectar con Supabase.',
+      message: err instanceof Error ? err.message : 'Error desconocido al conectar con Supabase.',
     };
   }
 
@@ -57,10 +57,10 @@ export async function GET() {
       parentFolderFound: true,
       authMode: getDriveAuthMode(),
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     results.googleDrive = {
       status: 'ERROR',
-      message: err.message || 'Error desconocido al conectar con Google Drive API.',
+      message: err instanceof Error ? err.message : 'Error desconocido al conectar con Google Drive API.',
       parentFolderFound: false,
       authMode: getDriveAuthMode(),
     };

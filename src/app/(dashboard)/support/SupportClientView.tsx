@@ -216,7 +216,7 @@ export default function SupportClientView({ ticketsIniciales }: Props) {
                     onChange={(e) =>
                       setForm({
                         ...form,
-                        canal_origen: e.target.value as any,
+                        canal_origen: e.target.value as typeof form.canal_origen,
                       })
                     }
                     className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white"
@@ -238,7 +238,7 @@ export default function SupportClientView({ ticketsIniciales }: Props) {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      prioridad: e.target.value as any,
+                      prioridad: e.target.value as typeof form.prioridad,
                     })
                   }
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2 text-xs text-white"

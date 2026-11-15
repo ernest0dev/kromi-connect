@@ -21,7 +21,7 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
       .order('id', { ascending: true })
       .range(offset, offset + 99),
   ]);
-  const { data: generalHistory, error: generalHistoryError } = await (supabase as any).from('general_design_requests')
+  const { data: generalHistory, error: generalHistoryError } = await supabase.from('general_design_requests')
     .select('id,title,design_type,design_type_other,department,required_date,status,priority,created_at,updated_at,delivered_at,requester_role,requester_id,designer_id,started_at,categories,scopes,instructions')
     .in('status', ['ENTREGADA', 'CANCELADA']).order('updated_at', { ascending: false }).range(offset, offset + 99);
   if (publicationResult.error || internalResult.error || eventResult.error || legacyResult.error || generalHistoryError) {
@@ -58,7 +58,7 @@ export default async function DesignHistoryPage({ searchParams }: { searchParams
       source: 'OPERATIONAL' as const,
       request: adaptEvent(row),
     })),
-    ...(generalHistory ?? []).map((row: Record<string, unknown>) => ({ source: 'OPERATIONAL' as const, request: adaptGeneralRequest(row) })),
+    ...(generalHistory ?? []).map((row) => ({ source: 'OPERATIONAL' as const, request: adaptGeneralRequest(row) })),
     ...legacy.map(adaptLegacyDesignHistory),
   ].map((entry) => entry.source === 'LEGACY'
     ? entry

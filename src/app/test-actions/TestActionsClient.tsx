@@ -5,7 +5,7 @@ import { createPostWithDriveAction } from "@/app/actions/publicaciones/create";
 
 export default function TestActionsClient() {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Awaited<ReturnType<typeof createPostWithDriveAction>> | null>(null);
 
   const handleTestSubmit = async () => {
     setLoading(true);

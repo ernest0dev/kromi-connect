@@ -13,7 +13,7 @@ export default async function MyGeneralRequestDetailPage({ params }: { params: P
   if (!UUID.test(id)) notFound();
 
   const { supabase, user } = await requirePermission('requests.general.read-own');
-  const { data: request, error } = await (supabase as any)
+  const { data: request, error } = await supabase
     .from('general_design_requests')
     .select('*')
     .eq('id', id)
@@ -22,8 +22,8 @@ export default async function MyGeneralRequestDetailPage({ params }: { params: P
   if (error || !request) notFound();
 
   const [{ data: history }, { data: cancellations }, { data: designerProfile }, { data: requesterProfile }] = await Promise.all([
-    (supabase as any).from('general_design_request_history').select('id,action,detail,created_at').eq('request_id', id).order('created_at', { ascending: true }),
-    (supabase as any).from('general_design_cancellations').select('id,reason,status,review_note,created_at').eq('request_id', id).order('created_at', { ascending: false }),
+    supabase.from('general_design_request_history').select('id,action,detail,created_at').eq('request_id', id).order('created_at', { ascending: true }),
+    supabase.from('general_design_cancellations').select('id,reason,status,review_note,created_at').eq('request_id', id).order('created_at', { ascending: false }),
     request.designer_id
       ? getSupabaseAdmin().from('profiles').select('full_name').eq('user_id', request.designer_id).maybeSingle()
       : Promise.resolve({ data: null }),

@@ -16,7 +16,7 @@ export async function getShootingPostsAction(input?: ObtenerPautasInput) {
   try {
     const supabase = access.context.supabase;
 
-    let query = supabase
+    const query = supabase
       .from("publicaciones")
       .select("*")
       .is('deleted_at', null)
@@ -54,8 +54,8 @@ export async function getShootingPostsAction(input?: ObtenerPautasInput) {
         linea_contenido: namesByPostId.get(post.id)?.join(', ') || post.linea_contenido,
       })) as Publicacion[],
     };
-  } catch (err: any) {
-    return { success: false, error: err.message, data: [] };
+  } catch (err: unknown) {
+    return { success: false, error: err instanceof Error ? err.message : 'Error desconocido.', data: [] };
   }
 }
 
