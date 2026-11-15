@@ -117,43 +117,71 @@ export async function listGeneralRequestFilesAction(id: string, category: 'REFER
 }
 
 export async function listGeneralRequestPendingUploadsAction(id: string, category: 'REFERENCIAS' | 'ENTREGABLES') {
+  let actorId: string;
   if (!UUID.test(id)) return { success: false as const, error: 'Identificador inválido.' };
   if (category === 'REFERENCIAS') {
     const own = await getOwnRequest(id);
     if ('error' in own) return { success: false as const, error: own.error };
+    if (!['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(own.request.status)) return { success: false as const, error: 'La solicitud ya no admite referencias.' };
+    actorId = own.access.context!.user.id;
   } else {
-    const access = await authorizeAction('design.requests.read');
+    const access = await authorizeAction('design.general.deliverable.upload');
     if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
+    actorId = access.context.user.id;
   }
   const admin = getSupabaseAdmin();
-  const { data, error } = await admin.from('general_design_request_uploads').select('id,file_name,mime_type,file_size,created_at').eq('request_id', id).eq('category', category).eq('status', 'UPLOADING');
+  if (category === 'ENTREGABLES') {
+    const { data: request } = await admin.from('general_design_requests').select('status').eq('id', id).maybeSingle();
+    if (!request || request.status !== 'EN_DISENO') return { success: false as const, error: 'La solicitud ya no admite entregables.' };
+  }
+  const { data, error } = await admin.from('general_design_request_uploads').select('id,file_name,mime_type,file_size,created_at').eq('request_id', id).eq('category', category).eq('status', 'UPLOADING').eq('actor_id', actorId);
   if (error) return { success: false as const, error: 'No se pudieron consultar las cargas pendientes.' };
   return { success: true as const, uploads: (data ?? []).map((item) => ({ id: item.id, name: item.file_name, mimeType: item.mime_type, size: Number(item.file_size), createdAt: item.created_at })) };
 }
 
 export async function resumeGeneralRequestUploadAction(uploadId: string, category: 'REFERENCIAS' | 'ENTREGABLES') {
   if (!UUID.test(uploadId)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = category === 'REFERENCIAS' ? await authorizeAction('requests.general.read-own') : await authorizeAction('design.requests.read');
+  const access = category === 'REFERENCIAS' ? await authorizeAction('requests.general.read-own') : await authorizeAction('design.general.deliverable.upload');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
   const query = admin.from('general_design_request_uploads').select('id,request_id,actor_id,file_name,mime_type,file_size,session_uri').eq('id', uploadId).eq('category', category).eq('status', 'UPLOADING').eq('actor_id', access.context.user.id);
   const { data: upload } = await query.maybeSingle();
-  if (!upload?.session_uri) {
-    await admin.from('general_design_request_uploads').update({ status: 'FAILED', session_uri: null }).eq('id', uploadId).eq('status', 'UPLOADING');
-    return { success: false as const, restartable: true as const, error: 'La sesión de carga expiró. Se iniciará una sesión nueva.' };
+  if (!upload) return { success: false as const, error: 'No se encontro una carga pendiente.' };
+  if (category === 'ENTREGABLES') {
+    const { data: request } = await admin.from('general_design_requests').select('status').eq('id', upload.request_id).maybeSingle();
+    if (!request || request.status !== 'EN_DISENO') return { success: false as const, error: 'La carga o la solicitud ya no esta disponible.' };
   }
   if (category === 'REFERENCIAS') {
-    const { data: request } = await access.context.supabase.from('general_design_requests').select('id').eq('id', upload.request_id).eq('requester_id', access.context.user.id).maybeSingle();
-    if (!request) return { success: false as const, error: 'No se encontró la solicitud.' };
+    const { data: request } = await access.context.supabase.from('general_design_requests').select('id,status').eq('id', upload.request_id).eq('requester_id', access.context.user.id).maybeSingle();
+    if (!request || !['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(request.status)) return { success: false as const, error: 'La solicitud ya no admite referencias.' };
   }
+  if (!upload?.session_uri) {
+    const { data: failedUpload, error } = await admin.from('general_design_request_uploads').update({ status: 'FAILED', session_uri: null }).eq('id', upload.id).eq('actor_id', access.context.user.id).eq('category', category).eq('status', 'UPLOADING').select('id').maybeSingle();
+    if (error || !failedUpload) return { success: false as const, error: error?.message || 'La carga cambio antes de poder reiniciarla.' };
+    return { success: false as const, restartable: true as const, error: 'La sesión de carga expiró. Se iniciará una sesión nueva.' };
+  }
+
   return { success: true as const, uploadId: upload.id, sessionUri: upload.session_uri, name: upload.file_name, size: Number(upload.file_size), mimeType: upload.mime_type };
 }
 
 export async function expireGeneralRequestUploadAction(uploadId: string, category: 'REFERENCIAS' | 'ENTREGABLES') {
   if (!UUID.test(uploadId)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = category === 'REFERENCIAS' ? await authorizeAction('requests.general.read-own') : await authorizeAction('design.requests.read');
+  const access = category === 'REFERENCIAS' ? await authorizeAction('requests.general.read-own') : await authorizeAction('design.general.deliverable.upload');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
-  const { error } = await getSupabaseAdmin().from('general_design_request_uploads').update({ status: 'FAILED', session_uri: null }).eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', category).eq('status', 'UPLOADING');
+  const admin = getSupabaseAdmin();
+  if (category === 'REFERENCIAS') {
+    const { data: upload } = await admin.from('general_design_request_uploads').select('request_id').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', category).eq('status', 'UPLOADING').maybeSingle();
+    if (!upload) return { success: false as const, error: 'No se encontro una carga pendiente.' };
+    const { data: request } = await access.context.supabase.from('general_design_requests').select('id,status').eq('id', upload.request_id).eq('requester_id', access.context.user.id).maybeSingle();
+    if (!request || !['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(request.status)) return { success: false as const, error: 'La solicitud ya no admite referencias.' };
+  }
+  if (category === 'ENTREGABLES') {
+    const { data: upload } = await admin.from('general_design_request_uploads').select('request_id').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', category).eq('status', 'UPLOADING').maybeSingle();
+    if (!upload) return { success: false as const, error: 'No se encontro una carga pendiente.' };
+    const { data: request } = await admin.from('general_design_requests').select('status').eq('id', upload.request_id).maybeSingle();
+    if (!request || request.status !== 'EN_DISENO') return { success: false as const, error: 'La solicitud ya no admite entregables.' };
+  }
+  const { error } = await admin.from('general_design_request_uploads').update({ status: 'FAILED', session_uri: null }).eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', category).eq('status', 'UPLOADING');
   return error ? { success: false as const, error: 'No se pudo actualizar la carga expirada.' } : { success: true as const };
 }
 
@@ -190,15 +218,16 @@ export async function finishGeneralRequestReferenceUploadAction(uploadId: string
   const access = await authorizeAction('requests.general.read-own');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
-  const { data: upload } = await admin.from('general_design_request_uploads').select('*').eq('id', uploadId).eq('actor_id', access.context.user.id).maybeSingle();
+  const { data: upload } = await admin.from('general_design_request_uploads').select('*').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'REFERENCIAS').maybeSingle();
   if (!upload || upload.status !== 'UPLOADING') return { success: false as const, error: 'La carga no está pendiente.' };
-  const { data: request } = await admin.from('general_design_requests').select('drive_folder_id').eq('id', upload.request_id).eq('requester_id', access.context.user.id).maybeSingle();
-  if (!request?.drive_folder_id) return { success: false as const, error: 'No se encontró la solicitud.' };
+  const { data: request } = await admin.from('general_design_requests').select('drive_folder_id,status').eq('id', upload.request_id).eq('requester_id', access.context.user.id).maybeSingle();
+  if (!request?.drive_folder_id || !['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(request.status)) return { success: false as const, error: 'La solicitud ya no admite referencias.' };
   try {
     const folder = await ensureDriveChildFolder(request.drive_folder_id, 'Referencias');
     const file = await findDriveUploadedFile(folder.id, upload.id);
     if (!file) return { success: false as const, error: 'Drive todavía no confirma el archivo. Reintenta en unos segundos.' };
-    await admin.from('general_design_request_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, drive_web_url: file.webViewLink, completed_at: new Date().toISOString(), session_uri: null }).eq('id', upload.id);
+    const { data: completedUpload, error } = await admin.from('general_design_request_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, drive_web_url: file.webViewLink, completed_at: new Date().toISOString(), session_uri: null }).eq('id', upload.id).eq('actor_id', access.context.user.id).eq('category', 'REFERENCIAS').eq('status', 'UPLOADING').select('id').maybeSingle();
+    if (error || !completedUpload) return { success: false as const, error: error?.message || 'La carga cambio antes de poder finalizarla.' };
     await admin.from('general_design_request_history').insert({ request_id: upload.request_id, actor_id: access.context.user.id, action: 'DRIVE_UPDATED', detail: { category: 'REFERENCIAS', file_name: upload.file_name } });
     revalidatePath('/requests/mine');
     return { success: true as const };
@@ -210,16 +239,18 @@ export async function cancelGeneralRequestReferenceUploadAction(uploadId: string
   const access = await authorizeAction('requests.general.read-own');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
-  const { data: upload } = await admin.from('general_design_request_uploads').select('id,session_uri').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('status', 'UPLOADING').maybeSingle();
-  if (!upload) return { success: false as const, error: 'No se encontró una carga pendiente.' };
+  const { data: upload } = await admin.from('general_design_request_uploads').select('id,request_id,session_uri').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'REFERENCIAS').eq('status', 'UPLOADING').maybeSingle();
+  if (!upload) return { success: false as const, error: 'No se encontro una carga pendiente.' };
+  const { data: request } = await access.context.supabase.from('general_design_requests').select('id,status').eq('id', upload.request_id).eq('requester_id', access.context.user.id).maybeSingle();
+  if (!request || !['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION'].includes(request.status)) return { success: false as const, error: 'La solicitud ya no admite referencias.' };
   if (upload.session_uri) await revokeDriveResumableSession(upload.session_uri);
-  await admin.from('general_design_request_uploads').update({ status: 'CANCELLED', session_uri: null }).eq('id', uploadId);
+  await admin.from('general_design_request_uploads').update({ status: 'CANCELLED', session_uri: null }).eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'REFERENCIAS').eq('status', 'UPLOADING');
   return { success: true as const };
 }
 
 export async function startGeneralDesignDeliverableUploadAction(input: { id: string; name: string; size: number }) {
   if (!UUID.test(input.id)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.deliverable.upload');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const rule = getDriveFileRule('ENTREGABLES', input.name);
   if (!rule || !Number.isSafeInteger(input.size) || input.size < 1 || input.size > rule.maxBytes) return { success: false as const, error: 'El formato no está permitido o supera 500 MB.' };
@@ -240,7 +271,7 @@ export async function startGeneralDesignDeliverableUploadAction(input: { id: str
 
 export async function finishGeneralDesignDeliverableUploadAction(uploadId: string) {
   if (!UUID.test(uploadId)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.deliverable.upload');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
   const { data: upload } = await admin.from('general_design_request_uploads').select('*').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'ENTREGABLES').maybeSingle();
@@ -250,8 +281,9 @@ export async function finishGeneralDesignDeliverableUploadAction(uploadId: strin
   try {
     const folder = await ensureDriveChildFolder(request.drive_folder_id, 'Entregables');
     const file = await findDriveUploadedFile(folder.id, upload.id);
-    if (!file) return { success: false as const, error: 'Drive todavía no confirma el archivo. Reintenta en unos segundos.' };
-    await admin.from('general_design_request_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, drive_web_url: file.webViewLink, completed_at: new Date().toISOString(), session_uri: null }).eq('id', upload.id);
+    if (!file || file.size !== Number(upload.file_size) || file.mimeType !== upload.mime_type) return { success: false as const, error: 'Drive todavia no confirma el archivo esperado.' };
+    const { data: completedUpload, error } = await admin.from('general_design_request_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, drive_web_url: file.webViewLink, completed_at: new Date().toISOString(), session_uri: null }).eq('id', upload.id).eq('actor_id', access.context.user.id).eq('category', 'ENTREGABLES').eq('status', 'UPLOADING').select('id').maybeSingle();
+    if (error || !completedUpload) return { success: false as const, error: error?.message || 'La carga cambio antes de poder finalizarla.' };
     await admin.from('general_design_request_history').insert({ request_id: upload.request_id, actor_id: access.context.user.id, action: 'DRIVE_UPDATED', detail: { category: 'ENTREGABLES', file_name: upload.file_name } });
     revalidatePath(`/design/requests/general/${upload.request_id}`);
     return { success: true as const };
@@ -260,19 +292,21 @@ export async function finishGeneralDesignDeliverableUploadAction(uploadId: strin
 
 export async function cancelGeneralDesignDeliverableUploadAction(uploadId: string) {
   if (!UUID.test(uploadId)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.deliverable.upload');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
-  const { data: upload } = await admin.from('general_design_request_uploads').select('id,session_uri').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'ENTREGABLES').eq('status', 'UPLOADING').maybeSingle();
-  if (!upload) return { success: false as const, error: 'No se encontró una carga pendiente.' };
+  const { data: upload } = await admin.from('general_design_request_uploads').select('id,request_id,session_uri').eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'ENTREGABLES').eq('status', 'UPLOADING').maybeSingle();
+  if (!upload) return { success: false as const, error: 'No se encontro una carga pendiente.' };
+  const { data: request } = await admin.from('general_design_requests').select('status').eq('id', upload.request_id).maybeSingle();
+  if (!request || request.status !== 'EN_DISENO') return { success: false as const, error: 'La solicitud ya no admite entregables.' };
   if (upload.session_uri) await revokeDriveResumableSession(upload.session_uri);
-  await admin.from('general_design_request_uploads').update({ status: 'CANCELLED', session_uri: null }).eq('id', uploadId);
+  await admin.from('general_design_request_uploads').update({ status: 'CANCELLED', session_uri: null }).eq('id', uploadId).eq('actor_id', access.context.user.id).eq('category', 'ENTREGABLES').eq('status', 'UPLOADING');
   return { success: true as const };
 }
 
 export async function deliverGeneralDesignRequestAction(id: string) {
   if (!UUID.test(id)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.deliver');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
   const { data: request } = await admin.from('general_design_requests').select('status,started_at').eq('id', id).maybeSingle();
@@ -289,7 +323,7 @@ export async function deliverGeneralDesignRequestAction(id: string) {
 
 export async function setGeneralDesignPriorityAction(id: string, priority: 'HIGH' | 'NORMAL' | 'LOW') {
   if (!UUID.test(id) || !['HIGH', 'NORMAL', 'LOW'].includes(priority)) return { success: false as const, error: 'Prioridad no válida.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.priority.update');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
   const { data, error } = await admin.from('general_design_requests').update({ priority, updated_at: new Date().toISOString() }).eq('id', id).in('status', ['SOLICITADA', 'EN_DISENO', 'EN_CORRECCION']).select('id').maybeSingle();
@@ -315,7 +349,7 @@ export async function requestGeneralCancellationAction(id: string, reason: strin
 
 export async function startGeneralDesignWorkAction(id: string) {
   if (!UUID.test(id)) return { success: false as const, error: 'Identificador inválido.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.start');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
   const { data: request } = await admin.from('general_design_requests').select('status,designer_id').eq('id', id).maybeSingle();
@@ -329,7 +363,7 @@ export async function startGeneralDesignWorkAction(id: string) {
 
 export async function resolveGeneralCancellationAction(id: string, decision: 'APPROVED' | 'REJECTED', note: string) {
   if (!UUID.test(id) || !['APPROVED', 'REJECTED'].includes(decision) || note.trim().length > 1000) return { success: false as const, error: 'Datos de resolución no válidos.' };
-  const access = await authorizeAction('design.requests.read');
+  const access = await authorizeAction('design.general.cancellation.resolve');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'No tienes permiso.' };
   const admin = getSupabaseAdmin();
   const { data: request } = await admin.from('general_design_requests').select('status').eq('id', id).maybeSingle();

@@ -73,6 +73,13 @@ set full_name = excluded.full_name,
 insert into public.role_permissions (role_code, permission_code)
 select 'admin', code
 from public.app_permissions
+where code not in (
+  'design.general.start',
+  'design.general.deliver',
+  'design.general.deliverable.upload',
+  'design.general.priority.update',
+  'design.general.cancellation.resolve'
+)
 on conflict do nothing;
 
 insert into public.inventario_ubicaciones (sede_id, nombre)

@@ -398,6 +398,20 @@ El rol `admin` se limita al control de acceso (`can_manage_access()`); no equiva
 
 El catálogo puede conservar el código histórico `social-media.posts.delete` de migraciones previas, pero el flujo actual usa Archivo: se revocó el borrado directo para `authenticated`; las acciones de purga se ejecutan en servidor con comprobaciones de permiso.
 
+#### Solicitudes generales de Diseño (C1)
+
+Se conserva `design.requests.read` para la cola, el historial y la lectura global. Las operaciones mutantes de solicitudes `GENERAL` usan permisos independientes concedidos exclusivamente al rol `design` por la migración incremental C1:
+
+| Permiso | Capacidad |
+|---|---|
+| `design.general.start` | Iniciar el diseño de una solicitud general. |
+| `design.general.deliver` | Entregar una solicitud general. |
+| `design.general.deliverable.upload` | Gestionar uploads de `ENTREGABLES`, incluidos iniciar, reanudar, expirar, finalizar, cancelar y consultar metadatos pendientes. |
+| `design.general.priority.update` | Modificar prioridad. |
+| `design.general.cancellation.resolve` | Resolver una solicitud de cancelación. |
+
+No existe permiso de reapertura para GENERAL. `requests.general.create` y `requests.general.read-own` se conservan para los roles solicitantes. La lectura propia y los uploads de `REFERENCIAS` siguen protegidos por propiedad y `requests.general.read-own`; no conceden acceso a `ENTREGABLES`. El rol `admin` no recibe estos cinco permisos por el seed ni por un bypass de negocio. Las Server Actions deben ejecutar `authorizeAction` antes de usar Service Role o Drive.
+
 ### 7.4 Componentes del repositorio
 
 | Ubicación | Responsabilidad |
