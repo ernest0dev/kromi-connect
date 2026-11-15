@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { BookOpen, ClipboardList } from 'lucide-react';
 import { useRegisterShellSlots } from '../components/ShellSlot';
-import type { NavGroup } from '../components/SocialMediaShell';
+import type { NavGroup } from '@/components/layout/navigation';
 
 export function DesignLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

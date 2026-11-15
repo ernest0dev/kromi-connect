@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState } from "react";
-import type { NavGroup } from "./SocialMediaShell";
+import type { NavGroup } from "@/components/layout/navigation";
 
 const EMPTY_NAV_GROUPS: NavGroup[] = [];
 

@@ -2,22 +2,10 @@
 
 import React from "react";
 import Link from "next/link";
-import { LucideIcon } from "lucide-react";
 import { ShellSlotProvider, useShellSlot } from "./ShellSlot";
 import { logoutAction } from "@/app/actions/auth";
+import type { NavGroup } from "@/components/layout/navigation";
 import { mergeNavigationGroups } from "@/lib/navigation/dashboardNavigation";
-
-export interface NavItem {
-  href: string;
-  label: string;
-  icon: LucideIcon;
-  exact?: boolean;
-}
-
-export interface NavGroup {
-  label?: string;
-  items: NavItem[];
-}
 
 interface SocialMediaShellProps {
   /** Grupos de navegación siempre visibles (transversales a todos los perfiles). */
