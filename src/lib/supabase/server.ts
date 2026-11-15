@@ -3,7 +3,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database.types";
-import { assertLiveDataMode } from "@/lib/data-mode";
+import { assertLiveDataMode } from "@/lib/supabase/data-mode";
 
 export async function createSupabaseServerClient() {
   assertLiveDataMode();
