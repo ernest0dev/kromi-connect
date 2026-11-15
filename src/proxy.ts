@@ -2,11 +2,24 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import {
   FIXTURES_READ_ONLY_MESSAGE,
+  assertDataModeConsistency,
   isFixtureRequestBlocked,
   isFixturesMode,
-} from "@/lib/data-mode";
+} from "@/lib/supabase/data-mode";
 
 export async function proxy(request: NextRequest) {
+  try {
+    assertDataModeConsistency();
+  } catch {
+    // Deliberately omit configured values: the response is safe for callers,
+    // while this fixed diagnostic identifies the deployment configuration fault.
+    console.error("[data-mode] Build/runtime mode mismatch or invalid configuration.");
+    return NextResponse.json(
+      { error: "La aplicación no está disponible por una configuración inconsistente." },
+      { status: 503 },
+    );
+  }
+
   if (isFixturesMode()) {
     const { pathname } = request.nextUrl;
 
@@ -27,6 +40,8 @@ export async function proxy(request: NextRequest) {
   if (!url || !key) return NextResponse.next({ request });
 
   let response = NextResponse.next({ request });
+  // The proxy needs its own request/response cookie adapter. It cannot use
+  // the Server Component factory, which relies on next/headers cookies().
   const supabase = createServerClient(url, key, {
     cookies: {
       getAll() {
