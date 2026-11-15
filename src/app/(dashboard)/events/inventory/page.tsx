@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { requirePermission } from '@/lib/auth/dal';
 import { INVENTARIO_RUTA, buildInventoryQueryString, parseInventoryQuery, sedeSlug } from '@/lib/inventory';
 import { normalizeInventoryItems } from '@/lib/inventory-rpc';
+import { listSedesActivas } from '@/lib/sedes';
 import type { InventarioArticuloRow, InventarioPermisos } from '@/types';
 import { InventoryView } from './InventoryView';
 
@@ -14,7 +15,7 @@ export default async function InventoryPage({ searchParams }: { searchParams: Se
   const query = parseInventoryQuery(await searchParams);
 
   const [sedesRes, categoriasRes, ubicacionesRes, countsRes, ...perms] = await Promise.all([
-    supabase.from('inventario_sedes').select('id, codigo, nombre, orden').eq('activa', true).order('orden'),
+    listSedesActivas(supabase),
     supabase.from('inventario_categorias').select('id, nombre').eq('activa', true).order('nombre'),
     supabase.from('inventario_ubicaciones').select('id, sede_id, nombre').eq('activa', true).order('nombre'),
     supabase.rpc('get_inventory_sede_counts'),

@@ -6,16 +6,17 @@ import { createGeneralDesignRequestAction, finishGeneralRequestReferenceUploadAc
 import { uploadFile } from '@/lib/drive-resumable-upload';
 
 const CATEGORIES = ['Carnicería', 'Charcutería', 'Pescadería', 'Víveres', 'Panadería', 'Farmacia', 'Eventos', 'Otros'];
-const SCOPES = ['Prebo', 'Mañongo', 'Trigal Sur', 'Trigal Norte', 'Guataparo', 'Castillito', 'San Felipe', 'Online'];
+const ONLINE_SCOPE = 'Online';
 const DEPARTMENTS = ['Mercadeo', 'Operaciones', 'Capital Humano', 'Selección', 'Compras', 'Farmacia', 'Ventas Online'];
 const field = 'mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900';
 const label = 'block text-sm font-semibold text-slate-800';
 
-export function GeneralRequestForm({ requesterName, requesterRole, today }: { requesterName: string | null; requesterRole: string; today: string }) {
+export function GeneralRequestForm({ physicalScopes, requesterName, requesterRole, today }: { physicalScopes: string[]; requesterName: string | null; requesterRole: string; today: string }) {
   const router = useRouter(); const [pending, startTransition] = useTransition(); const [error, setError] = useState('');
   const [submissionKey] = useState(() => crypto.randomUUID());
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const [type, setType] = useState('DIGITAL'); const [categories, setCategories] = useState<string[]>([]); const [scopes, setScopes] = useState<string[]>([]);
+  const scopesAvailable = [...physicalScopes, ONLINE_SCOPE];
   const toggle = (items: string[], item: string, setter: (value: string[]) => void) => setter(items.includes(item) ? items.filter((value) => value !== item) : [...items, item]);
   const submit = (form: FormData) => {
     setError('');
@@ -45,7 +46,7 @@ export function GeneralRequestForm({ requesterName, requesterRole, today }: { re
     <label className={label}>Título de la solicitud *<input name="title" required maxLength={200} className={field} /></label>
     <div className="grid gap-4 sm:grid-cols-2"><label className={label}>Tipo de diseño *<select value={type} onChange={(event) => setType(event.target.value)} className={field}><option value="DIGITAL">Digital</option><option value="PRINT">Impreso</option><option value="BOTH">Digital e Impreso</option><option value="OTHER">Otro</option></select></label>{type === 'OTHER' && <label className={label}>Describe el tipo *<input name="otherType" required maxLength={120} className={field} /></label>}</div>
     <label className={label}>Descripción e instrucciones *<textarea name="instructions" required maxLength={5000} rows={5} className={field} /></label>
-    {checkGroup('Categorías', CATEGORIES, categories, setCategories)}{checkGroup('Sedes o ámbitos (opcional)', SCOPES, scopes, setScopes)}
+    {checkGroup('Categorías', CATEGORIES, categories, setCategories)}{checkGroup('Sedes o ámbitos (opcional)', scopesAvailable, scopes, setScopes)}
     <div className="grid gap-4 sm:grid-cols-2"><label className={label}>Departamento *<select name="department" required defaultValue="Mercadeo" className={field}>{DEPARTMENTS.map((item) => <option key={item}>{item}</option>)}</select></label><label className={label}>Fecha requerida *<input type="date" name="requiredDate" min={today} required className={field} /></label></div>
     <p className="-mt-3 text-xs text-slate-500">La fecha de hoy está permitida; Diseño asigna prioridad y no se aplica un plazo mínimo automático.</p>
     <label className={label}>Cantidad o especificaciones adicionales<textarea name="specifications" maxLength={3000} rows={3} className={field} /></label>
