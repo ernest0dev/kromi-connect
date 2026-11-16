@@ -1,5 +1,7 @@
-export type DesignSource = 'SOCIAL_MEDIA' | 'INTERNAL' | 'EVENTS' | 'GENERAL';
-export type DesignStatus = 'REQUESTED' | 'IN_PROGRESS' | 'NEEDS_CHANGES' | 'DELIVERED' | 'CANCELLED';
+import type { DesignRequestStatus, DesignSource } from '@/lib/design-contract';
+
+export type { DesignSource } from '@/lib/design-contract';
+export type DesignStatus = DesignRequestStatus;
 
 export type DesignRequest = {
   request_id: string; source: DesignSource; source_record_id: string; title: string;
