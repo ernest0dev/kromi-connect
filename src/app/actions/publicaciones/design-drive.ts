@@ -30,16 +30,24 @@ async function ensureFolderIds(publication: { id: string; drive_folder_id: strin
 
 async function reconcileDeliverableUploads(publicationId: string, folderId: string) {
   const admin = getSupabaseAdmin();
-  const { data, error } = await (admin.from('publicacion_drive_uploads')).select('id,file_size,status,expires_at').eq('publicacion_id', publicationId).eq('carpeta', 'ENTREGABLES').in('status', ['RESERVING', 'UPLOADING', 'CANCEL_PENDING']);
+  const { data, error } = await (admin.from('publicacion_drive_uploads')).select('id,actor_id,file_size,status,expires_at').eq('publicacion_id', publicationId).eq('carpeta', 'ENTREGABLES').in('status', ['RESERVING', 'UPLOADING', 'CANCEL_PENDING']);
   if (error) throw new Error(error.message);
   for (const upload of data || []) {
     if (new Date(upload.expires_at).getTime() <= Date.now()) {
-      await (admin.from('publicacion_drive_uploads')).update({ status: 'EXPIRED', session_uri: null }).eq('id', upload.id);
+      await (admin.from('publicacion_drive_uploads')).update({ status: 'EXPIRED', session_uri: null }).eq('id', upload.id).eq('publicacion_id', publicationId).eq('actor_id', upload.actor_id).eq('carpeta', 'ENTREGABLES').in('status', ['RESERVING', 'UPLOADING', 'CANCEL_PENDING']).lte('expires_at', new Date().toISOString());
       continue;
     }
-    if (upload.status === 'RESERVING') continue;
+    if (upload.status !== 'UPLOADING') continue;
     const file = await findDriveUploadedFile(folderId, upload.id).catch(() => null);
-    if (file && file.size === Number(upload.file_size)) await (admin.from('publicacion_drive_uploads')).update({ status: 'COMPLETE', drive_file_id: file.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', upload.id);
+    if (!file || file.size !== Number(upload.file_size)) continue;
+    const { data: completedIds, error: finalizeError } = await admin.rpc('finalize_publication_deliverable_upload', {
+      p_upload_id: upload.id,
+      p_publication_id: publicationId,
+      p_actor_id: upload.actor_id,
+      p_drive_file_id: file.id,
+    });
+    if (finalizeError) throw new Error('No se pudo confirmar la carga recuperada de Drive.');
+    if (!completedIds?.includes(upload.id)) continue;
   }
 }
 
@@ -88,10 +96,18 @@ async function authorizedUpload(uploadId: string) {
   return { upload, publication: result.publication, admin } as const;
 }
 
-export async function finishDeliverableUploadAction(uploadId: string) {
-  const result = await authorizedUpload(uploadId);
-  if ('error' in result) return { success: false as const, error: result.error };
+export async function finishDeliverableUploadAction(publicationId: string, uploadId: string) {
+  if (!UUID.test(uploadId)) return { success: false as const, error: 'Carga no válida.' };
+  const authorized = await getDesignPublication(publicationId, 'design.posts.upload');
+  if ('error' in authorized) return { success: false as const, error: authorized.error };
+  const admin = getSupabaseAdmin();
+  const { data: upload, error: uploadError } = await admin.from('publicacion_drive_uploads').select('*').eq('id', uploadId).eq('publicacion_id', publicationId).eq('carpeta', 'ENTREGABLES').maybeSingle();
+  if (uploadError || !upload) return { success: false as const, error: uploadError?.message || 'No se encontró la carga.' };
+  if (upload.publicacion_id !== publicationId || upload.carpeta !== 'ENTREGABLES') return { success: false as const, error: 'La carga no pertenece a esta solicitud de Diseño.' };
+  if (upload.actor_id !== authorized.access.context!.user.id) return { success: false as const, error: 'No tienes autorización para operar esta carga.' };
+  const result = { upload, publication: authorized.publication, access: authorized.access, admin };
   if (result.publication.estatus !== 'EN_DISENO') return { success: false as const, error: 'La solicitud ya no está en diseño.' };
+  if (result.upload.status !== 'UPLOADING' || new Date(result.upload.expires_at).getTime() <= Date.now()) return { success: false as const, error: 'La carga ya no está pendiente de confirmación.' };
   try {
     const folders = await ensureFolderIds(result.publication);
     let file = await findDriveUploadedFile(folders.deliverablesId, uploadId).catch(() => null);
@@ -100,8 +116,8 @@ export async function finishDeliverableUploadAction(uploadId: string) {
       file = await findDriveUploadedFile(folders.deliverablesId, uploadId).catch(() => null);
     }
     if (!file || file.size !== Number(result.upload.file_size)) return { success: false as const, error: 'Drive todavía no confirma el archivo esperado.' };
-    const { error: updateError } = await (result.admin.from('publicacion_drive_uploads')).update({ status: 'COMPLETE', drive_file_id: file.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', uploadId);
-    if (updateError) return { success: false as const, error: 'El archivo está en Drive, pero no se pudo registrar la confirmación.' };
+    const { data: completed, error: updateError } = await result.admin.rpc('finalize_publication_deliverable_upload', { p_upload_id: uploadId, p_publication_id: publicationId, p_actor_id: result.access.context!.user.id, p_drive_file_id: file.id });
+    if (updateError || !completed?.includes(uploadId)) return { success: false as const, error: 'El archivo está en Drive, pero la carga cambió de estado y no se pudo registrar la confirmación.' };
     revalidatePath('/design/publications'); revalidatePath(`/design/publications/${result.publication.id}`);
     return { success: true as const };
   } catch (error) { return { success: false as const, error: error instanceof Error ? error.message : 'No se pudo confirmar el archivo.' }; }
@@ -119,10 +135,11 @@ export async function cancelDeliverableUploadAction(uploadId: string) {
   const access = await authorizeAction('design.posts.upload');
   if (access.error || !access.context) return { success: false as const, error: access.error || 'Inicia sesión.' };
   const admin = getSupabaseAdmin();
-  const { data: upload, error } = await admin.from('publicacion_drive_uploads').select('id,actor_id,session_uri').eq('id', uploadId).eq('carpeta', 'ENTREGABLES').maybeSingle();
+  const { data: upload, error } = await admin.from('publicacion_drive_uploads').select('id,publicacion_id,actor_id,session_uri').eq('id', uploadId).eq('carpeta', 'ENTREGABLES').maybeSingle();
   if (error || !upload || upload.actor_id !== access.context.user.id) return { success: false as const, error: 'No tienes autorización para cancelar esta carga.' };
   const revoked = upload.session_uri ? await revokeDriveResumableSession(upload.session_uri).catch(() => false) : true;
-  await admin.from('publicacion_drive_uploads').update({ status: revoked ? 'CANCELLED' : 'CANCEL_PENDING', ...(revoked ? { session_uri: null } : {}) }).eq('id', uploadId);
+  const { data: cancelled } = await admin.from('publicacion_drive_uploads').update({ status: revoked ? 'CANCELLED' : 'CANCEL_PENDING', ...(revoked ? { session_uri: null } : {}) }).eq('id', uploadId).eq('publicacion_id', upload.publicacion_id).eq('actor_id', access.context.user.id).eq('carpeta', 'ENTREGABLES').eq('status', 'UPLOADING').select('id').maybeSingle();
+  if (!cancelled) return { success: false as const, error: 'La carga ya cambió de estado y no se pudo cancelar.' };
   return revoked ? { success: true as const } : { success: false as const, error: 'No se pudo cancelar la sesión; el cupo queda reservado hasta que expire.' };
 }
 

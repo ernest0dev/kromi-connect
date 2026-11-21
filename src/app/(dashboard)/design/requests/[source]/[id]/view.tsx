@@ -84,8 +84,8 @@ function FilesPanel({ detail, onCanDeliverChange }: { detail: DesignRequestDetai
         if (!result.success) throw new Error(result.error); uploadId = result.uploadId; sessionUri = result.sessionUri; mimeType = result.mimeType;
       }
       await uploadFile(file, sessionUri, mimeType, abortController.signal, (progress) => updateProgress(progressId, progress));
-      const finished = source === 'SOCIAL_MEDIA' ? await finishDeliverableUploadAction(uploadId) : source === 'INTERNAL' ? await finishInternalDeliverableUploadAction(uploadId) : await finishEventDeliverableUploadAction(uploadId);
-      if (!finished.success) throw new Error(finished.error);
+      const finished = source === 'SOCIAL_MEDIA' ? await finishDeliverableUploadAction(detail.source_record_id, uploadId) : source === 'INTERNAL' ? await finishInternalDeliverableUploadAction(uploadId) : await finishEventDeliverableUploadAction(uploadId);
+      if (!finished.success) throw new Error(String(finished.error));
       updateProgress(progressId, 100);
       await refresh();
     } catch (cause) {
@@ -120,8 +120,8 @@ function FilesPanel({ detail, onCanDeliverChange }: { detail: DesignRequestDetai
       const session = source === 'SOCIAL_MEDIA' ? await resumeDeliverableUploadAction(pending.id) : source === 'INTERNAL' ? await resumeInternalDeliverableUploadAction(pending.id) : await resumeEventDeliverableUploadAction(pending.id);
       if (!session.success) throw new Error(session.error); const uri = session.data.sessionUri;
       await uploadFile(file, uri, pending.mimeType, abortController.signal, (progress) => updateProgress(progressId, progress), true);
-      const finished = source === 'SOCIAL_MEDIA' ? await finishDeliverableUploadAction(pending.id) : source === 'INTERNAL' ? await finishInternalDeliverableUploadAction(pending.id) : await finishEventDeliverableUploadAction(pending.id);
-      if (!finished.success) throw new Error(finished.error);
+      const finished = source === 'SOCIAL_MEDIA' ? await finishDeliverableUploadAction(detail.source_record_id, pending.id) : source === 'INTERNAL' ? await finishInternalDeliverableUploadAction(pending.id) : await finishEventDeliverableUploadAction(pending.id);
+      if (!finished.success) throw new Error(String(finished.error));
       updateProgress(progressId, 100);
       await refresh();
     } catch (cause) {
