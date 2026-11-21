@@ -31,19 +31,22 @@ async function ensureFolders(publicationId: string, rootId: string, cachedBrief:
 }
 
 async function reconcileBriefUploads(publicationId: string, folderId: string) {
-  const admin=getSupabaseAdmin();
-  const {data,error}=await admin.from('publicacion_drive_uploads').select('id,file_size,mime_type,status,expires_at').eq('publicacion_id',publicationId).eq('carpeta','BRIEF').in('status',['RESERVING','UPLOADING','CANCEL_PENDING']);
-  if(error)throw new Error(error.message);
-  for(const upload of data||[]){
-    if(new Date(upload.expires_at).getTime()<=Date.now()){
-      await admin.from('publicacion_drive_uploads').update({status:'EXPIRED',session_uri:null}).eq('id',upload.id);
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.from('publicacion_drive_uploads').select('id,publicacion_id,actor_id,carpeta,file_size,mime_type,status,expires_at').eq('publicacion_id', publicationId).eq('carpeta', 'BRIEF').in('status', ['RESERVING', 'UPLOADING', 'CANCEL_PENDING']);
+  if (error) throw new Error(error.message);
+  for (const upload of data || []) {
+    if (upload.publicacion_id !== publicationId || upload.carpeta !== 'BRIEF') continue;
+    if (new Date(upload.expires_at).getTime() <= Date.now()) {
+      const { error: expireError } = await admin.from('publicacion_drive_uploads').update({ status: 'EXPIRED', session_uri: null }).eq('id', upload.id).eq('publicacion_id', publicationId).eq('actor_id', upload.actor_id).eq('carpeta', 'BRIEF').eq('status', upload.status).lte('expires_at', new Date().toISOString());
+      if (expireError) throw new Error(expireError.message);
       continue;
     }
-    if(upload.status==='RESERVING')continue;
-    const file=await findDriveUploadedFile(folderId,upload.id).catch(()=>null);
-    if(file&&file.size===Number(upload.file_size)&&file.mimeType===upload.mime_type){
-      await admin.from('publicacion_drive_uploads').update({status:'COMPLETE',drive_file_id:file.id,completed_at:new Date().toISOString(),session_uri:null}).eq('id',upload.id);
-    }
+    if (upload.status !== 'UPLOADING' && upload.status !== 'CANCEL_PENDING') continue;
+    const file = await findDriveUploadedFile(folderId, upload.id).catch(() => null);
+    if (!file || file.size !== Number(upload.file_size) || file.mimeType !== upload.mime_type) continue;
+    const { data: completed, error: completeError } = await admin.from('publicacion_drive_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', upload.id).eq('publicacion_id', publicationId).eq('actor_id', upload.actor_id).eq('carpeta', 'BRIEF').eq('status', upload.status).gt('expires_at', new Date().toISOString()).select('id').maybeSingle();
+    if (completeError) throw new Error(completeError.message);
+    if (completed?.id !== upload.id) continue;
   }
 }
 
@@ -152,8 +155,10 @@ export async function startPublicacionBriefUploadAction(input: { publicationId: 
 export async function finishPublicacionBriefUploadAction(uploadId: string) {
   if (!UUID.test(uploadId)) return { success: false as const, error: 'Carga no válida.' };
   const admin = getSupabaseAdmin();
-  const { data: upload, error } = await admin.from('publicacion_drive_uploads').select('*').eq('id', uploadId).maybeSingle();
+  const { data: upload, error } = await admin.from('publicacion_drive_uploads').select('*').eq('id', uploadId).eq('carpeta', 'BRIEF').maybeSingle();
   if (error || !upload) return { success: false as const, error: error?.message || 'No se encontró la reserva.' };
+  if (upload.carpeta !== 'BRIEF') return { success: false as const, error: 'La reserva no pertenece al flujo de Brief.' };
+  if (upload.status !== 'UPLOADING' || new Date(upload.expires_at).getTime() <= Date.now()) return { success: false as const, error: 'La carga ya no está pendiente de confirmación.' };
   const result = await getAuthorizedPublication(upload.publicacion_id, 'social-media.posts.edit');
   if ('error' in result || result.access.context!.user.id !== upload.actor_id) return { success: false as const, error: 'No tienes autorización para confirmar esta carga.' };
   try {
@@ -163,7 +168,8 @@ export async function finishPublicacionBriefUploadAction(uploadId: string) {
     const count = await countDriveFolderFiles(folder.briefId);
     const { error: syncError } = await admin.rpc('sync_publication_drive_brief', { p_publication_id: upload.publicacion_id, p_brief_folder_id: folder.briefId, p_deliverables_folder_id: folder.deliverablesId, p_file_count: Math.min(count, 10) });
     if (syncError) throw new Error(syncError.message);
-    await admin.from('publicacion_drive_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', uploadId);
+    const { data: completed, error: completeError } = await admin.from('publicacion_drive_uploads').update({ status: 'COMPLETE', drive_file_id: file.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', uploadId).eq('publicacion_id', upload.publicacion_id).eq('actor_id', result.access.context!.user.id).eq('carpeta', 'BRIEF').eq('status', 'UPLOADING').gt('expires_at', new Date().toISOString()).select('id').maybeSingle();
+    if (completeError || completed?.id !== uploadId) return { success: false as const, error: 'La carga cambió de estado y no se pudo confirmar.' };
     revalidatePath('/social-media/grid');
     return { success: true as const, data: file };
   } catch (cause) { return { success: false as const, error: cause instanceof Error ? cause.message : 'No se pudo confirmar el archivo.' }; }
@@ -183,20 +189,24 @@ export async function resumePublicacionBriefUploadAction(uploadId:string){
 export async function cancelPublicacionBriefUploadAction(uploadId: string) {
   if (!UUID.test(uploadId)) return { success: false as const, error: 'Carga no válida.' };
   const admin = getSupabaseAdmin();
-  const { data: upload } = await admin.from('publicacion_drive_uploads').select('*').eq('id', uploadId).maybeSingle();
+  const { data: upload } = await admin.from('publicacion_drive_uploads').select('*').eq('id', uploadId).eq('carpeta', 'BRIEF').maybeSingle();
   if (!upload) return { success: false as const, error: 'No se encontró la reserva.' };
   const result = await getAuthorizedPublication(upload.publicacion_id, 'social-media.posts.edit');
   if ('error' in result || result.access.context!.user.id !== upload.actor_id) return { success: false as const, error: 'No tienes autorización para cancelar esta carga.' };
+  if (upload.carpeta !== 'BRIEF') return { success: false as const, error: 'La reserva no pertenece al flujo de Brief.' };
+  if ((upload.status !== 'UPLOADING' && upload.status !== 'CANCEL_PENDING') || new Date(upload.expires_at).getTime() <= Date.now()) return { success: false as const, error: 'La carga ya no se puede cancelar.' };
   const folders = upload.session_uri ? await ensureFolders(upload.publicacion_id, result.publication.drive_folder_id!, result.publication.drive_brief_folder_id, result.publication.drive_deliverables_folder_id) : null;
   const completedFile = folders ? await findDriveUploadedFile(folders.briefId, uploadId).catch(() => null) : null;
   if (completedFile) {
     const count = await countDriveFolderFiles(folders!.briefId);
     await admin.rpc('sync_publication_drive_brief', { p_publication_id: upload.publicacion_id, p_brief_folder_id: folders!.briefId, p_deliverables_folder_id: folders!.deliverablesId, p_file_count: Math.min(count, 10) });
-    await admin.from('publicacion_drive_uploads').update({ status: 'COMPLETE', drive_file_id: completedFile.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', uploadId);
+    const { data: completed, error: completeError } = await admin.from('publicacion_drive_uploads').update({ status: 'COMPLETE', drive_file_id: completedFile.id, completed_at: new Date().toISOString(), session_uri: null }).eq('id', uploadId).eq('publicacion_id', upload.publicacion_id).eq('actor_id', result.access.context!.user.id).eq('carpeta', 'BRIEF').eq('status', upload.status).gt('expires_at', new Date().toISOString()).select('id').maybeSingle();
+    if (completeError || completed?.id !== uploadId) return { success: false as const, error: 'La carga cambió de estado y no se pudo confirmar.' };
     return { success: true as const, completed: true as const };
   }
   const revoked = upload.session_uri ? await revokeDriveResumableSession(upload.session_uri).catch(() => false) : true;
-  await admin.from('publicacion_drive_uploads').update({ status: revoked ? 'CANCELLED' : 'CANCEL_PENDING', expires_at: revoked ? upload.expires_at : new Date(Date.now()+7*24*60*60*1000).toISOString(), ...(revoked ? { session_uri: null } : {}) }).eq('id', uploadId);
+  const { data: cancelled, error: cancelError } = await admin.from('publicacion_drive_uploads').update({ status: revoked ? 'CANCELLED' : 'CANCEL_PENDING', expires_at: revoked ? upload.expires_at : new Date(Date.now()+7*24*60*60*1000).toISOString(), ...(revoked ? { session_uri: null } : {}) }).eq('id', uploadId).eq('publicacion_id', upload.publicacion_id).eq('actor_id', result.access.context!.user.id).eq('carpeta', 'BRIEF').eq('status', upload.status).gt('expires_at', new Date().toISOString()).select('id').maybeSingle();
+  if (cancelError || cancelled?.id !== uploadId) return { success: false as const, error: 'La carga cambió de estado y no se pudo cancelar.' };
   if (revoked) return { success: true as const };
   return { success: false as const, error: 'No pudimos revocar la sesión de Drive. El cupo queda reservado hasta que expire.' };
 }
