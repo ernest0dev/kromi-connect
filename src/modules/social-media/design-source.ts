@@ -129,9 +129,18 @@ async function authorize(actor: DesignActor, permission: Parameters<typeof autho
   return { context: access.context } as const;
 }
 
+async function authorizePublicationRead(actor: DesignActor, permission: Parameters<typeof authorizeAction>[0]): Promise<Authorization> {
+  const access = await authorize(actor, permission);
+  if ('error' in access) return access;
+  // The existing publication RPCs enforce this legacy source permission internally.
+  const publicationRead = await authorize(actor, 'design.posts.read');
+  if ('error' in publicationRead) return publicationRead;
+  return access;
+}
+
 async function loadPublication(id: string, actor: DesignActor, permission: 'design.requests.read' | 'design.posts.upload' | 'design.posts.start' | 'design.posts.deliver'): Promise<LoadedPublication> {
   if (!UUID.test(id)) return { error: failure('INVALID_INPUT', 'El identificador de publicación no es válido.') } as const;
-  const authorized = await authorize(actor, permission);
+  const authorized = await authorizePublicationRead(actor, permission);
   if ('error' in authorized) return { error: authorized.error };
   const { data, error } = await authorized.context.supabase.rpc('get_design_publication_request', { p_id: id });
   if (error) return { error: failure(classifyError(error), 'No se pudo consultar la solicitud.', error.code) } as const;
@@ -222,7 +231,7 @@ const source: DesignRequestSource<'SOCIAL_MEDIA', SocialMediaDesignFilters> = {
   source: 'SOCIAL_MEDIA',
 
   async list(filters: DesignRequestListFilters<SocialMediaDesignFilters>, actor) {
-    const authorized = await authorize(actor, 'design.requests.read');
+    const authorized = await authorizePublicationRead(actor, 'design.requests.read');
     if ('error' in authorized) return authorized.error;
     const { data: rows, error } = await authorized.context.supabase.rpc('get_design_publication_queue');
     if (error) return failure(classifyError(error), 'No se pudo cargar la cola de publicaciones.', error.code);
@@ -293,7 +302,7 @@ const source: DesignRequestSource<'SOCIAL_MEDIA', SocialMediaDesignFilters> = {
   },
 
   async capabilities(request, actor): Promise<Result<DesignRequestCapabilities>> {
-    const readAccess = await authorize(actor, 'design.requests.read');
+    const readAccess = await authorizePublicationRead(actor, 'design.requests.read');
     if ('error' in readAccess) return readAccess.error;
     const startAccess = await authorizeAction('design.posts.start');
     const uploadAccess = await authorizeAction('design.posts.upload');
