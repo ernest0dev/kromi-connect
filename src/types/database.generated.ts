@@ -1021,9 +1021,6 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-"finalize_publication_deliverable_upload":
-{ Args: { "p_actor_id": string,"p_drive_file_id": string,"p_publication_id": string,"p_upload_id": string }; Returns: string[]
-                           },
             "add_solicitud_diseno_entregable":
 { Args: { "p_data": Json,"p_solicitud_id": string }; Returns: string
                            },
@@ -1188,6 +1185,12 @@ isOneToOne: false
                            },
 "events_sede_names":
 { Args: { "p_ids": (string)[] }; Returns: Json
+                           },
+"finalize_evento_deliverable_upload":
+{ Args: { "p_actor_id": string,"p_drive_file_id": string,"p_evento_id": string,"p_upload_id": string }; Returns: string[]
+                           },
+"finalize_publication_deliverable_upload":
+{ Args: { "p_actor_id": string,"p_drive_file_id": string,"p_publication_id": string,"p_upload_id": string }; Returns: string[]
                            },
 "get_design_event_history":
 { Args: { "p_limit"?: number,"p_offset"?: number }; Returns: {
